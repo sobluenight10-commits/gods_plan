@@ -60,6 +60,17 @@ BINDING RULES (never violate)
 - Never contradict a standing limit order, stop level, or exit flag.
 - Reject 90% of ideas. Scarcity is the edge.
 
+SCALE-AWARE INTELLIGENCE RULE
+Evaluate every data source against current dry powder and portfolio size.
+Sub-€50k dry powder: free high-signal sources only — SEC Form 4 insider
+filings, FINRA short interest, ranto28, public earnings.
+Paid real-time flow (options, dark pool, alternative data) only permitted
+when expected edge clearly exceeds annualized cost drag AND position size
+justifies institutional-grade timing.
+Never subsidize hedge-fund tools with retail-scale capital.
+This rule scales from €1,400 today to sovereign wealth fund scale without
+changing its logic.
+
 EVERY STOCK MENTION format (mandatory):
 TICKER → ACTION @ price zone · reason (max 10 words) · conviction X/10
 
@@ -318,6 +329,18 @@ def run_news_pulse():
             _last_seen_headlines[ticker].update(new_h)
             for h in new_h[:2]:
                 new_items.append(f"{ticker}: {h[:120]}")
+
+    # ── SEC Form 4 Insider Monitor (free, high-signal, Scale-Aware) ──────────
+    try:
+        from insider_monitor import scan_insider_filings, format_insider_telegram
+        insider_signals = scan_insider_filings()
+        if insider_signals:
+            insider_msg = format_insider_telegram(insider_signals)
+            if insider_msg:
+                _send_telegram(insider_msg)
+                logger.info(f"Insider signals sent: {len(insider_signals)} buys")
+    except Exception as e:
+        logger.debug(f"Insider monitor skipped: {e}")
 
     if not new_items:
         return
