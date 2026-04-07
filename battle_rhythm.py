@@ -1,20 +1,18 @@
 """
-🔱 titan_K v2 — Battle Rhythm Briefing Engine (v3)
-Weekday-only briefings. GPT-4o-mini for cost efficiency.
-TITAN orders sent daily at 07:00.
+🔱 OLYMPUS — Battle Rhythm Briefing Engine v4
+ONE message. Concrete verdicts. Logical order.
 
-Schedule (Berlin time, Mon-Fri only):
-  07:00  master_daily — Blog + Macro + Scores + TITAN Orders
-  15:00  us_premarket — Final prep before US open
-  18:00  us_midday    — Open summary + institutional flows
-  23:00  us_close     — Daily review + tomorrow prep
+Order: Mission → Overnight → Korea → Key Moves → Forecast → Catalysts → Blog → Strategy
+Every stock mention ends with: BUY/HOLD/SELL @ price · size · reason
 
-Weekly (Saturday only):
-  07:00  olympus_weekly — Full dashboard update
+Schedule (Berlin, Mon-Fri):
+  07:00  master_daily
+  15:30  us_open
+  22:30  us_close
+Saturday 08:00  olympus_weekly
 """
 import logging
 import os
-import asyncio
 from datetime import datetime
 from typing import Dict
 
@@ -30,102 +28,103 @@ from market_data import (
 )
 
 logger = logging.getLogger("titan_k.battle_rhythm")
-
 client = OpenAI(api_key=config.OPENAI_API_KEY)
 
-# config.DAILY_SCHEDULE / config.WEEKLY_SCHEDULE — same source as main.py scheduler
-logger.debug(
-    "Schedule aligned with config: %d daily + %d weekly briefing slots",
-    len(config.DAILY_SCHEDULE),
-    len(config.WEEKLY_SCHEDULE),
-)
+FAST_MODEL = "gpt-4o-mini"
+DEEP_MODEL = "gpt-4o-mini"
 
-# ── Model selection ───────────────────────────────────────────────────────────
-FAST_MODEL = "gpt-4o-mini"   # cost-efficient for all briefings
-DEEP_MODEL = "gpt-4o"        # reserved for Olympus weekly only
-
-QUANT_BRIEFING_PATH = os.path.join("data", "QUANT_BRIEFING.md")
 NEWS_CACHE_PATH = os.path.join("data", "news_cache.json")
 
 GOD_MISSION = (
-    "⚔️ <b>GOD'S MISSION</b>\n"
-    "🎯 ₩170,000,000,000 (~€115M) by 2036\n"
-    "📈 ~47% CAGR · Beat Buffett every year\n"
-    "💰 €25,000 + €1,500/month deployed\n"
-    "🏝 Destination: Thailand Islands\n"
-    "🔱 Belief: <b>INVINCIBLE</b>\n"
+    "🔱 <b>OLYMPUS · MINERVA V5</b>\n"
+    "🎯 ₩170,000,000,000 (~€115M) by 2036 · 47% CAGR\n"
+    "🏝 Thailand Islands · Beat Buffett every year\n"
 )
 
-TEN_CRITERIA = """
-THE 10 GREATEST INVESTORS — QUANTIFIED CRITERIA (apply to every analysis):
-Gate 0: "Does this move GOD toward €115M by 2036?" — reject immediately if NO
-1. Graham Number = sqrt(22.5 × EPS × BVPS) — never pay above this
-2. ROIC > 25% — strong moat indicator (Buffett + Greenblatt)
-3. PEG < 1.0 — growth at reasonable price (Peter Lynch)
-4. Debt/Equity < 0.5 — financial fortress (Graham + Buffett)
-5. Earnings Yield (EBIT/EV) — higher = more value (Magic Formula)
-6. Correlation < 0.2 — Holy Grail diversification (Ray Dalio)
-7. NCAV Net-Net — buy if Market Cap < 66% of (Current Assets - Total Liabilities)
-8. Inventory Growth < Sales Growth — early warning flag (Lynch)
-9. Operating Margin Stability 10yr — pricing power = moat (Templeton + Munger)
-10. ETF Expense Ratio < 0.15% — cost is the enemy of returns (Bogle)
+SYSTEM_PERSONA = """You are Minerva — GOD's sovereign investment analyst.
+GOD's mission: ₩170,000,000,000 (~€115M) by 2036. 47% CAGR required.
+
+ABSOLUTE RULES for every response:
+1. Every stock mention MUST end with a verdict: BUY/HOLD/SELL/WATCH @ price · why
+2. No instructions to self ("analyze X", "research Y") — only conclusions
+3. No fluff, no repetition, no meta-commentary
+4. Max 12 words per bullet
+5. Bullets only — no paragraphs
+6. If uncertain: say HOLD and why, not "monitor closely"
+7. Gate 0 applies to every action: does this move GOD toward €115M?
+
+10 CRITERIA (apply silently, surface conclusions only):
+Graham Number · ROIC>25% · PEG<1.0 · D/E<0.5 · Earnings Yield
+Dalio Correlation<0.2 · NCAV Net-Net · Inventory<Sales · Margin Stability · ETF ER<0.15%
 """
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# SHARED UTILITIES
+# UTILITIES
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _berlin_now():
     import pytz
     return datetime.now(pytz.timezone(config.TIMEZONE))
 
+def _is_weekday():
+    return _berlin_now().weekday() < 5
 
-def _is_weekday() -> bool:
-    return _berlin_now().weekday() < 5  # 0=Mon, 4=Fri
-
-
-def _build_header(title: str, ctx: Dict) -> str:
-    regime_emoji = {"CALM": "🟢", "NORMAL": "🔵", "FEAR": "🟡", "CRISIS": "🔴"}.get(ctx["regime"], "⚪")
-    now = _berlin_now()
-    return (
-        f"{GOD_MISSION}"
-        f"{'━' * 28}\n\n"
-        f"🔱 <b>{title}</b>\n"
-        f"📅 {now.strftime('%Y-%m-%d %H:%M')} Berlin\n"
-        f"{regime_emoji} {ctx['regime']} · VIX {ctx['vix']} · Deploy {ctx['deploy_pct']}%\n"
-        f"{'━' * 28}\n\n"
-    )
-
-
-def _build_footer() -> str:
-    return (
-        f"\n{'━' * 28}\n"
-        f"🔱 <a href=\"{config.TITAN_SYSTEM_URL}\">Open TITAN SYSTEM</a>"
-    )
-
-
-def _gpt_call(system: str, user: str, max_tokens: int = 500, model: str = FAST_MODEL) -> str:
+def _gpt(system: str, user: str, tokens: int = 600) -> str:
     try:
         resp = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": system},
-                {"role": "user", "content": user},
-            ],
-            temperature=0.35,
-            max_tokens=max_tokens,
+            model=FAST_MODEL,
+            messages=[{"role": "system", "content": system},
+                      {"role": "user", "content": user}],
+            temperature=0.3,
+            max_tokens=tokens,
         )
-        return resp.choices[0].message.content
+        return resp.choices[0].message.content.strip()
     except Exception as e:
-        logger.error(f"GPT call failed: {e}")
-        return "⚠️ AI analysis unavailable."
+        logger.error(f"GPT failed: {e}")
+        return "⚠️ Analysis unavailable."
 
+def _send_telegram(message: str):
+    token = config.TELEGRAM_BOT_TOKEN
+    chat_id = config.TELEGRAM_CHAT_ID
+    if not token or not chat_id:
+        logger.error("Telegram credentials missing")
+        return
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    # Split if over 4096 chars
+    chunks = []
+    if len(message) <= 4096:
+        chunks = [message]
+    else:
+        lines = message.split("\n")
+        current = ""
+        for line in lines:
+            if len(current) + len(line) + 1 > 4096:
+                chunks.append(current)
+                current = line
+            else:
+                current = (current + "\n" + line).strip()
+        if current:
+            chunks.append(current)
+    for chunk in chunks:
+        try:
+            requests.post(url, json={
+                "chat_id": chat_id,
+                "text": chunk,
+                "parse_mode": "HTML",
+                "disable_web_page_preview": True,
+            }, timeout=15)
+        except Exception as e:
+            logger.error(f"Telegram send failed: {e}")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DATA FETCHERS
+# ══════════════════════════════════════════════════════════════════════════════
 
 def _fetch_live_context() -> Dict:
-    logger.info("Fetching live market context...")
     all_tickers = set()
-    for broker, positions in config.PORTFOLIO.items():
+    for positions in config.PORTFOLIO.values():
         for pos in positions:
             all_tickers.add(pos["ticker"])
     for w in config.WATCHLIST:
@@ -135,53 +134,44 @@ def _fetch_live_context() -> Dict:
     fx_rate = fetch_fx_rate()
     snapshot = fetch_market_snapshot()
     composite = calculate_titan_k_index(snapshot, config.WEIGHTS)
-
     vix_val = snapshot.get("VIX", {}).get("value", 25)
-    if isinstance(vix_val, (int, float)):
-        regime, deploy_pct, label = get_vix_regime(vix_val)
-    else:
-        regime, deploy_pct, label = "UNKNOWN", 0, "?"
+    regime, deploy_pct, label = get_vix_regime(vix_val) if isinstance(vix_val, (int, float)) else ("UNKNOWN", 0, "?")
 
     portfolio_lines = []
     for broker, positions in config.PORTFOLIO.items():
         for pos in positions:
-            t = pos["ticker"]
-            p = prices.get(t, {})
+            p = prices.get(pos["ticker"], {})
             portfolio_lines.append(
-                f"{t} ({pos['name']}) | ${p.get('price','?')} ({p.get('change_pct',0):+.1f}%) | "
-                f"Score:{pos.get('score','?')}/10 | {pos.get('action','HOLD')}"
+                f"{pos['ticker']} ${p.get('price','?')} ({p.get('change_pct',0):+.1f}%) "
+                f"Score:{pos.get('score','?')}/10 Signal:{pos.get('signal','?')} "
+                f"Action:{pos.get('action','HOLD')} Stop:{pos.get('stop','—')}"
             )
 
     watchlist_lines = []
     for w in config.WATCHLIST:
         p = prices.get(w["ticker"], {})
         watchlist_lines.append(
-            f"{w['ticker']} ({w['name']}) | ${p.get('price','?')} | Entry:{w['entry']} | Score:{w.get('score','?')}/10"
+            f"{w['ticker']} ${p.get('price','?')} Score:{w.get('score','?')}/10 "
+            f"Signal:{w.get('signal','?')} Entry:{w.get('entry','—')}"
         )
 
-    key_indicators = ["VIX", "SPX", "NDX", "SOX", "Gold", "Oil", "DXY", "US10Y", "BTC", "Copper", "Uranium"]
+    key_indicators = ["VIX","SPX","NDX","SOX","Gold","Oil","DXY","US10Y","BTC","Copper","Uranium"]
     key_moves = []
     for ind in key_indicators:
         d = snapshot.get(ind, {})
         if isinstance(d.get("value"), (int, float)):
             chg = d.get("change_pct", 0)
-            direction = "▲" if chg >= 0 else "▼"
+            arrow = "▲" if chg >= 0 else "▼"
             bold = abs(chg) >= 2
-            if bold:
-                key_moves.append(f"  <b>{direction} {ind} {d['value']} ({chg:+.1f}%)</b>")
-            else:
-                key_moves.append(f"  {direction} {ind} {d['value']} ({chg:+.1f}%)")
+            line = f"  {'<b>' if bold else ''}{arrow} {ind} {d['value']} ({chg:+.1f}%){'</b>' if bold else ''}"
+            key_moves.append(line)
 
     today = _berlin_now().strftime("%Y-%m-%d")
-    earnings_today = [e for e in config.EARNINGS_CALENDAR if e["date"] == today]
+    earnings_today = [e for e in config.EARNINGS_CALENDAR if e.get("date") == today]
 
     return {
-        "prices": prices,
-        "fx_rate": fx_rate,
-        "vix": vix_val,
-        "regime": regime,
-        "deploy_pct": deploy_pct,
-        "composite": composite,
+        "prices": prices, "fx_rate": fx_rate, "vix": vix_val,
+        "regime": regime, "deploy_pct": deploy_pct, "composite": composite,
         "portfolio_text": "\n".join(portfolio_lines),
         "watchlist_text": "\n".join(watchlist_lines),
         "key_moves": "\n".join(key_moves),
@@ -189,28 +179,21 @@ def _fetch_live_context() -> Dict:
         "snapshot": snapshot,
     }
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# NEWS SCANNER — fetch headlines for all portfolio stocks
-# ══════════════════════════════════════════════════════════════════════════════
-
 def _fetch_portfolio_news() -> Dict[str, list]:
-    """Fetch latest headlines for every portfolio + watchlist stock via yfinance."""
     import yfinance as yf
     all_tickers = set()
-    for broker, positions in config.PORTFOLIO.items():
+    for positions in config.PORTFOLIO.values():
         for pos in positions:
             all_tickers.add(pos["ticker"])
-    for w in config.WATCHLIST:
-        all_tickers.add(w["ticker"])
-
     news_by_ticker = {}
     for ticker in all_tickers:
+        if ticker in ("xAI", "FigureAI"):
+            continue
         try:
             t = yf.Ticker(ticker)
-            news_items = t.news or []
+            items = t.news or []
             headlines = []
-            for item in news_items[:5]:
+            for item in items[:4]:
                 content = item.get("content", {})
                 title = content.get("title", item.get("title", ""))
                 if title:
@@ -218,174 +201,70 @@ def _fetch_portfolio_news() -> Dict[str, list]:
             if headlines:
                 news_by_ticker[ticker] = headlines
         except Exception as e:
-            logger.debug(f"News fetch failed for {ticker}: {e}")
-
-    logger.info(f"News fetched for {len(news_by_ticker)} tickers")
+            logger.debug(f"News fetch {ticker}: {e}")
     return news_by_ticker
 
+def _fetch_blog() -> str:
+    """Fetch ranto28 blog — try RSS first, then direct scrape."""
+    import xml.etree.ElementTree as ET
+    import re
 
-def _detect_catalysts(prices: Dict, news: Dict) -> str:
-    """Detect stocks with significant price moves + news catalysts."""
-    import json
-    import os
+    rss_url = config.NAVER_RSS_URL
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+        "Accept-Language": "ko-KR,ko;q=0.9,en;q=0.8",
+    }
 
-    # Load previous prices from cache
-    prev_prices = {}
-    if os.path.exists(NEWS_CACHE_PATH):
+    posts = []
+
+    # Try RSS
+    try:
+        resp = requests.get(rss_url, headers=headers, timeout=15)
+        if resp.status_code == 200 and "<rss" in resp.text:
+            root = ET.fromstring(resp.content)
+            channel = root.find("channel")
+            items = channel.findall("item") if channel else []
+            for item in items[:3]:
+                title = item.findtext("title", "").strip()
+                desc = item.findtext("description", "").strip()
+                pub = item.findtext("pubDate", "").strip()
+                # Strip HTML tags from description
+                desc_clean = re.sub(r"<[^>]+>", " ", desc).strip()[:300]
+                if title:
+                    posts.append(f"📌 <b>{title}</b>\n{desc_clean}\n({pub[:16]})")
+            logger.info(f"Blog RSS: {len(posts)} posts")
+    except Exception as e:
+        logger.warning(f"Blog RSS failed: {e}")
+
+    # Fallback: scrape blog page
+    if not posts:
         try:
-            with open(NEWS_CACHE_PATH, "r") as f:
-                cache = json.load(f)
-                prev_prices = cache.get("prices", {})
-        except:
-            pass
-
-    # Save current prices to cache
-    os.makedirs("data", exist_ok=True)
-    with open(NEWS_CACHE_PATH, "w") as f:
-        json.dump({"prices": {t: d.get("price") for t, d in prices.items()}}, f)
-
-    catalysts = []
-    for ticker, price_data in prices.items():
-        chg = price_data.get("change_pct", 0)
-        current = price_data.get("price", 0)
-
-        # Flag any move >2% with news
-        if abs(chg) >= 2 and ticker in news:
-            direction = "🟢 ▲" if chg > 0 else "🔴 ▼"
-            headlines = news[ticker][:2]
-            catalysts.append(
-                f"{direction} <b>{ticker}</b> {chg:+.1f}% @ ${current}\n"
-                f"  📰 {headlines[0][:80]}\n"
-                + (f"  📰 {headlines[1][:80]}\n" if len(headlines) > 1 else "")
-            )
-        # Flag any move >4% even without news — unusual move
-        elif abs(chg) >= 4:
-            direction = "🟢 ▲" if chg > 0 else "🔴 ▼"
-            catalysts.append(
-                f"{direction} <b>{ticker}</b> {chg:+.1f}% @ ${current} — ⚠️ No news found. Investigate.\n"
-            )
-
-    if catalysts:
-        return "<b>🚨 CATALYST ALERTS</b>\n" + "\n".join(catalysts)
-    return ""
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# LAYER 2 — MACRO LEADING INDICATOR CORRELATIONS
-# ══════════════════════════════════════════════════════════════════════════════
-
-# Key leading pairs: {macro_indicator: [(portfolio_ticker, direction, lag_desc)]}
-MACRO_CORRELATIONS = {
-    "SOX":     [("000660.KS", "+", "SK Hynix typically follows SOX overnight"),
-                ("COHR", "+", "Coherent follows semiconductor index")],
-    "Uranium": [("UEC", "+", "UEC tracks uranium spot closely"),
-                ("URNM", "+", "URNM mirrors uranium ETF moves")],
-    "Gold":    [("IAU", "+", "IAU directly tracks gold price")],
-    "Oil":     [("FCX", "+", "Copper/FCX correlated with oil risk sentiment")],
-    "DXY":     [("PLTR", "-", "Strong DXY headwind for US tech exports"),
-                ("UEC", "-", "Uranium priced in USD — DXY inverse")],
-    "BTC":     [("IONQ", "+", "Quantum/crypto risk-on correlation"),
-                ("RKLB", "+", "Space/growth stocks follow BTC risk appetite")],
-}
-
-MACRO_MOVE_THRESHOLD = 1.5  # % move in macro indicator to trigger alert
-
-
-def _generate_macro_forecast(snapshot: Dict) -> str:
-    """Layer 2 — detect macro moves and forecast impact on portfolio."""
-    forecasts = []
-
-    for indicator, correlations in MACRO_CORRELATIONS.items():
-        ind_data = snapshot.get(indicator, {})
-        chg = ind_data.get("change_pct", 0)
-        val = ind_data.get("value", "?")
-
-        if not isinstance(chg, (int, float)):
-            continue
-        if abs(chg) < MACRO_MOVE_THRESHOLD:
-            continue
-
-        direction = "▲" if chg > 0 else "▼"
-        bold = abs(chg) >= 3
-
-        for ticker, corr_dir, desc in correlations:
-            # Determine expected impact
-            if (chg > 0 and corr_dir == "+") or (chg < 0 and corr_dir == "-"):
-                impact = "🟢 Tailwind"
-                expected = "likely UP"
-            else:
-                impact = "🔴 Headwind"
-                expected = "likely DOWN"
-
-            forecasts.append(
-                f"{'<b>' if bold else ''}{direction} {indicator} {chg:+.1f}%{'</b>' if bold else ''} "
-                f"→ <b>{ticker}</b> {impact} ({expected})\n"
-                f"  💡 {desc}"
-            )
-
-    if forecasts:
-        return "<b>🔭 MACRO PRELIMINARY FORECAST</b>\n" + "\n".join(forecasts) + "\n"
-    return ""
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# LAYER 1 — PRE-MARKET SCANNER
-# ══════════════════════════════════════════════════════════════════════════════
-
-def _scan_premarket(prices: Dict) -> str:
-    """Layer 1 — detect pre-market movers before US open."""
-    import yfinance as yf
-
-    movers = []
-    all_tickers = []
-    for broker, positions in config.PORTFOLIO.items():
-        for pos in positions:
-            if ".KS" not in pos["ticker"]:  # US stocks only
-                all_tickers.append(pos["ticker"])
-    for w in config.WATCHLIST:
-        if ".KS" not in w["ticker"]:
-            all_tickers.append(w["ticker"])
-
-    for ticker in all_tickers:
-        try:
-            t = yf.Ticker(ticker)
-            info = t.fast_info
-            pre_price = getattr(info, "pre_market_price", None)
-            prev_close = getattr(info, "previous_close", None)
-
-            if pre_price and prev_close and prev_close > 0:
-                pre_chg = ((pre_price - prev_close) / prev_close) * 100
-                if abs(pre_chg) >= 1.0:  # Flag >1% pre-market move
-                    direction = "🟢 ▲" if pre_chg > 0 else "🔴 ▼"
-                    movers.append(
-                        f"{direction} <b>{ticker}</b> pre-market {pre_chg:+.1f}% "
-                        f"(${pre_price:.2f} vs close ${prev_close:.2f})"
-                    )
+            resp = requests.get(config.NAVER_BLOG_URL, headers=headers, timeout=15)
+            if resp.status_code == 200:
+                titles = re.findall(r'<span[^>]*logMainTitle[^>]*>([^<]+)</span>', resp.text)
+                if not titles:
+                    titles = re.findall(r'"title"\s*:\s*"([^"]{10,})"', resp.text)
+                for t in titles[:3]:
+                    posts.append(f"📌 <b>{t.strip()}</b>")
+                logger.info(f"Blog scrape: {len(posts)} titles")
         except Exception as e:
-            logger.debug(f"Pre-market scan failed for {ticker}: {e}")
+            logger.warning(f"Blog scrape failed: {e}")
 
-    if movers:
-        return "<b>🌅 PRE-MARKET MOVERS</b>\n" + "\n".join(movers) + "\n"
-    return ""
+    if not posts:
+        return "📭 ranto28: No posts retrieved. Check manually."
 
+    return "\n\n".join(posts)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# LAYER 3 — NEWS PULSE (GPT synthesis + SO WHAT)
+# NEWS PULSE (background — fires silently, sends only if actionable)
 # ══════════════════════════════════════════════════════════════════════════════
 
 _last_seen_headlines: Dict[str, set] = {}
 
-
 def run_news_pulse():
-    """Fetch new portfolio headlines; synthesize one SO WHAT brief via GPT (see schedule interval)."""
     import pytz
-
-    if not logging.root.handlers:
-        logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
-
     berlin = pytz.timezone(config.TIMEZONE)
     now = datetime.now(berlin)
-
     if now.weekday() >= 5:
         return
     hour = now.hour + now.minute / 60.0
@@ -394,648 +273,294 @@ def run_news_pulse():
     if hour < start_h or hour > end_h:
         return
 
-    logger.info("Running news pulse synthesis...")
-
     try:
         fresh_news = _fetch_portfolio_news()
     except Exception as e:
-        logger.error("News pulse fetch failed: %s", e)
+        logger.error(f"News pulse fetch failed: {e}")
         return
 
     new_items = []
     for ticker, headlines in fresh_news.items():
         if ticker not in _last_seen_headlines:
             _last_seen_headlines[ticker] = set()
-        new_headlines = [h for h in headlines if h not in _last_seen_headlines[ticker]]
-        if new_headlines:
-            _last_seen_headlines[ticker].update(new_headlines)
-            for h in new_headlines[:2]:
+        new_h = [h for h in headlines if h not in _last_seen_headlines[ticker]]
+        if new_h:
+            _last_seen_headlines[ticker].update(new_h)
+            for h in new_h[:2]:
                 new_items.append(f"{ticker}: {h[:120]}")
 
     if not new_items:
-        logger.info("News pulse: no new headlines")
         return
 
-    try:
-        headline_block = chr(10).join(new_items[:20])
-        system = (
-            "You are MINERVA, investment intelligence for a civilization-shift portfolio. "
-            "Analyze NEW headlines and produce ONE concise actionable briefing. "
-            "Format: "
-            "Line 1: Market mood in one sentence. "
-            "Line 2-3: 2-3 portfolio impacts (ticker + what it means). "
-            "Line 4: SO WHAT — one concrete directive: BUY/HOLD/SELL/WATCH + ticker + reason + price level if relevant. "
-            "If nothing actionable reply exactly: SKIP. "
-            "Never list raw headlines. Always end with SO WHAT directive."
-        )
-        user = (
-            f"Today {now.strftime('%Y-%m-%d %H:%M')} Berlin. New headlines:{chr(10)}{chr(10)}"
-            f"{headline_block}{chr(10)}{chr(10)}"
-            "Portfolio: SK Hynix(LEGEND), Hanwha(LEGEND), PLTR(HOLD), COHR(HOLD), "
-            "UEC(HOLD+stop$11.50), AVAV(CAUTION), VRT(HOLD), ARKQ/BOTZ(HOLD), "
-            "RKLB(HOLD), TMO(HOLD), URNM(HOLD), NTR(STRIKE-add before Mar31), "
-            "Xiaomi(OBSERVE-Mar24earnings), IONQ(HOLD), TSMC(HOLD). "
-            "EXIT: HUYA(-77%), GEVO(-87%Mar26), FCX(stop$54.50), IAU(+128%-sell-on-strength). "
-            "Synthesize. End with SO WHAT directive."
-        )
-        response = _gpt_call(system, user, max_tokens=250)
-        if not response or response.strip() == "SKIP":
-            logger.info("News pulse: nothing actionable")
-            return
-        from telegram_bot import send_telegram
+    verdict = _gpt(
+        SYSTEM_PERSONA + "\nRespond with ONE line per ticker mentioned. Format: TICKER → BUY/HOLD/SELL @ $price · reason (max 10 words). If nothing actionable reply exactly: SKIP",
+        f"New headlines:\n" + "\n".join(new_items[:15]) +
+        f"\n\nPortfolio:\n{chr(10).join(new_items[:5])}"
+    )
 
-        msg = (
-            f"⚡ <b>PULSE | {now.strftime('%H:%M')} Berlin</b>"
-            f"{chr(10)}{'━' * 22}{chr(10)}{chr(10)}"
-            f"{response.strip()}"
-            f"{chr(10)}{chr(10)}<i>{len(new_items)} headlines synthesized</i>"
-        )
-        send_telegram(msg)
-        logger.info("News pulse sent: %s headlines synthesized", len(new_items))
-    except Exception as e:
-        logger.error("News pulse GPT failed: %s", e)
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# TITAN MESSENGER — Minerva sends orders to TITAN
-# ══════════════════════════════════════════════════════════════════════════════
-
-
-def _send_to_titan(message: str):
-    """Send a message to GOD's Telegram using TITAN's bot token."""
-    if not config.TITAN_BOT_TOKEN or not config.TELEGRAM_CHAT_ID:
-        logger.warning("TITAN_BOT_TOKEN or TELEGRAM_CHAT_ID not set — skipping TITAN message")
+    if not verdict or verdict.strip() == "SKIP":
         return
-    try:
-        url = f"https://api.telegram.org/bot{config.TITAN_BOT_TOKEN}/sendMessage"
-        chunks = []
-        if len(message) <= 4096:
-            chunks = [message]
-        else:
-            lines = message.split("\n")
-            current = ""
-            for line in lines:
-                if len(current) + len(line) + 1 > 4096:
-                    if current:
-                        chunks.append(current)
-                    current = line
-                else:
-                    current = current + "\n" + line if current else line
-            if current:
-                chunks.append(current)
 
-        for chunk in chunks:
-            requests.post(url, json={
-                "chat_id": config.TELEGRAM_CHAT_ID,
-                "text": chunk,
-                "parse_mode": "HTML",
-                "disable_web_page_preview": True,
-            }, timeout=15)
-        logger.info("TITAN orders sent via Telegram")
-    except Exception as e:
-        logger.error(f"Failed to send to TITAN: {e}")
-
-
-def _generate_titan_orders(ctx: Dict, blog_analyses: list, scores_summary: str, portfolio_news: Dict = None) -> str:
-    """Minerva generates specific daily orders for TITAN."""
-    now = _berlin_now()
-    today = now.strftime("%Y-%m-%d")
-    weekday = now.strftime("%A")
-
-    # Build news summary for TITAN
-    news_summary = ""
-    if portfolio_news:
-        news_lines = []
-        for ticker, headlines in portfolio_news.items():
-            if headlines:
-                news_lines.append(f"[{ticker}]")
-                for h in headlines[:3]:
-                    news_lines.append(f"  - {h}")
-        if news_lines:
-            news_summary = "\n## PORTFOLIO NEWS TODAY\n" + "\n".join(news_lines)
-
-    # Build QUANT_BRIEFING.md
-    quant_lines = [
-        f"# QUANT_BRIEFING — {today} ({weekday})",
-        f"Generated by Minerva at {now.strftime('%H:%M')} Berlin\n",
-        "## MACRO SNAPSHOT",
-        ctx["key_moves"],
-        f"\nVIX: {ctx['vix']} | Regime: {ctx['regime']} | Deploy: {ctx['deploy_pct']}%",
-        f"EUR/USD: {ctx['fx_rate']}",
-        f"Composite Score: {ctx['composite']}/100\n",
-        "## PORTFOLIO STATUS",
-        ctx["portfolio_text"],
-        "\n## WATCHLIST",
-        ctx["watchlist_text"],
-    ]
-
-    if blog_analyses:
-        quant_lines.append("\n## RANTO28 BLOG — TODAY'S POSTS")
-        for post in blog_analyses:
-            title = post.get("title", "Untitled")
-            insight = post.get("investment_insight", "")
-            signal = post.get("watch_signal", "")
-            companies = post.get("companies", [])
-            quant_lines.append(f"### {title}")
-            quant_lines.append(f"Signal: {signal}")
-            quant_lines.append(f"Insight: {insight}")
-            if companies:
-                for c in companies:
-                    quant_lines.append(f"- {c.get('name','')} ({c.get('ticker','?')}) Score:{c.get('titan_k_score','?')}/10")
-            quant_lines.append("")
-
-    if scores_summary:
-        quant_lines.append("\n## SCORE REVISIONS TODAY")
-        quant_lines.append(scores_summary)
-
-    if news_summary:
-        quant_lines.append(news_summary)
-
-    quant_content = "\n".join(quant_lines)
-
-    # Save QUANT_BRIEFING.md
-    os.makedirs("data", exist_ok=True)
-    with open(QUANT_BRIEFING_PATH, "w", encoding="utf-8") as f:
-        f.write(quant_content)
-    logger.info(f"QUANT_BRIEFING.md saved: {QUANT_BRIEFING_PATH}")
-
-    # Generate TITAN orders via GPT
-    orders_analysis = _gpt_call(
-        system=f"""You are Minerva briefing TITAN — GOD's autonomous investment strategist.
-GOD's mission: ₩170,000,000,000 (~€115M) by 2036. ~47% CAGR required.
-{TEN_CRITERIA}
-
-Generate specific, actionable orders for TITAN today.
-FORMAT: Direct commands. Max 15 words per bullet. No fluff.
-
-Structure:
-🔍 RESEARCH TODAY
-• [specific stocks or themes to research — reference 10 criteria]
-
-📊 ANALYZE — RUN FULL ARCHITECT GATE
-• [specific positions or new candidates to screen]
-• For each: Gate 0 + Graham + ROIC + PEG + D/E + NCAV + margins
-
-🎯 OUTPUT REQUIRED BY 14:00 BERLIN
-• Stock name | Gate 0 | gates passed/10 | BUY/HOLD/SKIP
-• Include: entry price, position size suggestion, correlation to existing portfolio""",
-        user=f"""TODAY'S DATA:
-{quant_content[:2000]}
-
-BLOG POSTS TODAY: {len(blog_analyses)} posts
-EARNINGS TODAY: {', '.join(e['ticker'] for e in ctx['earnings_today']) or 'None'}
-WEEKDAY: {weekday}
-{'MONDAY — also prepare weekly + next week event calendar.' if weekday == 'Monday' else ''}""",
-        max_tokens=400,
+    msg = (
+        f"⚡ <b>PULSE {now.strftime('%H:%M')}</b>\n"
+        f"{'━'*22}\n"
+        f"{verdict}"
     )
-
-    # Format TITAN message
-    titan_msg = (
-        f"⚔️ <b>MINERVA → TITAN DAILY ORDERS</b>\n"
-        f"📅 {today} {weekday} | {now.strftime('%H:%M')} Berlin\n"
-        f"{'━' * 28}\n\n"
-        f"<b>GOD'S MISSION:</b> ₩170,000,000,000 by 2036\n"
-        f"<b>Today's composite:</b> {ctx['composite']}/100 | VIX {ctx['vix']} | {ctx['regime']}\n\n"
-        f"{orders_analysis}\n\n"
-        f"{'━' * 28}\n"
-        f"🔍 <b>STANDING ORDER — INTRADAY MONITORING</b>\n"
-        f"• Watch ALL portfolio stocks for news catalysts during US session\n"
-        f"• If any position moves >3% with news → alert GOD immediately\n"
-        f"• Format: TICKER ▲/▼ X% | Catalyst: [news] | Action: [buy/hold/sell]\n"
-        f"• Do NOT wait for scheduled briefing — alert in real time\n\n"
-        f"📁 Full quant data in QUANT_BRIEFING.md\n"
-        f"⏰ Report back to GOD before 15:00 Berlin.\n"
-        f"🔱 <i>Minerva out.</i>"
-    )
-
-    return titan_msg
+    _send_telegram(msg)
+    logger.info(f"News pulse sent: {len(new_items)} headlines")
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# BRIEFING: master_daily (07:00 — THE MAIN BRIEFING)
+# MASTER DAILY — 07:00 — ONE MESSAGE, LOGICAL ORDER
 # ══════════════════════════════════════════════════════════════════════════════
 
 def generate_master_daily() -> str:
-    """07:00 — Blog + Macro + Scores + ARCHITECT gate + TITAN orders."""
     ctx = _fetch_live_context()
     now = _berlin_now()
     weekday = now.strftime("%A")
     is_monday = weekday == "Monday"
 
-    # ── Macro leading indicator forecast (Layer 2) ────────────────────────
-    macro_forecast = _generate_macro_forecast(ctx["snapshot"])
+    # ── Blog ──────────────────────────────────────────────────────────────────
+    blog_raw = _fetch_blog()
+    blog_gpt = _gpt(
+        SYSTEM_PERSONA + "\nAnalyze these Korean blog posts by ranto28 (Korean investment analyst). "
+        "Extract: which stocks are mentioned, what the signal is, what GOD should do. "
+        "Format: TICKER → BUY/HOLD/SELL @ price · reason. If no actionable signal: say so in one line.",
+        f"Blog posts:\n{blog_raw}\n\nPortfolio:\n{ctx['portfolio_text'][:800]}"
+    )
 
-    # ── News scan + catalyst detection ────────────────────────────────────────
-    catalyst_section = ""
+    # ── Stock news with verdicts ───────────────────────────────────────────────
     portfolio_news = {}
+    catalyst_verdicts = ""
     try:
         portfolio_news = _fetch_portfolio_news()
-        catalyst_alert = _detect_catalysts(ctx["prices"], portfolio_news)
-        if catalyst_alert:
-            catalyst_section = catalyst_alert + "\n\n"
+        if portfolio_news:
+            news_block = ""
+            for ticker, headlines in portfolio_news.items():
+                p = ctx["prices"].get(ticker, {})
+                chg = p.get("change_pct", 0)
+                price = p.get("price", "?")
+                news_block += f"\n{ticker} {chg:+.1f}% @ ${price}:\n"
+                for h in headlines[:2]:
+                    news_block += f"  - {h[:100]}\n"
+
+            catalyst_verdicts = _gpt(
+                SYSTEM_PERSONA + "\nFor each stock below give ONE line verdict. "
+                "Format strictly: TICKER → BUY/HOLD/SELL @ $price · reason (max 10 words)\n"
+                "Only include stocks with moves >1.5% OR important news. Skip the rest.\n"
+                "End with: ⚡ TOP ACTION: [single most important thing GOD must do today]",
+                f"Live data:\n{news_block}\n\nPortfolio positions:\n{ctx['portfolio_text'][:1000]}"
+            )
     except Exception as e:
         logger.error(f"News scan failed: {e}")
 
-    # ── Blog analysis ──────────────────────────────────────────────────────
-    blog_analyses = []
-    blog_section = ""
-    try:
-        from scraper import fetch_blog_posts
-        from analyzer import analyze_post, generate_blog_summary
-        posts = fetch_blog_posts(days_back=1, max_posts=3)
-        if not posts:
-            posts = fetch_blog_posts(days_back=3, max_posts=3)
-        if posts:
-            blog_analyses = [r for p in posts if not (r := analyze_post(p)).get("error")]
-            if blog_analyses:
-                summary = generate_blog_summary(blog_analyses)
-                blog_section = f"<b>📰 RANTO28 TODAY</b>\n{summary}\n\n"
-                for post in blog_analyses[:2]:
-                    signal = post.get("watch_signal", "—")
-                    signal_emoji = "🟢" if "BUY" in signal else "🟡" if "WATCH" in signal else "🔴"
-                    blog_section += f"{signal_emoji} <b>{post.get('title','')[:50]}</b>\n"
-                    blog_section += f"  💡 {post.get('investment_insight','')[:80]}\n"
-                    companies = post.get("companies", [])
-                    for c in companies[:2]:
-                        blog_section += f"  • {c.get('name','')} ({c.get('ticker','?')}) {c.get('titan_k_score','?')}/10\n"
-                blog_section += "\n"
-        else:
-            blog_section = "📭 No new ranto28 posts today.\n\n"
-    except Exception as e:
-        logger.error(f"Blog analysis failed: {e}")
-        blog_section = "📭 Blog fetch failed.\n\n"
+    # ── Macro correlations ─────────────────────────────────────────────────────
+    MACRO_PAIRS = {
+        "SOX":     [("000660.KS","+"), ("COHR","+")],
+        "Uranium": [("UEC","+"), ("URNM","+")],
+        "Oil":     [("FCX","+")],
+        "DXY":     [("PLTR","-"), ("UEC","-")],
+        "BTC":     [("IONQ","+"), ("RKLB","+")],
+    }
+    macro_lines = []
+    for ind, pairs in MACRO_PAIRS.items():
+        d = ctx["snapshot"].get(ind, {})
+        chg = d.get("change_pct", 0)
+        if not isinstance(chg, (int, float)) or abs(chg) < 1.5:
+            continue
+        for ticker, corr in pairs:
+            impact = "Tailwind 🟢" if (chg > 0) == (corr == "+") else "Headwind 🔴"
+            macro_lines.append(f"  {ind} {chg:+.1f}% → <b>{ticker}</b> {impact}")
 
-    # ── Main GPT analysis ──────────────────────────────────────────────────
-    monday_extra = ""
-    if is_monday:
-        monday_extra = """
-📅 WEEKLY PREVIEW (Monday only)
-• [2-3 key events THIS week with dates]
-• [1-2 key events NEXT week to prepare for]
-"""
+    # ── Main GPT analysis ──────────────────────────────────────────────────────
+    monday_add = "\n📅 WEEK AHEAD\n• [2 key events this week with dates and GOD action]" if is_monday else ""
 
-    analysis = _gpt_call(
-        system=f"""You are Minerva. 07:00 Berlin master daily brief. Weekday: {weekday}.
-FORMAT: Bullet points. Max 15 words per bullet. Phone reading.
-GOD's mission: ₩170,000,000,000 (~€115M) by 2036. ~47% CAGR required.
-{TEN_CRITERIA}
+    analysis = _gpt(
+        SYSTEM_PERSONA + f"""
+Message structure — follow EXACTLY in this order:
 
-Structure:
-🌍 OVERNIGHT
-• [2-3 bullets: key global events while GOD slept]
+🌍 OVERNIGHT (2-3 bullets — what happened while GOD slept)
+• [event → portfolio impact → verdict]
 
-💼 PORTFOLIO IMPACT
-• [only affected positions — TICKER → event → action]
-• Flag any position failing Gate 0 or ARCHITECT criteria
+🇰🇷 KOREA OPEN (1-2 bullets — SK Hynix, Hanwha, early signal for US session)
+• [ticker move → what it signals for today]
 
-🏛 SCORE ALERTS
-• [any position whose score should change today and why]
-• Reference specific criteria: Graham/ROIC/PEG/D-E
+📋 TODAY'S STRATEGY (3-5 bullets — the ONLY section GOD needs to act on)
+• [TICKER → BUY/HOLD/SELL @ $price · reason · size if buying]
+• Flag: any stop levels approaching today?
+• Flag: any limit orders to arm today?
+{monday_add}
 
-📋 TODAY'S ACTION PLAN
-• [3-5 specific actions with prices]
-• Flag active limits/stops{monday_extra}""",
-        user=f"""MACRO:
+🎯 ONE COMMAND (single most important action today, one sentence)""",
+        f"""MACRO:
 {ctx['key_moves']}
-EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100
+EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100 | VIX: {ctx['vix']}
 
 PORTFOLIO:
 {ctx['portfolio_text']}
 
-WATCHLIST:
-{ctx['watchlist_text']}
+WATCHLIST TOP:
+{ctx['watchlist_text'][:600]}
 
-EARNINGS TODAY: {', '.join(e['ticker'] + ' ' + e['timing'] for e in ctx['earnings_today']) or 'None'}""",
-        max_tokens=600,
+EARNINGS TODAY: {', '.join(e['ticker'] for e in ctx['earnings_today']) or 'None'}
+WEEKDAY: {weekday}""",
+        tokens=700,
     )
 
-    # Extract scores summary for TITAN
-    scores_summary = ""
-    for broker, positions in config.PORTFOLIO.items():
-        for pos in positions:
-            if pos.get("action") and ("EXIT" in pos.get("action","") or "SELL" in pos.get("action","")):
-                scores_summary += f"⚠️ {pos['ticker']}: {pos.get('action','')}\n"
+    # ── Assemble ONE message ───────────────────────────────────────────────────
+    regime_emoji = {"CALM":"🟢","NORMAL":"🔵","FEAR":"🟡","CRISIS":"🔴"}.get(ctx["regime"],"⚪")
+    sep = "━" * 26
 
-    # ── Build message ──────────────────────────────────────────────────────
-    msg = _build_header("📰 MASTER DAILY BRIEF", ctx)
-    msg += macro_forecast
-    msg += catalyst_section
-    msg += blog_section
+    msg = (
+        f"{GOD_MISSION}"
+        f"{sep}\n"
+        f"📅 {now.strftime('%Y-%m-%d %H:%M')} Berlin\n"
+        f"{regime_emoji} {ctx['regime']} · VIX {ctx['vix']} · Deploy {ctx['deploy_pct']}%\n"
+        f"{sep}\n\n"
+    )
+
+    # Macro correlations (only if meaningful moves)
+    if macro_lines:
+        msg += "<b>🔭 MACRO → PORTFOLIO</b>\n" + "\n".join(macro_lines) + "\n\n"
+
+    # Catalyst verdicts with conclusions
+    if catalyst_verdicts:
+        msg += f"<b>🚨 CATALYST VERDICTS</b>\n{catalyst_verdicts}\n\n"
+
+    # Blog
+    msg += f"<b>📰 RANTO28</b>\n{blog_gpt}\n\n"
+
+    # Main analysis (overnight + Korea + strategy + one command)
     msg += analysis
-    msg += "\n\n<b>📊 KEY MOVES</b>\n" + ctx["key_moves"]
-    msg += _build_footer()
 
-    # ── Send TITAN orders ──────────────────────────────────────────────────
-    try:
-        titan_orders = _generate_titan_orders(ctx, blog_analyses, scores_summary, portfolio_news)
-        _send_to_titan(titan_orders)
-        logger.info("TITAN orders sent")
-    except Exception as e:
-        logger.error(f"TITAN orders failed: {e}")
+    # Key moves (compact)
+    msg += f"\n\n<b>📊 KEY MOVES</b>\n{ctx['key_moves']}"
+
+    # Footer
+    dashboard_url = getattr(config, "TITAN_SYSTEM_URL",
+        "https://sobluenight10-commits.github.io/gods_plan/OLYMPUS_UNIFIED.html")
+    msg += f"\n\n{sep}\n🔱 <a href=\"{dashboard_url}\">Open OLYMPUS Dashboard</a>"
 
     return msg
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# BRIEFING: us_premarket (15:00)
+# US OPEN — 15:30
 # ══════════════════════════════════════════════════════════════════════════════
 
-def generate_us_premarket() -> str:
-    """15:00 — Final check before US open + pre-market movers."""
+def generate_us_open() -> str:
     ctx = _fetch_live_context()
+    now = _berlin_now()
 
-    # Layer 1 — pre-market scanner
-    premarket_section = ""
-    try:
-        premarket_section = _scan_premarket(ctx["prices"])
-    except Exception as e:
-        logger.error(f"Pre-market scan failed: {e}")
-    analysis = _gpt_call(
-        system="""You are Minerva. US market opens in 30 minutes (15:30 Berlin).
-FORMAT: Bullet points. Max 15 words per bullet. Battle-ready.
-GOD's mission: ₩170,000,000,000 by 2036. Gate 0 on every action.
-
-Structure:
-🎯 PRE-MARKET STATUS
-• [futures direction, pre-market movers in GOD's stocks]
-
-⚡ ORDERS CHECK
-• [list every active limit/stop — confirm armed]
-• [any new orders to place before open?]
-
-⚠️ WATCH AT OPEN
-• [which stocks to watch first 30min and why]
-• [do NOT buy at open — wait 30min for price discovery]""",
-        user=f"""PORTFOLIO:
-{ctx['portfolio_text']}
-
-WATCHLIST:
-{ctx['watchlist_text']}
-
-MACRO:
-{ctx['key_moves']}
-EUR/USD: {ctx['fx_rate']}
-
-EARNINGS TODAY: {', '.join(e['ticker'] + ' ' + e['timing'] for e in ctx['earnings_today']) or 'None'}""",
-        max_tokens=450,
-    )
-    msg = _build_header("🇺🇸 US PRE-MARKET", ctx)
-    msg += premarket_section
-    msg += analysis
-    msg += _build_footer()
-    return msg
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# BRIEFING: xiaomi_earnings (12:30 Berlin — aligns with HKT 19:30 earnings call)
-# ══════════════════════════════════════════════════════════════════════════════
-
-def generate_xiaomi_earnings() -> str:
-    """12:30 Berlin — live read on XIACY / Xiaomi earnings + portfolio touchpoints."""
-    ctx = _fetch_live_context()
-    catalyst_section = ""
+    portfolio_news = {}
+    catalyst_verdicts = ""
     try:
         portfolio_news = _fetch_portfolio_news()
-        catalyst_alert = _detect_catalysts(ctx["prices"], portfolio_news)
-        if catalyst_alert:
-            catalyst_section = catalyst_alert + "\n\n"
+        if portfolio_news:
+            news_block = "\n".join(
+                f"{t} {ctx['prices'].get(t,{}).get('change_pct',0):+.1f}%: {hs[0][:80]}"
+                for t, hs in portfolio_news.items() if hs
+            )
+            catalyst_verdicts = _gpt(
+                SYSTEM_PERSONA + "\nPre-market. US opens in 30 min. ONE line per stock. "
+                "Format: TICKER → BUY/HOLD/SELL @ $price · reason. Skip unchanged stocks. "
+                "End with: ⚡ OPEN ACTION: [single most important thing at open]",
+                f"Pre-market news:\n{news_block}\n\nPortfolio:\n{ctx['portfolio_text'][:800]}"
+            )
     except Exception as e:
-        logger.error(f"Xiaomi earnings pulse news scan failed: {e}")
-    xi_news = ""
-    try:
-        import yfinance as yf
-        t = yf.Ticker("XIACY")
-        items = t.news or []
-        if items:
-            titles = []
-            for item in items[:5]:
-                c = item.get("content", {})
-                titles.append(c.get("title", item.get("title", ""))[:120])
-            xi_news = "\n".join("  • " + x for x in titles if x)
-    except Exception as e:
-        logger.debug(f"XIACY headline fetch: {e}")
-    analysis = _gpt_call(
-        system="""You are Minerva. Xiaomi (XIACY) earnings context — call live around HKT 19:30.
-FORMAT: Bullet points. Max 15 words per bullet.
-GOD's mission: ₩170,000,000,000 by 2036.
+        logger.error(f"Open news scan failed: {e}")
 
+    analysis = _gpt(
+        SYSTEM_PERSONA + """
 Structure:
-📱 XIACY / XIAOMI — EARNINGS LIVE
-• [key numbers or themes if inferable from context]
-• [guidance / IoT-auto-EV angle in one line]
+🎯 LIMITS CHECK
+• [every active limit order — armed/triggered/cancel?]
 
-💼 PORTFOLIO TOUCHPOINTS
-• [how XIACY result affects PLTR, semis, or ADR risk appetite]
+⚡ FIRST 30 MIN WATCH
+• [2-3 stocks to watch at open + price levels + what triggers action]
 
-⚡ ACTIONS NEXT 6 HOURS
-• [specific: hold/add/trim/watch levels]""",
-        user=f"""PORTFOLIO:
-{ctx['portfolio_text']}
-
-WATCHLIST:
-{ctx['watchlist_text']}
-
-MACRO:
-{ctx['key_moves']}
-
-RECENT XIACY HEADLINES (yfinance):
-{xi_news or '(none fetched)'}""",
-        max_tokens=500,
+📋 OPEN STRATEGY
+• [what to do at open — specific tickers, prices, sizes]
+• [do NOT buy in first 15min unless stop triggered]""",
+        f"Portfolio:\n{ctx['portfolio_text']}\nMacro:\n{ctx['key_moves']}\nEUR/USD: {ctx['fx_rate']}"
     )
-    msg = _build_header("📱 XIAOMI EARNINGS LIVE (HKT 19:30)", ctx)
-    msg += catalyst_section
+
+    sep = "━" * 26
+    regime_emoji = {"CALM":"🟢","NORMAL":"🔵","FEAR":"🟡","CRISIS":"🔴"}.get(ctx["regime"],"⚪")
+    msg = (
+        f"🔱 <b>US OPEN · {now.strftime('%H:%M')}</b>\n"
+        f"{regime_emoji} {ctx['regime']} · VIX {ctx['vix']}\n"
+        f"{sep}\n\n"
+    )
+    if catalyst_verdicts:
+        msg += f"<b>⚡ PRE-MARKET VERDICTS</b>\n{catalyst_verdicts}\n\n"
     msg += analysis
-    msg += "\n\n<b>📊 KEY MOVES</b>\n" + ctx["key_moves"]
-    msg += _build_footer()
+    msg += f"\n\n<b>📊 MOVES</b>\n{ctx['key_moves']}"
+    dashboard_url = getattr(config, "TITAN_SYSTEM_URL",
+        "https://sobluenight10-commits.github.io/gods_plan/OLYMPUS_UNIFIED.html")
+    msg += f"\n\n{sep}\n🔱 <a href=\"{dashboard_url}\">Open OLYMPUS</a>"
     return msg
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# BRIEFING: hk_deep_pulse (18:00 Berlin — HK midnight leak / grey-market read-through)
-# ══════════════════════════════════════════════════════════════════════════════
-
-def generate_hk_deep_pulse() -> str:
-    """18:00 Berlin — Asia leak window + grey-market / ADR read-through (XIACY focus)."""
-    ctx = _fetch_live_context()
-    catalyst_section = ""
-    try:
-        portfolio_news = _fetch_portfolio_news()
-        catalyst_alert = _detect_catalysts(ctx["prices"], portfolio_news)
-        if catalyst_alert:
-            catalyst_section = catalyst_alert + "\n\n"
-    except Exception as e:
-        logger.error(f"HK deep-pulse news scan failed: {e}")
-    analysis = _gpt_call(
-        system="""You are Minerva. 18:00 Berlin = HK late night / next-day leak window for Asia ADRs.
-FORMAT: Bullet points. Max 15 words per bullet.
-Focus: Xiaomi (XIACY) leaks, grey-market hints, HK/China tape read-through to US ADRs.
-
-Structure:
-🌙 HK DEEP-PULSE — LEAKS & GREY MARKET
-• [what to watch for from HK social/broker chatter — no fabrication]
-• [if no fresh leaks: say "no verified leaks — watch US futures"]
-
-📱 XIACY / CHINA ADR BRIDGE
-• [how HK sentiment might hit XIACY US session tonight]
-
-🏦 INSTITUTIONAL / FLOW
-• [block trades, ADR volume, unusual options if inferable]
-
-⚡ ACTION BEFORE US CLOSE
-• [one clear instruction for GOD]""",
-        user=f"""PORTFOLIO:
-{ctx['portfolio_text']}
-
-WATCHLIST:
-{ctx['watchlist_text']}
-
-MACRO:
-{ctx['key_moves']}""",
-        max_tokens=550,
-    )
-    msg = _build_header("🌙 HK DEEP-PULSE (XIACY / GREY MARKET)", ctx)
-    msg += catalyst_section
-    msg += analysis
-    msg += "\n\n<b>📊 LIVE MOVES</b>\n" + ctx["key_moves"]
-    msg += _build_footer()
-    return msg
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# BRIEFING: us_midday (18:00)
-# ══════════════════════════════════════════════════════════════════════════════
-
-def generate_us_midday() -> str:
-    """18:00 — 2.5hrs after open + institutional flows + catalyst detection."""
-    ctx = _fetch_live_context()
-
-    # Catalyst scan — critical at mid-session
-    catalyst_section = ""
-    try:
-        portfolio_news = _fetch_portfolio_news()
-        catalyst_alert = _detect_catalysts(ctx["prices"], portfolio_news)
-        if catalyst_alert:
-            catalyst_section = catalyst_alert + "\n\n"
-    except Exception as e:
-        logger.error(f"Mid-session news scan failed: {e}")
-    analysis = _gpt_call(
-        system="""You are Minerva. US market has been open 2.5 hours (18:00 Berlin = 12:00 EST).
-FORMAT: Bullet points. Max 15 words per bullet.
-GOD's mission: ₩170,000,000,000 by 2036.
-
-Structure:
-📊 MARKET FLOW SINCE OPEN
-• [summarize price action from open to now]
-• [which sectors leading / lagging]
-
-🏦 INSTITUTIONAL FLOWS — CRITICAL
-• [big money moves — block trades, sector rotation, unusual volume]
-• [what are institutions buying/selling RIGHT NOW?]
-• [any dark pool activity or options flow worth noting]
-
-💼 GOD'S PORTFOLIO STATUS
-• [top movers in GOD's positions]
-• [any stop/limit approaching?]
-
-⚡ ACTION PLAN UPDATE
-• [revise today's action plan based on current flow]
-• [specific: buy/hold/sell with price levels]""",
-        user=f"""PORTFOLIO:
-{ctx['portfolio_text']}
-
-WATCHLIST:
-{ctx['watchlist_text']}
-
-MACRO (live):
-{ctx['key_moves']}""",
-        max_tokens=550,
-    )
-    msg = _build_header("⚡ MID-SESSION + INSTITUTIONAL FLOWS", ctx)
-    msg += catalyst_section
-    msg += analysis
-    msg += "\n\n<b>📊 LIVE MOVES</b>\n" + ctx["key_moves"]
-    msg += _build_footer()
-    return msg
-
-
-# ══════════════════════════════════════════════════════════════════════════════
-# BRIEFING: us_close (23:00)
+# US CLOSE — 22:30
 # ══════════════════════════════════════════════════════════════════════════════
 
 def generate_us_close() -> str:
-    """23:00 — Full daily review + tomorrow prep."""
     ctx = _fetch_live_context()
-    analysis = _gpt_call(
-        system=f"""You are Minerva. US market just closed (23:00 Berlin).
-FORMAT: Bullet points. Max 15 words per bullet.
-GOD's mission: ₩170,000,000,000 by 2036. ~47% CAGR required.
-{TEN_CRITERIA}
+    now = _berlin_now()
 
+    analysis = _gpt(
+        SYSTEM_PERSONA + """
 Structure:
-🏁 MARKET CLOSE
-• [SPX, NDX, SOX final — direction + % change]
-• [VIX close — what it signals for tomorrow]
+🏁 CLOSE SUMMARY
+• [SPX/NDX/SOX final + what it means for tomorrow]
+• [VIX close → regime change?]
 
-💼 PORTFOLIO REVIEW
-• [winners and losers in GOD's portfolio today]
+💼 PORTFOLIO TODAY
+• [winners and losers — TICKER chg% · still HOLD or action needed?]
 • [any stops triggered? any limits filled?]
-• [Gate 0 check: did today's moves help or hurt the €115M mission?]
-
-📋 SCORE UPDATE
-• [any position whose ARCHITECT score should change?]
-• [which criteria changed: Graham/ROIC/PEG/margins?]
 
 🌅 TOMORROW PREP
-• [1-2 specific things to prepare]
-• [earnings or macro events tomorrow?]""",
-        user=f"""PORTFOLIO (end of day):
-{ctx['portfolio_text']}
+• [1-2 specific setups to prepare tonight]
+• [earnings or macro events — which ones matter for GOD's positions]
 
-WATCHLIST:
-{ctx['watchlist_text']}
-
-MACRO:
-{ctx['key_moves']}
-EUR/USD: {ctx['fx_rate']}
-
-TODAY'S EARNINGS: {', '.join(e['ticker'] + ' ' + e['timing'] for e in ctx['earnings_today']) or 'None'}""",
-        max_tokens=600,
+🎯 ONE COMMAND (what to do before markets open tomorrow)""",
+        f"Portfolio:\n{ctx['portfolio_text']}\nMacro:\n{ctx['key_moves']}\nEUR/USD: {ctx['fx_rate']}\n"
+        f"Earnings today: {', '.join(e['ticker'] for e in ctx['earnings_today']) or 'None'}"
     )
-    msg = _build_header("🏁 US MARKET CLOSE", ctx)
-    msg += analysis
-    msg += "\n\n<b>📊 FINAL</b>\n" + ctx["key_moves"]
-    msg += _build_footer()
+
+    sep = "━" * 26
+    regime_emoji = {"CALM":"🟢","NORMAL":"🔵","FEAR":"🟡","CRISIS":"🔴"}.get(ctx["regime"],"⚪")
+    msg = (
+        f"🔱 <b>US CLOSE · {now.strftime('%H:%M')}</b>\n"
+        f"{regime_emoji} {ctx['regime']} · VIX {ctx['vix']}\n"
+        f"{sep}\n\n"
+        f"{analysis}\n\n"
+        f"<b>📊 FINAL</b>\n{ctx['key_moves']}"
+    )
+    dashboard_url = getattr(config, "TITAN_SYSTEM_URL",
+        "https://sobluenight10-commits.github.io/gods_plan/OLYMPUS_UNIFIED.html")
+    msg += f"\n\n{sep}\n🔱 <a href=\"{dashboard_url}\">Open OLYMPUS</a>"
     return msg
 
 
 # ══════════════════════════════════════════════════════════════════════════════
-# MASTER DISPATCHER
+# DISPATCHER
 # ══════════════════════════════════════════════════════════════════════════════
 
 def generate_briefing(briefing_id: str) -> str:
-    """Generate the appropriate briefing. Returns None if not a weekday."""
-    logger.info(f"🔱 Generating briefing: {briefing_id}")
-
-    # Weekday check for daily briefings
+    logger.info(f"Generating: {briefing_id}")
     if briefing_id != "olympus_weekly" and not _is_weekday():
         logger.info(f"Skipping {briefing_id} — weekend")
         return None
-
     if briefing_id in ("master_daily", "morning_macro"):
         return generate_master_daily()
-    elif briefing_id in ("us_premarket", "us_open"):
-        # config DAILY_SCHEDULE uses us_open at 15:30 — same briefing as legacy us_premarket
-        return generate_us_premarket()
-    elif briefing_id == "xiaomi_earnings":
-        return generate_xiaomi_earnings()
-    elif briefing_id == "hk_deep_pulse":
-        return generate_hk_deep_pulse()
-    elif briefing_id == "us_midday":
-        return generate_us_midday()
-    elif briefing_id == "us_close":
+    elif briefing_id in ("us_open", "us_premarket"):
+        return generate_us_open()
+    elif briefing_id in ("us_close",):
         return generate_us_close()
     elif briefing_id == "olympus_weekly":
-        # Olympus weekly handled separately in main.py
         return None
     else:
         logger.error(f"Unknown briefing_id: {briefing_id}")
