@@ -7,6 +7,7 @@ __pycache__/
 # Data (local only)
 data/
 titan_k.log
+state.json
 
 # IDE
 .vscode/

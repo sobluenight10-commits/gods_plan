@@ -13,6 +13,7 @@ Saturday 08:00  olympus_weekly
 """
 import logging
 import os
+import json
 from datetime import datetime
 from typing import Dict
 
@@ -26,6 +27,81 @@ from market_data import (
     get_vix_regime,
     fetch_fx_rate,
 )
+
+
+STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
+
+def _load_state() -> dict:
+    """Load persistent OLYMPUS state. Returns empty dict if missing."""
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.warning(f"State file not loaded: {e}")
+        return {}
+
+def _format_state_context(state: dict) -> str:
+    """Format state.json into a compact context block for GPT."""
+    if not state:
+        return ""
+
+    lines = ["\n[OLYMPUS STATE — binding context]"]
+
+    # Liquidity
+    liq = state.get("liquidity_state", {})
+    if liq:
+        lines.append(f"Signal: {liq.get('signal','?')} · Min GOD Score: {liq.get('min_god_score','?')} · FSI: {liq.get('fsi','?')}")
+
+    # Dry powder
+    dp = state.get("dry_powder", {})
+    if dp:
+        lines.append(f"Dry powder: TR €{dp.get('TR_EUR',0)} · Kiwoom ${dp.get('Kiwoom_USD',0)}")
+
+    # Active limits
+    limits = state.get("active_limits", [])
+    if limits:
+        lines.append("Active limits (DO NOT recommend these — already in progress):")
+        for l in limits:
+            lines.append(f"  {l['ticker']} @ {l.get('limit_EUR','?')} EUR — {l.get('status','?')} — {l.get('reason','')}")
+
+    # Active stops
+    stops = state.get("active_stops", [])
+    if stops:
+        lines.append("Active stops:")
+        for s in stops:
+            lines.append(f"  {s['ticker']} stop ${s.get('stop_USD','?')} — {s.get('note','')}")
+
+    # Exit flags
+    exits = state.get("exit_flags", [])
+    if exits:
+        lines.append("Exit flags (these are BROKEN theses — never recommend as buys):")
+        for e in exits:
+            lines.append(f"  {e['ticker']} → {e.get('status','?')} — {e.get('reason','')}")
+
+    # Upcoming calendar
+    import datetime
+    today = datetime.date.today().isoformat()
+    cal = [c for c in state.get("calendar", []) if c.get("date","") >= today][:4]
+    if cal:
+        lines.append("Next calendar events:")
+        for c in cal:
+            lines.append(f"  {c['date']} · {c['event']} [{c.get('priority','?')}] → {c.get('action','')}")
+
+    # GOD scores (top 5 held)
+    scores = state.get("god_scores", [])
+    if scores:
+        lines.append("GOD Scores (current):")
+        for s in scores[:8]:
+            lines.append(f"  {s['ticker']} {s['score']}/100 → {s['signal']}")
+
+    # Macro
+    macro = state.get("macro_context", {})
+    iran = macro.get("iran_war", {})
+    if iran:
+        lines.append(f"Macro: Iran war {iran.get('status','?')} · VIX {macro.get('vix','?')} · {macro.get('regime','?')}")
+
+    lines.append("[END STATE]\n")
+    return "\n".join(lines)
 
 logger = logging.getLogger("titan_k.battle_rhythm")
 client = OpenAI(api_key=config.OPENAI_API_KEY)
@@ -375,9 +451,11 @@ If nothing clears Gate 0: reply exactly SKIP""",
 
 def generate_master_daily() -> str:
     ctx = _fetch_live_context()
+    state = _load_state()
+    state_context = _format_state_context(state)
     now = _berlin_now()
     weekday = now.strftime("%A")
-    is_monday = weekday == "Monday"
+    is_monday = weekday == "Monday" 
 
     # ── Blog ──────────────────────────────────────────────────────────────────
     blog_raw = _fetch_blog()
@@ -470,7 +548,7 @@ P5 · KILL CRITERIA
 
 🎯 ONE COMMAND (single most important action, one sentence)
 💤 WHAT TO IGNORE (noise to discard today, one line)""",
-        f"""MACRO:
+        f"""{state_context}MACRO:
 {ctx['key_moves']}
 EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100 | VIX: {ctx['vix']}
 
