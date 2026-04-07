@@ -472,7 +472,7 @@ Rules:
 5. If a post mentions a company not in GOD's portfolio: flag as NEW CANDIDATE with sector
 6. Never output "no actionable signals" without stating specifically what was mentioned
    and why it did not qualify""",
-        f"Blog posts:\n{blog_raw}\n\nPortfolio:\n{ctx['portfolio_text'][:800]}"
+        f"{state_context}Blog posts:\n{blog_raw}\n\nPortfolio:\n{ctx['portfolio_text'][:600]}"
     )
 
     # ── Stock news with verdicts ───────────────────────────────────────────────
@@ -490,12 +490,22 @@ Rules:
                 for h in headlines[:2]:
                     news_block += f"  - {h[:100]}\n"
 
+            # Build binding state constraints for this call
+            exit_tickers = [e["ticker"] for e in state.get("exit_flags", [])]
+            hold_tickers = [s["ticker"] for s in state.get("god_scores", []) if s.get("signal") in ("HOLD","CORE","NEVER_SELL","HOLD_NO_ADD")]
             catalyst_verdicts = _gpt(
-                SYSTEM_PERSONA + "\nFor each stock below give ONE line verdict. "
-                "Format strictly: TICKER → BUY/HOLD/SELL @ $price · reason (max 10 words)\n"
-                "Only include stocks with moves >1.5% OR important news. Skip the rest.\n"
-                "End with: ⚡ TOP ACTION: [single most important thing GOD must do today]",
-                f"Live data:\n{news_block}\n\nPortfolio positions:\n{ctx['portfolio_text'][:1000]}"
+                SYSTEM_PERSONA + f"""
+\nSTATE CONSTRAINTS — these are BINDING, not suggestions:
+- Exit flags (NEVER recommend BUY): {", ".join(exit_tickers)}
+- Standing HOLDs (do not change to SELL without conviction >8): {", ".join(hold_tickers)}
+- Min conviction to override a HOLD: 8/10
+- Any SELL recommendation below conviction 7 must be suppressed
+{state_context}
+For each stock give ONE line verdict.
+Format: TICKER → BUY/HOLD/SELL @ $price · reason (max 10 words) · conviction X/10
+Only include stocks with moves >1.5% OR material news. Skip unchanged stocks.
+End with: ⚡ TOP ACTION: [single highest-conviction action today]""",
+                f"Live data:\n{news_block}\n\nPortfolio:\n{ctx['portfolio_text'][:800]}"
             )
     except Exception as e:
         logger.error(f"News scan failed: {e}")
