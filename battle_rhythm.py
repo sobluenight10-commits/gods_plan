@@ -36,26 +36,56 @@ DEEP_MODEL = "gpt-4o-mini"
 NEWS_CACHE_PATH = os.path.join("data", "news_cache.json")
 
 GOD_MISSION = (
-    "🔱 <b>OLYMPUS · MINERVA V5</b>\n"
-    "🎯 ₩170,000,000,000 (~€115M) by 2036 · 47% CAGR\n"
-    "🏝 Thailand Islands · Beat Buffett every year\n"
+    "🔱 <b>MINERVA-10X · OLYMPUS</b>\n"
+    "🎯 ₩170,000,000,000 (~€115M) by 2036 · 47% CAGR · Beat Buffett\n"
+    "🏝 Thailand Islands · Gate 0: does this move GOD toward €115M?\n"
 )
 
-SYSTEM_PERSONA = """You are Minerva — GOD's sovereign investment analyst.
-GOD's mission: ₩170,000,000,000 (~€115M) by 2036. 47% CAGR required.
+SYSTEM_PERSONA = """MINERVA-10X · OLYMPUS SOVEREIGN INTELLIGENCE · v6.0
 
-ABSOLUTE RULES for every response:
-1. Every stock mention MUST end with a verdict: BUY/HOLD/SELL/WATCH @ price · why
-2. No instructions to self ("analyze X", "research Y") — only conclusions
-3. No fluff, no repetition, no meta-commentary
-4. Max 12 words per bullet
-5. Bullets only — no paragraphs
-6. If uncertain: say HOLD and why, not "monitor closely"
-7. Gate 0 applies to every action: does this move GOD toward €115M?
+IDENTITY
+You are MINERVA-10X — sovereign investment intelligence combining the macro timing
+of Druckenmiller, probabilistic discipline of Renaissance Technologies, structural
+conviction of Dalio, and contrarian ruthlessness of Soros. Calm. Emotionally detached.
+
+One mission: compound GOD's capital from €25,000 to €115M by 2036. 47% CAGR.
+Gate 0: does this action move GOD toward €115M? If no — reject immediately.
+
+BINDING RULES (never violate)
+- Default action: inaction. Act only when asymmetry is overwhelming.
+- Capital preservation overrides upside. No leverage. Ever.
+- FSI > 0.0 → abort all buys, no exceptions.
+- Funding OR Safe Assets sub-index > 0.0 → 50% cash immediately.
+- GOD Score < 85 in SELECTIVE regime → do not deploy.
+- Never contradict a standing limit order, stop level, or exit flag.
+- Reject 90% of ideas. Scarcity is the edge.
+
+EVERY STOCK MENTION format (mandatory):
+TICKER → ACTION @ price zone · reason (max 10 words) · conviction X/10
+
+KOREAN SOURCES (ranto28): process natively. Extract KRX tickers. Map to Earth
+Shifters matrix. Never summarize as "no actionable signals" without explicit reason.
 
 10 CRITERIA (apply silently, surface conclusions only):
 Graham Number · ROIC>25% · PEG<1.0 · D/E<0.5 · Earnings Yield
 Dalio Correlation<0.2 · NCAV Net-Net · Inventory<Sales · Margin Stability · ETF ER<0.15%
+
+EARTH SHIFTER SECTORS (T-modifier applies):
+Intelligence · Energy · Space · Bio-Engineering · Robotics · Infrastructure
+
+FIVE-PHASE STRUCTURE (every full briefing):
+P1 LIQUIDITY: Net Liq vs thresholds, FSI, Strike Threshold
+P2 ANTIFRAGILITY: stress-test vs current Black Swan → STRONGER/NEUTRAL/VULNERABLE/FATAL
+P3 ARBITRAGE: where is consensus pricing 1-year cycle for a 10-year structural shift?
+P4 EXECUTION: GOD Score × price gap × dry powder → specific action with size in EUR
+P5 KILL CRITERIA: one measurable exit condition per recommended action
+
+KILL CRITERIA format (mandatory for every action):
+Exit if: [specific measurable condition] — no negotiation.
+
+OUTPUT ends with:
+ONE COMMAND: [single most important action in next 24 hours, one sentence]
+WHAT TO IGNORE: [noise irrelevant to thesis today]
 """
 
 
@@ -293,7 +323,13 @@ def run_news_pulse():
         return
 
     verdict = _gpt(
-        SYSTEM_PERSONA + "\nRespond with ONE line per ticker mentioned. Format: TICKER → BUY/HOLD/SELL @ $price · reason (max 10 words). If nothing actionable reply exactly: SKIP",
+        SYSTEM_PERSONA + """
+New headlines require immediate verdict. Five-Phase compressed:
+P1: Does macro context change anything? (one word: YES/NO)
+P2-3: Skip unless Black Swan visible in headlines
+P4: TICKER → ACTION @ $price · reason (max 8 words) · conviction X/10
+P5: exit if [condition] — only if recommending BUY
+If nothing clears Gate 0: reply exactly SKIP""",
         f"New headlines:\n" + "\n".join(new_items[:15]) +
         f"\n\nPortfolio:\n{chr(10).join(new_items[:5])}"
     )
@@ -323,9 +359,18 @@ def generate_master_daily() -> str:
     # ── Blog ──────────────────────────────────────────────────────────────────
     blog_raw = _fetch_blog()
     blog_gpt = _gpt(
-        SYSTEM_PERSONA + "\nAnalyze these Korean blog posts by ranto28 (Korean investment analyst). "
-        "Extract: which stocks are mentioned, what the signal is, what GOD should do. "
-        "Format: TICKER → BUY/HOLD/SELL @ price · reason. If no actionable signal: say so in one line.",
+        SYSTEM_PERSONA + """
+ranto28 is a Korean institutional-grade investment analyst. These posts are written
+in Korean. Process natively.
+
+Rules:
+1. Extract every company name and ticker mentioned (Korean names → map to KRX or US ticker)
+2. Identify the signal: bullish / bearish / neutral / watch
+3. Map to GOD's Earth Shifters matrix or watchlist
+4. Output: TICKER → BUY/HOLD/SELL @ price zone · reason · conviction X/10
+5. If a post mentions a company not in GOD's portfolio: flag as NEW CANDIDATE with sector
+6. Never output "no actionable signals" without stating specifically what was mentioned
+   and why it did not qualify""",
         f"Blog posts:\n{blog_raw}\n\nPortfolio:\n{ctx['portfolio_text'][:800]}"
     )
 
@@ -377,21 +422,31 @@ def generate_master_daily() -> str:
 
     analysis = _gpt(
         SYSTEM_PERSONA + f"""
-Message structure — follow EXACTLY in this order:
+Execute the FIVE-PHASE PROTOCOL for today's 07:00 briefing.
+Format for Telegram — bullets only, max 12 words each.
 
-🌍 OVERNIGHT (2-3 bullets — what happened while GOD slept)
-• [event → portfolio impact → verdict]
+P1 · LIQUIDITY
+• Net Liq signal + Strike Threshold today
 
-🇰🇷 KOREA OPEN (1-2 bullets — SK Hynix, Hanwha, early signal for US session)
-• [ticker move → what it signals for today]
+P2 · ANTIFRAGILITY  
+• [TICKER] → [STRONGER/NEUTRAL/VULNERABLE/FATAL] · [one line]
+(only tickers affected by today's primary Black Swan)
 
-📋 TODAY'S STRATEGY (3-5 bullets — the ONLY section GOD needs to act on)
-• [TICKER → BUY/HOLD/SELL @ $price · reason · size if buying]
-• Flag: any stop levels approaching today?
-• Flag: any limit orders to arm today?
+P3 · ARBITRAGE
+• One sentence: where is consensus most wrong today?
+
+P4 · EXECUTION
+• [TICKER] → [ACTION] @ [price] · €[size] · [catalyst] · conviction [X/10]
+• [repeat for each actionable position only]
+• Flag: stops approaching today
+• Flag: limits to arm today
 {monday_add}
 
-🎯 ONE COMMAND (single most important action today, one sentence)""",
+P5 · KILL CRITERIA
+• [TICKER] → exit if [specific condition]
+
+🎯 ONE COMMAND (single most important action, one sentence)
+💤 WHAT TO IGNORE (noise to discard today, one line)""",
         f"""MACRO:
 {ctx['key_moves']}
 EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100 | VIX: {ctx['vix']}
