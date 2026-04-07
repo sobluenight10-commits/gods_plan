@@ -728,6 +728,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 <!-- NAV -->
 
   <!-- Inner sub-navigation -->
+  <div style="font-size:9px;color:var(--es-ink4);font-family:'DM Mono',monospace;padding:6px 16px 0;letter-spacing:0.1em;" id="es-price-status">prices loading...</div>
   <div class="es-inner-nav">
     <button class="es-tab active" onclick="esShowTab('matrix', this)">Master Matrix</button>
     <button class="es-tab" onclick="esShowTab('portfolio', this)">💼 Portfolio + Watchlist</button>
@@ -766,7 +767,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:95%;background:var(--c1)"></div></div><div class="god-num">95</div></div></td>
-  <td class="r"><span class="pnow">₩955K</span></td>
+  <td class="r"><span class="pnow" id="price-000660.KS" data-ticker="000660.KS">₩955K</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+17.3%</span><span class="gap-label">to ₩1.12M</span></div></td>
   <td class="r"><span class="fest pup">₩965K</span></td>
   <td class="r"><span class="fest pup">₩995K</span></td>
@@ -782,7 +783,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:90%;background:var(--c1)"></div></div><div class="god-num">90</div></div></td>
-  <td class="r"><span class="pnow">$178</span></td>
+  <td class="r"><span class="pnow" id="price-TSM" data-ticker="TSM">$178</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+23.6%</span><span class="gap-label">to $220</span></div></td>
   <td class="r"><span class="fest pup">$182</span></td>
   <td class="r"><span class="fest pup">$188</span></td>
@@ -798,7 +799,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:72%;background:var(--c1)"></div></div><div class="god-num">72</div></div></td>
-  <td class="r"><span class="pnow">$150.68</span></td>
+  <td class="r"><span class="pnow" id="price-PLTR" data-ticker="PLTR">$150.68</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+13.5%</span><span class="gap-label">to $171</span></div></td>
   <td class="r"><span class="fest pdn">$144</span></td>
   <td class="r"><span class="fest pfl">$151</span></td>
@@ -814,7 +815,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:68%;background:var(--c1)"></div></div><div class="god-num">68</div></div></td>
-  <td class="r"><span class="pnow">HK$40</span></td>
+  <td class="r"><span class="pnow" id="price-1810.HK" data-ticker="1810.HK">HK$40</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+62%</span><span class="gap-label">to HK$65</span></div></td>
   <td class="r"><span class="fest pup">HK$42</span></td>
   <td class="r"><span class="fest pup">HK$45</span></td>
@@ -830,7 +831,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:65%;background:var(--c1)"></div></div><div class="god-num">65</div></div></td>
-  <td class="r"><span class="pnow">$31.20</span></td>
+  <td class="r"><span class="pnow" id="price-IONQ" data-ticker="IONQ">$31.20</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+41%</span><span class="gap-label">to $44</span></div></td>
   <td class="r"><span class="fest pup">$35</span></td>
   <td class="r"><span class="fest pup">$37</span></td>
@@ -863,7 +864,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:78%;background:var(--c2)"></div></div><div class="god-num">78</div></div></td>
-  <td class="r"><span class="pnow">$12.09</span></td>
+  <td class="r"><span class="pnow" id="price-NVDA" data-ticker="NVDA">$12.09</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+69.6%</span><span class="gap-label">to $20.50</span></div></td>
   <td class="r"><span class="fest pup">$15.50</span></td>
   <td class="r"><span class="fest pup">$16.50</span></td>
@@ -879,7 +880,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:74%;background:var(--c2)"></div></div><div class="god-num">74</div></div></td>
-  <td class="r"><span class="pnow">$58.13</span></td>
+  <td class="r"><span class="pnow" id="price-UEC" data-ticker="UEC">$58.13</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+47%</span><span class="gap-label">to $85.50</span></div></td>
   <td class="r"><span class="fest pup">$70.50</span></td>
   <td class="r"><span class="fest pup">$72.50</span></td>
@@ -923,7 +924,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:58%;background:var(--c3)"></div></div><div class="god-num">58</div></div></td>
-  <td class="r"><span class="pnow">$67.23</span></td>
+  <td class="r"><span class="pnow" id="price-URNM" data-ticker="URNM">$67.23</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+30.2%</span><span class="gap-label">to $87.50</span></div></td>
   <td class="r"><span class="fest pdn">$70.50</span></td>
   <td class="r"><span class="fest pup">$73.50</span></td>
@@ -968,7 +969,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-watch">Watchlist</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:48%;background:var(--c4)"></div></div><div class="god-num">48</div></div></td>
-  <td class="r"><span class="pnow">$46.24</span></td>
+  <td class="r"><span class="pnow" id="price-CCJ" data-ticker="CCJ">$46.24</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+8.1%</span><span class="gap-label">to $50</span></div></td>
   <td class="r"><span class="fest pdn">$40</span></td>
   <td class="r"><span class="fest pdn">$42</span></td>
@@ -984,7 +985,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-watch">Watchlist</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:55%;background:var(--c4)"></div></div><div class="god-num">55</div></div></td>
-  <td class="r"><span class="pnow">$12.84</span></td>
+  <td class="r"><span class="pnow" id="price-OKLO" data-ticker="OKLO">$12.84</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+67.4%</span><span class="gap-label">to $21.50</span></div></td>
   <td class="r"><span class="fest pup">$14.70</span></td>
   <td class="r"><span class="fest pup">$15.70</span></td>
@@ -1014,7 +1015,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:92%;background:var(--c5)"></div></div><div class="god-num">92</div></div></td>
-  <td class="r"><span class="pnow">₩136K</span></td>
+  <td class="r"><span class="pnow" id="price-RKLB" data-ticker="RKLB">₩136K</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+34.9%</span><span class="gap-label">to ₩183.5K</span></div></td>
   <td class="r"><span class="fest pup">₩158.5K</span></td>
   <td class="r"><span class="fest pup">₩163.5K</span></td>
@@ -1030,7 +1031,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:80%;background:var(--c5)"></div></div><div class="god-num">80</div></div></td>
-  <td class="r"><span class="pnow">$84.62</span></td>
+  <td class="r"><span class="pnow" id="price-ASTS" data-ticker="ASTS">$84.62</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+17.6%</span><span class="gap-label">to $99.50</span></div></td>
   <td class="r"><span class="fest pdn">$87.50</span></td>
   <td class="r"><span class="fest pup">$89.50</span></td>
@@ -1046,7 +1047,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:58%;background:var(--c5)"></div></div><div class="god-num">58</div></div></td>
-  <td class="r"><span class="pnow">$197.72</span></td>
+  <td class="r"><span class="pnow" id="price-CRSP" data-ticker="CRSP">$197.72</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+3.7%</span><span class="gap-label">to $205</span></div></td>
   <td class="r"><span class="fest pdn">$180</span></td>
   <td class="r"><span class="fest pdn">$185</span></td>
@@ -1062,7 +1063,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:62%;background:var(--c5)"></div></div><div class="god-num">62</div></div></td>
-  <td class="r"><span class="pnow">$62</span></td>
+  <td class="r"><span class="pnow" id="price-NTLA" data-ticker="NTLA">$62</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+37.1%</span><span class="gap-label">to $85</span></div></td>
   <td class="r"><span class="fest pup">$64</span></td>
   <td class="r"><span class="fest pup">$67</span></td>
@@ -1078,7 +1079,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:60%;background:var(--c5)"></div></div><div class="god-num">60</div></div></td>
-  <td class="r"><span class="pnow">$33</span></td>
+  <td class="r"><span class="pnow" id="price-BEAM" data-ticker="BEAM">$33</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+36.4%</span><span class="gap-label">to $45</span></div></td>
   <td class="r"><span class="fest pup">$34</span></td>
   <td class="r"><span class="fest pup">$36</span></td>
@@ -1110,7 +1111,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:76%;background:var(--c6)"></div></div><div class="god-num">76</div></div></td>
-  <td class="r"><span class="pnow">$253.63</span></td>
+  <td class="r"><span class="pnow" id="price-272210.KS" data-ticker="272210.KS">$253.63</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+24.2%</span><span class="gap-label">to $315</span></div></td>
   <td class="r"><span class="fest pup">$275</span></td>
   <td class="r"><span class="fest pup">$280</span></td>
@@ -1126,7 +1127,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:84%;background:var(--c6)"></div></div><div class="god-num">84</div></div></td>
-  <td class="r"><span class="pnow">$89</span></td>
+  <td class="r"><span class="pnow" id="price-KTOS" data-ticker="KTOS">$89</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+40.4%</span><span class="gap-label">to $125</span></div></td>
   <td class="r"><span class="fest pup">$92</span></td>
   <td class="r"><span class="fest pup">$96</span></td>
@@ -1142,7 +1143,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:68%;background:var(--c6)"></div></div><div class="god-num">68</div></div></td>
-  <td class="r"><span class="pnow">$474.39</span></td>
+  <td class="r"><span class="pnow" id="price-AVAV" data-ticker="AVAV">$474.39</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+26.7%</span><span class="gap-label">to $601</span></div></td>
   <td class="r"><span class="fest pup">$506</span></td>
   <td class="r"><span class="fest pup">$521</span></td>
@@ -1172,7 +1173,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:72%;background:var(--c-radar)"></div></div><div class="god-num">72</div></div></td>
-  <td class="r"><span class="pnow">$47</span></td>
+  <td class="r"><span class="pnow" id="price-ARKQ" data-ticker="ARKQ">$47</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+53.2%</span><span class="gap-label">to $72</span></div></td>
   <td class="r"><span class="fest pup">$50</span></td>
   <td class="r"><span class="fest pup">$54</span></td>
@@ -1202,7 +1203,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-locked">Locked</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:75%;background:var(--locked)"></div></div><div class="god-num">75</div></div></td>
-  <td class="r"><span class="pnow">$500</span></td>
+  <td class="r"><span class="pnow" id="price-BOTZ" data-ticker="BOTZ">$500</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+20.4%</span><span class="gap-label">to $602</span></div></td>
   <td class="r">—</td><td class="r">—</td>
   <td class="r"><span class="fest pup">$602</span></td>
@@ -1259,7 +1260,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-exit">Exit</span></td>
   <td>—</td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:30%;background:var(--exit)"></div></div><div class="god-num">30</div></div></td>
-  <td class="r"><span class="pnow">$84.70</span></td>
+  <td class="r"><span class="pnow" id="price-COHR" data-ticker="COHR">$84.70</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+128%</span><span class="gap-label">unrealized</span></div></td>
   <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
   <td><span class="sig s-exit">EXIT SOON</span></td>
@@ -2629,6 +2630,82 @@ window.addEventListener('resize',()=>{if(document.getElementById('panel-bubble')
 
 // ── AUTO RUN ──
 runLiq();
+
+// ══════════════════════════════════════════════════════════════════
+// LIVE PRICE LOADER — reads prices.json pushed by Minerva server
+// JSON URL: same repo, prices.json in root
+// ══════════════════════════════════════════════════════════════════
+const PRICES_JSON_URL =
+  "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/prices.json";
+
+async function loadLivePrices() {
+  const badge = document.getElementById('live-price-badge');
+  try {
+    // Cache-bust with timestamp
+    const resp = await fetch(PRICES_JSON_URL + "?t=" + Date.now());
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+
+    const prices = data.prices || {};
+    const updated = data.updated || "unknown";
+    let updated_count = 0;
+
+    Object.entries(prices).forEach(([ticker, info]) => {
+      const el = document.getElementById("price-" + ticker);
+      if (!el) return;
+
+      const price = info.price;
+      const chg = info.change_pct;
+      const currency = info.currency || "USD";
+
+      // Format price
+      let priceStr = "";
+      if (currency === "KRW") {
+        priceStr = "₩" + Math.round(price).toLocaleString();
+      } else if (currency === "HKD") {
+        priceStr = "HK$" + price.toFixed(2);
+      } else if (currency === "EUR") {
+        priceStr = "€" + price.toFixed(2);
+      } else {
+        priceStr = "$" + price.toFixed(2);
+      }
+
+      // Color by change
+      const color = chg > 0 ? "var(--buy)" : chg < 0 ? "var(--sell)" : "inherit";
+      const arrow = chg > 0 ? " ▲" : chg < 0 ? " ▼" : "";
+      const chgStr = Math.abs(chg) >= 0.1 ? arrow + Math.abs(chg).toFixed(1) + "%" : "";
+
+      el.innerHTML = `<span style="color:${color}">${priceStr}</span>`
+                   + `<span style="font-size:9px;color:${color};display:block;">${chgStr}</span>`;
+      updated_count++;
+    });
+
+    // Update last-updated badge
+    if (badge) {
+      badge.textContent = "Live · " + updated;
+      badge.style.color = "var(--buy)";
+    }
+
+    // Update VIX display if present
+    if (prices["VIX"]) {
+      const vixEl = document.getElementById("ewFsi");
+      // Don't overwrite FSI — VIX is separate
+    }
+
+    console.log("Prices loaded: " + updated_count + " tickers @ " + updated);
+  } catch (e) {
+    console.warn("Price load failed:", e.message);
+    if (badge) {
+      badge.textContent = "Prices offline — run server";
+      badge.style.color = "var(--sell)";
+    }
+  }
+}
+
+// Load on page open + refresh every 5 minutes
+loadLivePrices();
+setInterval(loadLivePrices, 5 * 60 * 1000);
+
 </script>
 
 <!-- ═══════════════════════════════════════════════════════ -->
