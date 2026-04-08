@@ -1,5 +1,5 @@
 """
-Blog Monitor — Background thread that polls ranto28 RSS every 15 min.
+Blog Monitor — Background thread that polls ranto28 RSS on a fixed interval.
 When a new post is detected, sends an immediate Telegram alert + GPT analysis.
 """
 import logging
@@ -8,11 +8,11 @@ import threading
 import feedparser
 from datetime import datetime
 
-from config import NAVER_RSS_URL, NAVER_BLOG_ID
+from config import NAVER_RSS_URL, NAVER_BLOG_ID, BLOG_FETCH_INTERVAL_MINUTES
 
 logger = logging.getLogger("titan_k.blog_monitor")
 
-CHECK_INTERVAL = 900  # 15 minutes
+CHECK_INTERVAL = max(60, int(BLOG_FETCH_INTERVAL_MINUTES) * 60)  # seconds; min 1 min
 _seen_urls: set = set()
 _started = False
 

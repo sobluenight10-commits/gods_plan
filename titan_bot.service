@@ -1,0 +1,26 @@
+[Unit]
+Description=TITAN OLYMPUS Liquidity Bot
+Documentation=OLYMPUS §11-PREDICT — Island Mission 2036
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/home/titan/titan_bot
+ExecStart=/usr/bin/python3 /home/titan/titan_bot/titan_bot.py
+Restart=always
+RestartSec=30
+StandardOutput=journal
+StandardError=journal
+
+# Environment
+Environment=TZ=Europe/Berlin
+Environment=PYTHONUNBUFFERED=1
+
+# Auto-restart on failure
+StartLimitIntervalSec=120
+StartLimitBurst=5
+
+[Install]
+WantedBy=multi-user.target

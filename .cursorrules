@@ -1,0 +1,17 @@
+# Minerva / gods_plan — Cursor agent rules
+
+## Remote (Contabo VPS — SSH)
+- When the workspace is on the server under `/home/minerva/gods_plan`, **always use this Python interpreter** for run/test/debug:
+  `/home/minerva/gods_plan/venv/bin/python`
+- When I ask to **run** or **test** a script on the VPS, use that **full path** (e.g. `/home/minerva/gods_plan/venv/bin/python main.py --ping`).
+- For **service management** on the VPS, **prefer systemd**:
+  - `systemctl restart minerva` / `systemctl start minerva` / `systemctl stop minerva`
+  - `systemctl status minerva`
+  - `journalctl -u minerva -f` or `tail -f` on the app log if documented
+
+## Local (Windows laptop)
+- If the workspace is `D:\Cursor\gods_plan` (or similar), use the project venv or `py -m python` as appropriate; remote paths above apply only when connected via Remote-SSH.
+
+## Code
+- Do not remove existing API / Telegram / scheduler logic unless explicitly requested.
+- Prefer small, reviewable edits; keep `config.py` as the source of truth for schedules and filters where applicable.

@@ -50,7 +50,8 @@ def _format_state_context(state: dict) -> str:
     # Liquidity
     liq = state.get("liquidity_state", {})
     if liq:
-        lines.append(f"Signal: {liq.get('signal','?')} · Min GOD Score: {liq.get('min_god_score','?')} · FSI: {liq.get('fsi','?')}")
+        lines.append(f"§11 Net Liquidity: ${liq.get('net_liq_B','?')}B · Signal: {liq.get('signal','?')} · Min GOD Score: {liq.get('min_god_score','?')}")
+        lines.append(f"FSI: {liq.get('fsi','?')} · Funding sub: {liq.get('funding_sub','?')} · Safe Assets sub: {liq.get('safe_assets_sub','?')}")
 
     # Dry powder
     dp = state.get("dry_powder", {})
@@ -461,17 +462,23 @@ def generate_master_daily() -> str:
     blog_raw = _fetch_blog()
     blog_gpt = _gpt(
         SYSTEM_PERSONA + """
-ranto28 is a Korean institutional-grade investment analyst. These posts are written
-in Korean. Process natively.
+ranto28 is a Korean institutional-grade investment analyst.
+Posts may be in Korean — process natively.
+
+For EACH post, output exactly this structure (3-5 lines per post):
+📌 [POST TITLE]
+• What it says: [1 sentence — actual content of the post in plain English]
+• Companies/tickers mentioned: [list, or "none"]
+• Portfolio relevance: [which of GOD's holdings this touches, or "none"]
+• Signal: [TICKER → BUY/HOLD/SELL @ zone · reason · conviction X/10]
+  OR if no signal: "No signal — [specific reason why not actionable]"
 
 Rules:
-1. Extract every company name and ticker mentioned (Korean names → map to KRX or US ticker)
-2. Identify the signal: bullish / bearish / neutral / watch
-3. Map to GOD's Earth Shifters matrix or watchlist
-4. Output: TICKER → BUY/HOLD/SELL @ price zone · reason · conviction X/10
-5. If a post mentions a company not in GOD's portfolio: flag as NEW CANDIDATE with sector
-6. Never output "no actionable signals" without stating specifically what was mentioned
-   and why it did not qualify""",
+- Never compress all posts into one block
+- Always show what the post actually said, even if not actionable
+- If a ticker not in GOD's portfolio is mentioned: flag as ⚠️ NEW CANDIDATE · [sector]
+- Copper, data center, semiconductor supply chain posts → always check COHR, TSM, AMAT relevance
+- Korean company names: transliterate and map to KRX ticker if possible""",
         f"{state_context}Blog posts:\n{blog_raw}\n\nPortfolio:\n{ctx['portfolio_text'][:600]}"
     )
 
@@ -492,14 +499,22 @@ Rules:
 
             # Build binding state constraints for this call
             exit_tickers = [e["ticker"] for e in state.get("exit_flags", [])]
-            hold_tickers = [s["ticker"] for s in state.get("god_scores", []) if s.get("signal") in ("HOLD","CORE","NEVER_SELL","HOLD_NO_ADD")]
+            hold_tickers = [s["ticker"] for s in state.get("god_scores", [])
+                           if s.get("signal") in ("HOLD","CORE","NEVER_SELL","HOLD_NO_ADD")]
+            # Hard filter: any SELL below conviction 8 on a HOLD ticker is suppressed in post-processing
             catalyst_verdicts = _gpt(
                 SYSTEM_PERSONA + f"""
-\nSTATE CONSTRAINTS — these are BINDING, not suggestions:
-- Exit flags (NEVER recommend BUY): {", ".join(exit_tickers)}
-- Standing HOLDs (do not change to SELL without conviction >8): {", ".join(hold_tickers)}
-- Min conviction to override a HOLD: 8/10
-- Any SELL recommendation below conviction 7 must be suppressed
+\nHARD STATE CONSTRAINTS — violations are not permitted:
+1. These tickers are on EXIT flags — never recommend BUY: {", ".join(exit_tickers)}
+2. These tickers have standing HOLD status in state.json — you may NOT output SELL
+   unless conviction is 9 or 10 AND you provide a specific thesis-break reason:
+   {", ".join(hold_tickers)}
+3. Conviction below 7 = output HOLD, not SELL. No exceptions.
+4. If you cannot find a specific thesis-break event (earnings miss, contract loss,
+   management change) — output HOLD regardless of price action.
+5. Net Liquidity §11-PREDICT: ${state.get("liquidity_state", {}).get("net_liq_B", "?")}B
+   Dry powder available: TR €{state.get("dry_powder", {}).get("TR_EUR", 0)}
+   These are different numbers. Net Liq is the Fed liquidity reading. Dry powder is GOD's cash.
 {state_context}
 For each stock give ONE line verdict.
 Format: TICKER → BUY/HOLD/SELL @ $price · reason (max 10 words) · conviction X/10

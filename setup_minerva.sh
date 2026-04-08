@@ -105,10 +105,13 @@ User=minerva
 WorkingDirectory=/home/minerva/titan_k_v2
 ExecStart=/home/minerva/titan_k_v2/venv/bin/python main.py
 Restart=always
-RestartSec=15
+RestartSec=5
+Nice=-10
+Environment=PYTHONUNBUFFERED=1
+MemoryMax=1G
 StandardOutput=append:/home/minerva/titan_k_v2/minerva.log
 StandardError=append:/home/minerva/titan_k_v2/minerva.log
-Environment=PYTHONUNBUFFERED=1
+# If Nice=-10 causes start failure, remove Nice= or set LimitNICE=infinity (see deploy/minerva.service)
 
 [Install]
 WantedBy=multi-user.target

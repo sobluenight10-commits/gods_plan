@@ -1,0 +1,42 @@
+# Minerva — gods_plan (titan_K / Minerva stack)
+# Install: sudo cp deploy/minerva.service /etc/systemd/system/minerva.service
+#          sudo systemctl daemon-reload && sudo systemctl enable --now minerva
+#
+# If the repo on disk is still titan_k_v2, change WorkingDirectory and ExecStart paths.
+
+[Unit]
+Description=Minerva — gods_plan investment system (Telegram + scheduler)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=minerva
+Group=minerva
+
+# Repo root (adjust if server still uses /home/minerva/titan_k_v2)
+WorkingDirectory=/home/minerva/gods_plan
+ExecStart=/home/minerva/gods_plan/venv/bin/python main.py
+
+# Auto-restart if the process exits or the host is flaky
+Restart=always
+RestartSec=5
+
+# Higher scheduling priority (may require LimitNICE in [Service] on some distros)
+Nice=-10
+# If start fails with "Permission denied" on Nice, comment Nice=-10 or add:
+# LimitNICE=infinity
+# AmbientCapabilities=CAP_SYS_NICE
+
+# Real-time logs in journal / appended logs
+Environment=PYTHONUNBUFFERED=1
+
+# Prevent runaway memory use on small Contabo plans
+MemoryMax=1G
+
+# Logging (optional — adjust path if repo dir differs)
+StandardOutput=append:/home/minerva/gods_plan/minerva.log
+StandardError=append:/home/minerva/gods_plan/minerva.log
+
+[Install]
+WantedBy=multi-user.target
