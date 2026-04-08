@@ -47,6 +47,11 @@ NEWS_PULSE_INTERVAL_MINUTES = int(os.getenv("NEWS_PULSE_INTERVAL_MINUTES", "120"
 NEWS_PULSE_START_HOUR = float(os.getenv("NEWS_PULSE_START_HOUR", "7"))
 NEWS_PULSE_END_HOUR = float(os.getenv("NEWS_PULSE_END_HOUR", "23.5"))
 
+# ── Thesis / intraday drop tiers (%, price_alert.check_thesis_alerts & run_price_alerts) ─
+ALERT_TIER_WATCH = -8
+ALERT_TIER_THESIS = -12
+ALERT_TIER_EMERGENCY = -15
+
 # ── Berlin schedules (weekday checks are inside battle_rhythm.generate_briefing) ─
 DAILY_SCHEDULE = [
     ("07:00", "master_daily", "🌅 Morning Brief"),
@@ -192,7 +197,7 @@ PORTFOLIO: Dict[str, List[Dict]] = {
     ],
 }
 
-# Held positions monitored for intraday -8% thesis alerts (see price_alert.check_thesis_alerts)
+# Held positions monitored for intraday tiered thesis alerts (see price_alert.check_thesis_alerts)
 THESIS_ALERT_TICKERS: List[str] = [
     "TSM",
     "PLTR",

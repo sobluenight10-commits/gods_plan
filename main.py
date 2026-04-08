@@ -302,7 +302,7 @@ def start_full_system():
             "· 07:00 Morning · 16:30 US Open · 19:00 Interim · 23:30 US Close",
             f"· News pulse every {int(getattr(app_config, 'NEWS_PULSE_INTERVAL_MINUTES', 120))} min "
             f"({getattr(app_config, 'NEWS_PULSE_START_HOUR', 7)}–{getattr(app_config, 'NEWS_PULSE_END_HOUR', 23.5)}h, filtered headlines)",
-            "· Thesis -8% scan every 30 min (weekdays 15:30–22:00 Berlin, config THESIS_ALERT_TICKERS)",
+            "· Thesis tier scan every 30 min (weekdays 15:30–22:00 Berlin, THESIS_ALERT_TICKERS & ALERT_TIER_*)",
             f"· Blog RSS every {BLOG_FETCH_INTERVAL_MINUTES} min (ranto28)",
         ]
         send_telegram("\n".join(lines))

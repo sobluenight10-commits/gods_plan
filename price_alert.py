@@ -1,7 +1,7 @@
 """
 🔱 OLYMPUS — Price Alert System
 Fires IMMEDIATELY when:
-1. Any held position drops >8% in a single session (thesis review trigger)
+1. Held positions hit tiered session drops (watch / thesis / emergency — see config ALERT_TIER_*)
 2. Any EXIT_ON_BOUNCE position rises >5% (exit window open)
 3. Any active stop level is breached
 
@@ -23,8 +23,7 @@ logger = logging.getLogger("titan_k.price_alert")
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
 ALERT_CACHE = os.path.join("data", "alert_cache.json")
 
-# Thresholds
-DROP_ALERT_PCT   = -8.0   # Lesson 05: -8% = thesis review mandatory
+# Local thresholds (drop tiers: config.ALERT_TIER_WATCH / THESIS / EMERGENCY)
 BOUNCE_ALERT_PCT = +5.0   # Exit-flagged position bouncing = exit window
 STOP_BUFFER_PCT  = 0.02   # Alert when within 2% of stop level
 
@@ -121,7 +120,8 @@ def _send_thesis_plain(message: str):
 def check_thesis_alerts():
     """
     Berlin weekdays 15:30–22:00: scan config.THESIS_ALERT_TICKERS with yfinance;
-    if session change <= -8%, send one Telegram per ticker per day (Lesson #05).
+    tiered drops (config ALERT_TIER_WATCH / THESIS / EMERGENCY), one Telegram per tier
+    per ticker per day; -15% suppresses lower tiers for that day.
     Scheduler calls this every 30 minutes; this function no-ops outside the window.
     """
     try:
@@ -132,6 +132,10 @@ def check_thesis_alerts():
 
 def _check_thesis_alerts_impl():
     import config
+
+    tw = float(getattr(config, "ALERT_TIER_WATCH", -8))
+    tt = float(getattr(config, "ALERT_TIER_THESIS", -12))
+    te = float(getattr(config, "ALERT_TIER_EMERGENCY", -15))
 
     berlin = pytz.timezone(getattr(config, "TIMEZONE", "Europe/Berlin"))
     now = datetime.now(berlin)
@@ -147,31 +151,81 @@ def _check_thesis_alerts_impl():
     if not tickers:
         return
 
+    def _k_watch(t: str) -> str:
+        return f"thesis_watch_{t}"
+
+    def _k_thesis(t: str) -> str:
+        return f"thesis_thesis_{t}"
+
+    def _k_emergency(t: str) -> str:
+        return f"thesis_emergency_{t}"
+
     cache = _load_alert_cache()
     fired = []
     cache_dirty = False
 
     for ticker in tickers:
-        if _already_alerted(cache, f"thesis_{ticker}"):
-            continue
         data = _fetch_price(ticker)
         if not data:
             continue
         chg = data.get("change_pct", 0)
-        if chg > DROP_ALERT_PCT:
+        if chg > tw:
             continue
 
+        kw = _k_watch(ticker)
+        kt = _k_thesis(ticker)
+        ke = _k_emergency(ticker)
+
+        # Highest tier only when multiple thresholds apply; suppress lower tiers for the day.
+        if chg <= te:
+            if _already_alerted(cache, ke):
+                continue
+            msg = (
+                "🔴 EMERGENCY ALERT\n\n"
+                f"🔴 EMERGENCY — {ticker}\n"
+                f"Drop: {chg:+.1f}% today\n"
+                "CRISIS LEVEL DROP. Thesis likely broken.\n"
+                "IMMEDIATE ACTION REQUIRED. Do not wait."
+            )
+            _send_thesis_plain(msg)
+            _mark_alerted(cache, ke)
+            _mark_alerted(cache, kt)
+            _mark_alerted(cache, kw)
+            cache_dirty = True
+            fired.append(f"{ticker} EMERGENCY {chg:+.1f}%")
+            continue
+
+        if chg <= tt:
+            if _already_alerted(cache, kt) or _already_alerted(cache, ke):
+                continue
+            msg = (
+                "🟠 THESIS ALERT\n\n"
+                f"🟠 THESIS ALERT — {ticker}\n"
+                f"Drop: {chg:+.1f}% today\n"
+                "Significant session drop. Lesson #05 applies.\n"
+                "ACTION: Check company news NOW before macro."
+            )
+            _send_thesis_plain(msg)
+            _mark_alerted(cache, kt)
+            _mark_alerted(cache, kw)
+            cache_dirty = True
+            fired.append(f"{ticker} THESIS {chg:+.1f}%")
+            continue
+
+        # chg <= tw (watch tier)
+        if _already_alerted(cache, kw) or _already_alerted(cache, kt) or _already_alerted(cache, ke):
+            continue
         msg = (
-            f"🚨 THESIS ALERT — {ticker}\n"
+            "🟡 WATCH ALERT\n\n"
+            f"🟡 POSITION ALERT — {ticker}\n"
             f"Drop: {chg:+.1f}% today\n"
-            f"This triggered Lesson #05 — Company news overrides macro.\n"
-            f"ACTION REQUIRED: Check news now. Is thesis broken?\n"
-            f"/price {ticker} for current price"
+            "Elevated move. Check company news.\n"
+            "Is this macro noise or thesis risk?"
         )
         _send_thesis_plain(msg)
-        _mark_alerted(cache, f"thesis_{ticker}")
+        _mark_alerted(cache, kw)
         cache_dirty = True
-        fired.append(f"{ticker} {chg:+.1f}%")
+        fired.append(f"{ticker} WATCH {chg:+.1f}%")
 
     if cache_dirty:
         _save_alert_cache(cache)
@@ -200,6 +254,8 @@ def run_price_alerts():
     cache = _load_alert_cache()
     alerts_sent = []
 
+    drop_watch = float(getattr(config, "ALERT_TIER_WATCH", -8))
+
     # ── Build ticker lists from state ──────────────────────────────────────
     held_tickers = []
     for score in state.get("god_scores", []):
@@ -210,7 +266,7 @@ def run_price_alerts():
     exit_tickers = [e["ticker"] for e in state.get("exit_flags", [])]
     stops        = {s["ticker"]: s["stop_USD"] for s in state.get("active_stops", [])}
 
-    # ── Check 1: Held positions dropping >8% ──────────────────────────────
+    # ── Check 1: Held positions at/ past watch-tier drop (config ALERT_TIER_WATCH) ─
     for ticker in held_tickers:
         if _already_alerted(cache, f"drop_{ticker}"):
             continue
@@ -220,7 +276,7 @@ def run_price_alerts():
         chg  = data.get("change_pct", 0)
         price = data.get("price", 0)
 
-        if chg <= DROP_ALERT_PCT:
+        if chg <= drop_watch:
             # Get kill criteria from state
             kill = state.get("kill_criteria", {}).get(ticker, "Check thesis manually")
             msg = (
