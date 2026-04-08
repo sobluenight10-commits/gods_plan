@@ -672,9 +672,9 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 <!-- DRY POWDER -->
 <div class="dp-bar">
   <div class="dp-label">💰 Dry Powder</div>
-  <div class="dp-broker"><div class="dp-broker-name">Trade Republic</div><input class="dp-input" id="dp-tr" type="text" placeholder="0.00" oninput="calcTotal()"><div class="dp-curr">EUR</div></div>
+  <div class="dp-broker"><div class="dp-broker-name">Trade Republic</div><span class="dp-input" id="dp-tr">2,200</span><div class="dp-curr">EUR</div></div>
   <div class="dp-sep"></div>
-  <div class="dp-broker"><div class="dp-broker-name">Kiwoom</div><input class="dp-input" id="dp-kw" type="text" placeholder="0.00" oninput="calcTotal()"><div class="dp-curr">USD</div></div>
+  <div class="dp-broker"><div class="dp-broker-name">Kiwoom</div><span class="dp-input" id="dp-kw">0.00</span><div class="dp-curr">USD</div></div>
   <div class="dp-sep"></div>
   <div class="dp-total">Total (EUR eq.) &nbsp;<strong id="dp-total">—</strong></div>
 </div>
@@ -2121,9 +2121,15 @@ function esShowTabOLD(id){
   event.target.classList.add('active');
   if(id==='bubble') drawBubble();
 }
+function dpRead(id){
+  const el=document.getElementById(id);
+  if(!el) return 0;
+  const raw = el.tagName && el.tagName.toLowerCase()==='input' ? el.value : (el.textContent||'');
+  return parseFloat(String(raw).replace(/[,\s\u00a0]/g,''))||0;
+}
 function calcTotal(){
-  const tr=parseFloat(document.getElementById('dp-tr').value)||0;
-  const kw=parseFloat(document.getElementById('dp-kw').value)||0;
+  const tr=dpRead('dp-tr');
+  const kw=dpRead('dp-kw');
   const t=tr+(kw/1.09);
   document.getElementById('dp-total').textContent=t>0?'€'+t.toFixed(0):'—';
 }
@@ -2495,8 +2501,8 @@ function esShowTabOLD(id){
   if(id==='bubble') drawBubble();
 }
 function calcTotal(){
-  const tr=parseFloat(document.getElementById('dp-tr').value)||0;
-  const kw=parseFloat(document.getElementById('dp-kw').value)||0;
+  const tr=dpRead('dp-tr');
+  const kw=dpRead('dp-kw');
   const t=tr+(kw/1.09);
   document.getElementById('dp-total').textContent=t>0?'€'+t.toFixed(0):'—';
 }
@@ -2671,6 +2677,7 @@ async function loadLivePrices() {
 // Load on page open + refresh every 5 minutes
 loadLivePrices();
 setInterval(loadLivePrices, 5 * 60 * 1000);
+calcTotal();
 
 </script>
 
