@@ -672,9 +672,9 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 <!-- DRY POWDER -->
 <div class="dp-bar">
   <div class="dp-label">💰 Dry Powder</div>
-  <div class="dp-broker"><div class="dp-broker-name">Trade Republic</div><span class="dp-input" id="dp-tr">2,200</span><div class="dp-curr">EUR</div></div>
+  <div class="dp-broker"><div class="dp-broker-name">Trade Republic</div><input class="dp-input" id="dp-tr" type="text" value="2200" oninput="calcTotal()"><div class="dp-curr">EUR</div></div>
   <div class="dp-sep"></div>
-  <div class="dp-broker"><div class="dp-broker-name">Kiwoom</div><span class="dp-input" id="dp-kw">0.00</span><div class="dp-curr">USD</div></div>
+  <div class="dp-broker"><div class="dp-broker-name">Kiwoom</div><input class="dp-input" id="dp-kw" type="text" value="0" oninput="calcTotal()"><div class="dp-curr">USD</div></div>
   <div class="dp-sep"></div>
   <div class="dp-total">Total (EUR eq.) &nbsp;<strong id="dp-total">—</strong></div>
 </div>
