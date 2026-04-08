@@ -645,8 +645,8 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 <div class="nudge-banner">
   <span class="nudge-icon">⚠</span>
   <div class="nudge-text">
-    <strong>TODAY'S DIRECTIVE — 2026-04-07</strong> &nbsp;·&nbsp;
-    FEAR ZONE VIX 24.61 → Deploy 50% dry powder. Priority: (1) EXIT HUYA + GEVO on any green candle. (2) Add NTR before Mar 31 dividend record. (3) Hold all LEGEND positions — do not react to drawdowns.
+    <strong>TODAY'S DIRECTIVE — <span id="directive-date">—</span></strong> &nbsp;·&nbsp;
+    <span id="directive-text">Loading directives…</span>
   </div>
   <div class="nudge-date">Updated 07:00 CET</div>
 </div>
@@ -658,8 +658,8 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     <div class="sys-sub">OLYMPUS Unified · MINERVA Protocol · v6.0 · 2026-04-08</div>
   </div>
   <div class="regime-block">
-    <div class="regime-pill">⚠ FEAR ZONE — DEPLOY 50%</div>
-    <div class="vix-num">24.61</div>
+    <div class="regime-pill" id="hdr-regime-pill">⚠ FEAR ZONE — DEPLOY 50%</div>
+    <div class="vix-num" id="hdr-vix-num">24.61</div>
     <div class="vix-label">VIX · Live</div>
   </div>
   <div class="masthead-right">
@@ -2678,6 +2678,36 @@ async function loadLivePrices() {
 loadLivePrices();
 setInterval(loadLivePrices, 5 * 60 * 1000);
 calcTotal();
+
+// ══════════════════════════════════════════════════════════════════
+// DIRECTIVES — Minerva data/directives.json (nginx: /data/ → server path)
+// ══════════════════════════════════════════════════════════════════
+const DIRECTIVES_JSON_URL = "http://5.189.176.185/data/directives.json";
+
+async function loadDirectives() {
+  try {
+    const resp = await fetch(DIRECTIVES_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
+    if (!resp.ok) throw new Error("HTTP " + resp.status);
+    const data = await resp.json();
+    const dt = document.getElementById("directive-date");
+    const tx = document.getElementById("directive-text");
+    if (dt && data.date) dt.textContent = data.date;
+    if (tx && data.directive != null) tx.textContent = data.directive;
+    const vixEl = document.getElementById("hdr-vix-num");
+    if (vixEl != null && data.vix != null && data.vix !== "") {
+      vixEl.textContent = Number(data.vix).toFixed(2);
+    }
+    const pill = document.getElementById("hdr-regime-pill");
+    if (pill != null && data.regime != null && data.deploy_pct != null) {
+      pill.textContent = "\u26A0 " + data.regime + " \u2014 DEPLOY " + data.deploy_pct + "%";
+    }
+  } catch (e) {
+    console.warn("Directives load failed:", e.message);
+  }
+}
+
+loadDirectives();
+setInterval(loadDirectives, 5 * 60 * 1000);
 
 </script>
 
