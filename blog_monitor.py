@@ -57,6 +57,9 @@ def _seed_seen():
 
 def _send_alert(post: dict):
     """Send Telegram alert for a new blog post, with optional GPT summary."""
+    from html import escape
+
+    from analyzer import client
     from telegram_bot import send_telegram
 
     title = post.get("title", "")
@@ -64,46 +67,43 @@ def _send_alert(post: dict):
     date = post.get("date", "")
 
     lines = [
-        "📰 *NEW BLOG POST DETECTED*",
+        "📰 <b>NEW BLOG POST DETECTED</b>",
         "",
-        f"📌 *{title}*",
-        f"📅 {date}",
-        f"🔗 {url}",
+        f"📌 <b>{escape(title)}</b>",
+        f"📅 {escape(date)}",
+        f'🔗 <a href="{escape(url)}">{escape(url)}</a>' if url else "",
         "",
     ]
 
-    # Try quick GPT analysis
     try:
         from scraper import _fetch_post_content
         content = _fetch_post_content(url)
         if content and len(content) > 100:
-            from analyzer import analyze_post
-            result = analyze_post({
-                "title": title, "url": url, "date": date,
-                "content": content, "source": "ranto28",
-            })
-            if not result.get("error"):
-                insight = result.get("investment_insight", "")
-                signal = result.get("watch_signal", "")
-                keywords = ", ".join(result.get("keywords", [])[:5])
-                companies = result.get("companies", [])
+            prompt = f"""You are Minerva, investment analyst for GOD's OLYMPUS system.
+Analyze this blog post and return ONLY this format, nothing else:
 
-                lines.append(f"💡 *Insight:* {insight}")
-                lines.append(f"📊 *Signal:* {signal}")
-                lines.append(f"🔑 *Keywords:* {keywords}")
+📰 [3-5 word title]
+🔑 [2-3 core keywords separated by ·]
+📊 SO WHAT: [1 sentence — exact market impact]
+🎯 STOCKS: [ticker1, ticker2] or NONE
+⏱ TIMING: [BUY NOW / WATCH / AVOID / HOLD]
+📈 IF RELEVANT — 1M: $X · 6M: $X · 1Y: $X · 5Y: $X
 
-                if companies:
-                    lines.append("")
-                    lines.append("🏢 *Companies mentioned:*")
-                    for c in companies[:5]:
-                        gem = "💎" if c.get("hidden_gem") else ""
-                        lines.append(
-                            f"  {gem} {c.get('name','')} ({c.get('ticker','N/A')}) "
-                            f"— Score: {c.get('titan_k_score','?')}/10 "
-                            f"| {c.get('sentiment','').upper()}"
-                        )
+Blog post:
+Title: {post.get('title')}
+Content: {content[:1500]}
+"""
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.3,
+                max_tokens=800,
+            )
+            gpt_text = (response.choices[0].message.content or "").strip()
+            if gpt_text:
+                lines.append(escape(gpt_text))
             else:
-                lines.append("⚠️ GPT analysis failed — check manually")
+                lines.append("⚠️ GPT returned empty — check manually")
         else:
             lines.append("⚠️ Could not fetch content — check manually")
     except Exception as e:
