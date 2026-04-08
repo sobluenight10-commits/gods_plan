@@ -26,6 +26,7 @@ logger = logging.getLogger("titan_k.price_alert")
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
 ALERT_CACHE = os.path.join("data", "alert_cache.json")
 NEWS_ALERT_CACHE = os.path.join("data", "news_alert_cache.json")
+BLOG_TICKERS_FILE = os.path.join("data", "blog_tickers.json")
 
 # NewsAPI headline keyword lists (substring match, case-insensitive; longer phrases first where needed)
 _NEWS_DANGER_KEYWORDS: Tuple[str, ...] = (
@@ -94,6 +95,17 @@ def _mark_alerted(cache: dict, key: str):
     if "sent" not in cache:
         cache["sent"] = {}
     cache["sent"][f"{today}_{key}"] = True
+
+
+def _load_blog_tickers() -> List[str]:
+    """Tickers extracted from blog posts (blog_monitor); merged into NewsAPI scan."""
+    try:
+        with open(BLOG_TICKERS_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        raw = data.get("tickers") or []
+        return [str(t).strip() for t in raw if t and str(t).strip()]
+    except Exception:
+        return []
 
 
 def _load_news_alert_cache() -> dict:
@@ -170,8 +182,9 @@ def _newsapi_fetch_articles(query: str, api_key: str) -> List[dict]:
 
 def check_news_alerts():
     """
-    Weekdays 06:30–23:30 Berlin: NewsAPI keyword scan per THESIS_ALERT_TICKERS
-    (query = ticker + company name). Cached: one Telegram per ticker per headline per day.
+    Weekdays 06:30–23:30 Berlin: NewsAPI keyword scan per THESIS_ALERT_TICKERS plus
+    tickers from data/blog_tickers.json (query = ticker + company name).
+    Cached: one Telegram per ticker per headline per day.
     """
     try:
         _check_news_alerts_impl()
@@ -194,7 +207,16 @@ def _check_news_alerts_impl():
     if hour < 6.5 or hour > 23.5:
         return
 
-    tickers = getattr(config, "THESIS_ALERT_TICKERS", None) or []
+    thesis = list(getattr(config, "THESIS_ALERT_TICKERS", None) or [])
+    blog_extra = _load_blog_tickers()
+    seen: set = set()
+    tickers: List[str] = []
+    for t in thesis + blog_extra:
+        t = str(t).strip()
+        if not t or t in seen:
+            continue
+        seen.add(t)
+        tickers.append(t)
     if not tickers:
         return
 

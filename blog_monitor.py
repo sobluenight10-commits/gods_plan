@@ -3,6 +3,7 @@ Blog Monitor — Background thread that polls ranto28 RSS on a fixed interval.
 When a new post is detected, sends an immediate Telegram alert + GPT analysis.
 """
 import logging
+import os
 import time
 import threading
 import feedparser
@@ -56,6 +57,79 @@ def _seed_seen():
         logger.error(f"Seed failed: {e}")
 
 
+def _extract_and_register_tickers(post_content: str, post_title: str) -> None:
+    """Extract tickers from blog post and add to data/blog_tickers.json."""
+    import json
+    import re
+
+    from analyzer import client
+    from price_alert import _send_thesis_plain
+
+    try:
+        prompt = f"""Extract all stock tickers and company names mentioned in this Korean financial blog post.
+Return ONLY a JSON array of ticker symbols. Use US ticker format where possible.
+For Korean stocks use format like 005930.KS
+If no stocks mentioned return empty array [].
+Do not explain. Return only the JSON array.
+
+Title: {post_title}
+Content: {post_content[:1500]}"""
+
+        response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=200,
+            temperature=0.2,
+        )
+        raw = (response.choices[0].message.content or "").strip()
+        if raw.startswith("```"):
+            raw = re.sub(r"^```(?:json)?\s*", "", raw, count=1)
+            raw = re.sub(r"\s*```\s*$", "", raw)
+        tickers = json.loads(raw)
+
+        if not isinstance(tickers, list):
+            return
+        tickers = [str(t).strip() for t in tickers if t and str(t).strip()]
+
+        if not tickers:
+            return
+
+        cache_path = os.path.join(os.path.dirname(__file__), "data", "blog_tickers.json")
+        os.makedirs(os.path.dirname(cache_path), exist_ok=True)
+        try:
+            with open(cache_path, "r", encoding="utf-8") as f:
+                existing = json.load(f)
+        except Exception:
+            existing = {"tickers": [], "history": []}
+        if "tickers" not in existing:
+            existing["tickers"] = []
+        if "history" not in existing:
+            existing["history"] = []
+
+        new_tickers = [t for t in tickers if t not in existing["tickers"]]
+
+        if new_tickers:
+            existing["tickers"].extend(new_tickers)
+            existing["history"].append({
+                "date": datetime.now().strftime("%Y-%m-%d"),
+                "post": post_title[:60],
+                "added": new_tickers,
+            })
+            with open(cache_path, "w", encoding="utf-8") as f:
+                json.dump(existing, f, ensure_ascii=False, indent=2)
+
+            msg = (
+                f"📡 BLOG TICKER DETECTED\n"
+                f"Post: {post_title[:50]}\n"
+                f"New tickers added to watch: {', '.join(new_tickers)}\n"
+                f"Total blog watchlist: {len(existing['tickers'])} stocks"
+            )
+            _send_thesis_plain(msg)
+
+    except Exception as e:
+        logger.warning(f"Ticker extraction failed: {e}")
+
+
 def _send_alert(post: dict):
     """Send Telegram alert for a new blog post, with optional GPT summary."""
     from html import escape
@@ -106,6 +180,7 @@ Content: {content[:1500]}
                 lines.append(escape(gpt_text))
             else:
                 lines.append("⚠️ GPT returned empty — check manually")
+            _extract_and_register_tickers(content, post.get("title", "") or title)
         else:
             lines.append("⚠️ Could not fetch content — check manually")
     except Exception as e:
