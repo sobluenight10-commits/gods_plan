@@ -58,40 +58,63 @@ def _seed_seen():
 
 
 def _extract_and_register_tickers(post_content: str, post_title: str) -> None:
-    """Extract tickers from blog post and add to data/blog_tickers.json."""
+    """Extract tickers from blog post, classify into OLYMPUS sectors, alert GOD."""
     import json
     import re
 
     from analyzer import client
     from price_alert import _send_thesis_plain
 
+    _VALID_SECTORS = frozenset({
+        "INTELLIGENCE", "ENERGY", "SPACE", "BIO", "ROBOTICS", "INFRASTRUCTURE", "RADAR",
+    })
+
     try:
-        prompt = f"""Extract all stock tickers and company names mentioned in this Korean financial blog post.
-Return ONLY a JSON array of ticker symbols. Use US ticker format where possible.
-For Korean stocks use format like 005930.KS
-If no stocks mentioned return empty array [].
-Do not explain. Return only the JSON array.
+        prompt = f"""You are Minerva, analyst for the OLYMPUS investment system.
+Extract all stocks and companies mentioned in this Korean financial blog post.
+For each stock, classify it into exactly ONE of these 7 sectors:
+
+1. INTELLIGENCE — AI, semiconductors, quantum computing, neural interfaces, advanced memory
+2. ENERGY — Uranium, nuclear, oil, gas, solid-state batteries
+3. SPACE — Rockets, satellites, orbital infrastructure, lunar economy
+4. BIO — CRISPR, gene editing, longevity, AI drug discovery
+5. ROBOTICS — Humanoids, defense drones, autonomous systems, weapons
+6. INFRASTRUCTURE — Photonics, data center power, semiconductor equipment, copper
+7. RADAR — Geopolitical plays, commodities, macro trades, does not fit above 6
+
+Return ONLY a JSON array. No explanation. Example:
+[{{"ticker":"TSM","name":"TSMC","sector":"INTELLIGENCE"}},{{"ticker":"UEC","name":"Uranium Energy","sector":"ENERGY"}}]
+
+Use US ticker format. Korean stocks: 005930.KS format.
+If no stocks found return [].
 
 Title: {post_title}
-Content: {post_content[:1500]}"""
+Content: {post_content[:2000]}"""
 
         response = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=200,
+            max_tokens=400,
             temperature=0.2,
         )
         raw = (response.choices[0].message.content or "").strip()
         if raw.startswith("```"):
             raw = re.sub(r"^```(?:json)?\s*", "", raw, count=1)
             raw = re.sub(r"\s*```\s*$", "", raw)
-        tickers = json.loads(raw)
+        stocks = json.loads(raw)
 
-        if not isinstance(tickers, list):
+        if not isinstance(stocks, list) or not stocks:
             return
-        tickers = [str(t).strip() for t in tickers if t and str(t).strip()]
 
-        if not tickers:
+        stocks = [
+            s for s in stocks
+            if isinstance(s, dict) and s.get("ticker") and str(s["ticker"]).strip()
+        ]
+        for s in stocks:
+            sec = str(s.get("sector", "RADAR")).strip().upper()
+            s["sector"] = sec if sec in _VALID_SECTORS else "RADAR"
+
+        if not stocks:
             return
 
         cache_path = os.path.join(os.path.dirname(__file__), "data", "blog_tickers.json")
@@ -100,30 +123,57 @@ Content: {post_content[:1500]}"""
             with open(cache_path, "r", encoding="utf-8") as f:
                 existing = json.load(f)
         except Exception:
-            existing = {"tickers": [], "history": []}
+            existing = {"tickers": [], "by_sector": {}, "history": []}
+
         if "tickers" not in existing:
             existing["tickers"] = []
+        if "by_sector" not in existing:
+            existing["by_sector"] = {}
         if "history" not in existing:
             existing["history"] = []
 
-        new_tickers = [t for t in tickers if t not in existing["tickers"]]
+        new_stocks = [s for s in stocks if s["ticker"] not in existing["tickers"]]
 
-        if new_tickers:
-            existing["tickers"].extend(new_tickers)
+        if new_stocks:
+            for s in new_stocks:
+                existing["tickers"].append(s["ticker"])
+                sector = s.get("sector", "RADAR")
+                if sector not in existing["by_sector"]:
+                    existing["by_sector"][sector] = []
+                existing["by_sector"][sector].append({
+                    "ticker": s["ticker"],
+                    "name": s.get("name", ""),
+                    "added": datetime.now().strftime("%Y-%m-%d"),
+                    "source": post_title[:60],
+                })
+
             existing["history"].append({
                 "date": datetime.now().strftime("%Y-%m-%d"),
                 "post": post_title[:60],
-                "added": new_tickers,
+                "added": [s["ticker"] for s in new_stocks],
             })
+
             with open(cache_path, "w", encoding="utf-8") as f:
                 json.dump(existing, f, ensure_ascii=False, indent=2)
 
-            msg = (
-                f"📡 BLOG TICKER DETECTED\n"
-                f"Post: {post_title[:50]}\n"
-                f"New tickers added to watch: {', '.join(new_tickers)}\n"
-                f"Total blog watchlist: {len(existing['tickers'])} stocks"
-            )
+            by_sector = {}
+            for s in new_stocks:
+                sec = s.get("sector", "RADAR")
+                label = f"{s['ticker']} ({s.get('name', '')})"
+                by_sector.setdefault(sec, []).append(label)
+
+            sector_icons = {
+                "INTELLIGENCE": "🧠", "ENERGY": "⚡", "SPACE": "🚀",
+                "BIO": "🧬", "ROBOTICS": "🤖", "INFRASTRUCTURE": "🏗",
+                "RADAR": "📡",
+            }
+
+            msg = f"📡 BLOG TICKER DETECTED\n"
+            msg += f"Post: {post_title[:50]}\n\n"
+            for sec, labels in by_sector.items():
+                icon = sector_icons.get(sec, "📌")
+                msg += f"{icon} {sec}: {', '.join(labels)}\n"
+            msg += f"\nTotal blog watchlist: {len(existing['tickers'])} stocks"
             _send_thesis_plain(msg)
 
     except Exception as e:
