@@ -27,6 +27,9 @@ TITAN_SYSTEM_URL = os.getenv(
     "http://5.189.176.185/index.html",
 ).strip()
 
+# NewsAPI (keyword scan in price_alert.check_news_alerts)
+NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
+
 # Legacy / optional
 FRED_API_KEY = os.getenv("FRED_API_KEY", "")
 CACHE_PATH = os.getenv("CACHE_PATH", os.path.join("data", "titan_cache.json"))
@@ -226,6 +229,27 @@ WATCHLIST: List[Dict] = [
     {"ticker": "NTLA", "name": "Intellia", "score": 6, "entry": "$10 limit", "target_usd": None},
     {"ticker": "IAU", "name": "iShares Gold ETF", "score": 10, "entry": "Any dip", "target_usd": None},
 ]
+
+# Company names for NewsAPI query when ticker is not in PORTFOLIO (see get_company_name_for_ticker)
+_THESIS_ALERT_NAME_FALLBACK: Dict[str, str] = {
+    "TSM": "Taiwan Semiconductor",
+    "1810.HK": "Xiaomi",
+    "VRT": "Vertiv",
+    "ARKQ": "ARK Autonomous Technology Robotics ETF",
+    "BOTZ": "Global Robotics and Automation ETF",
+}
+
+
+def get_company_name_for_ticker(ticker: str) -> str:
+    """Resolve company name for NewsAPI q= ticker + name; prefers PORTFOLIO/WATCHLIST."""
+    for _bk, positions in PORTFOLIO.items():
+        for p in positions:
+            if p["ticker"] == ticker:
+                return str(p.get("name") or ticker)
+    for w in WATCHLIST:
+        if w["ticker"] == ticker:
+            return str(w.get("name") or ticker)
+    return _THESIS_ALERT_NAME_FALLBACK.get(ticker, ticker)
 
 
 def _build_stocks_list() -> List[Dict]:

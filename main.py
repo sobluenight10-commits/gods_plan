@@ -238,13 +238,15 @@ def _setup_schedule():
     p_start = getattr(app_config, "NEWS_PULSE_START_HOUR", 7.0)
     p_end = getattr(app_config, "NEWS_PULSE_END_HOUR", 23.5)
 
-    from price_alert import check_thesis_alerts
+    from price_alert import check_news_alerts, check_thesis_alerts
 
-    schedule.every(30).minutes.do(check_thesis_alerts)
+    schedule.every(5).minutes.do(check_thesis_alerts)
+    schedule.every(15).minutes.do(check_news_alerts)
 
     logger.info(
         "Registered %s daily + %s weekly + news pulse every %s min "
-        "(Berlin window %s–%s) + thesis alerts every 30 min (weekdays 15:30–22:00 Berlin)",
+        "(Berlin window %s–%s) + thesis/spike scan every 5 min (weekdays 15:30–22:00 Berlin) "
+        "+ NewsAPI keyword scan every 15 min (weekdays 06:30–23:30 Berlin)",
         len(DAILY_SCHEDULE),
         len(WEEKLY_SCHEDULE),
         pulse_min,
@@ -302,7 +304,8 @@ def start_full_system():
             "· 07:00 Morning · 16:30 US Open · 19:00 Interim · 23:30 US Close",
             f"· News pulse every {int(getattr(app_config, 'NEWS_PULSE_INTERVAL_MINUTES', 120))} min "
             f"({getattr(app_config, 'NEWS_PULSE_START_HOUR', 7)}–{getattr(app_config, 'NEWS_PULSE_END_HOUR', 23.5)}h, filtered headlines)",
-            "· Thesis tier scan every 30 min (weekdays 15:30–22:00 Berlin, THESIS_ALERT_TICKERS & ALERT_TIER_*)",
+            "· Thesis/spike tier scan every 5 min (weekdays 15:30–22:00 Berlin, THESIS_ALERT_TICKERS & ALERT_TIER_*)",
+            "· NewsAPI keyword scan every 15 min (weekdays 06:30–23:30 Berlin, set NEWS_API_KEY)",
             f"· Blog RSS every {BLOG_FETCH_INTERVAL_MINUTES} min (ranto28)",
         ]
         send_telegram("\n".join(lines))

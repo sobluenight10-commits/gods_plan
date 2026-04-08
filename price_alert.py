@@ -5,15 +5,18 @@ Fires IMMEDIATELY when:
 2. Any EXIT_ON_BOUNCE position rises >5% (exit window open)
 3. Any active stop level is breached
 
-Runs every 30 minutes during market hours via the scheduler.
+Runs thesis/spike scans every 5 minutes during US window via the scheduler; NewsAPI keyword
+scan on a separate interval (see main.py).
 This is Lesson 07: the system must warn GOD in real time, not wait for a scheduled brief.
 """
 
+import hashlib
 import json
 import logging
 import os
+import time
 from datetime import datetime
-from typing import Dict, List
+from typing import Dict, List, Optional, Tuple
 
 import pytz
 import requests
@@ -22,6 +25,31 @@ logger = logging.getLogger("titan_k.price_alert")
 
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
 ALERT_CACHE = os.path.join("data", "alert_cache.json")
+NEWS_ALERT_CACHE = os.path.join("data", "news_alert_cache.json")
+
+# NewsAPI headline keyword lists (substring match, case-insensitive; longer phrases first where needed)
+_NEWS_DANGER_KEYWORDS: Tuple[str, ...] = (
+    "sec investigation",
+    "contract loss",
+    "cancelled",
+    "terminated",
+    "downgrade",
+    "fraud",
+    "bankruptcy",
+    "recall",
+    "sanction",
+    "delisted",
+)
+_NEWS_OPPORTUNITY_KEYWORDS: Tuple[str, ...] = (
+    "contract awarded",
+    "deal signed",
+    "partnership",
+    "breakthrough",
+    "approval",
+    "upgrade",
+    "record",
+    "beat",
+)
 
 # Local thresholds (drop tiers: config.ALERT_TIER_WATCH / THESIS / EMERGENCY)
 BOUNCE_ALERT_PCT = +5.0   # Exit-flagged position bouncing = exit window
@@ -62,6 +90,156 @@ def _mark_alerted(cache: dict, key: str):
     if "sent" not in cache:
         cache["sent"] = {}
     cache["sent"][f"{today}_{key}"] = True
+
+
+def _load_news_alert_cache() -> dict:
+    try:
+        with open(NEWS_ALERT_CACHE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {"sent": {}}
+
+
+def _save_news_alert_cache(cache: dict):
+    os.makedirs("data", exist_ok=True)
+    with open(NEWS_ALERT_CACHE, "w", encoding="utf-8") as f:
+        json.dump(cache, f, indent=2)
+
+
+def _headline_digest(title: str) -> str:
+    norm = (title or "").strip().lower()
+    return hashlib.sha256(norm.encode("utf-8")).hexdigest()[:20]
+
+
+def _already_news_headline(cache: dict, ticker: str, headline: str) -> bool:
+    today = datetime.now().strftime("%Y-%m-%d")
+    key = f"{ticker}_{_headline_digest(headline)}"
+    return cache.get("sent", {}).get(f"{today}_{key}", False)
+
+
+def _mark_news_headline(cache: dict, ticker: str, headline: str):
+    today = datetime.now().strftime("%Y-%m-%d")
+    if "sent" not in cache:
+        cache["sent"] = {}
+    key = f"{ticker}_{_headline_digest(headline)}"
+    cache["sent"][f"{today}_{key}"] = True
+
+
+def _match_news_keyword(
+    headline_lower: str,
+) -> Tuple[Optional[str], Optional[str]]:
+    """Return (kind, keyword) where kind is 'danger' or 'opportunity'; danger wins if both match."""
+    for kw in _NEWS_DANGER_KEYWORDS:
+        if kw in headline_lower:
+            return "danger", kw
+    for kw in _NEWS_OPPORTUNITY_KEYWORDS:
+        if kw in headline_lower:
+            return "opportunity", kw
+    return None, None
+
+
+def _newsapi_fetch_articles(query: str, api_key: str) -> List[dict]:
+    try:
+        r = requests.get(
+            "https://newsapi.org/v2/everything",
+            params={
+                "q": query,
+                "language": "en",
+                "sortBy": "publishedAt",
+                "pageSize": 20,
+                "apiKey": api_key,
+            },
+            timeout=25,
+        )
+        if r.status_code != 200:
+            logger.warning("NewsAPI HTTP %s: %s", r.status_code, (r.text or "")[:240])
+            return []
+        data = r.json()
+        if data.get("status") != "ok":
+            logger.warning("NewsAPI: %s", data.get("message", data))
+            return []
+        return list(data.get("articles") or [])
+    except Exception as e:
+        logger.error("NewsAPI request failed: %s", e)
+        return []
+
+
+def check_news_alerts():
+    """
+    Weekdays 06:30–23:30 Berlin: NewsAPI keyword scan per THESIS_ALERT_TICKERS
+    (query = ticker + company name). Cached: one Telegram per ticker per headline per day.
+    """
+    try:
+        _check_news_alerts_impl()
+    except Exception as e:
+        logger.error("check_news_alerts failed: %s", e, exc_info=True)
+
+
+def _check_news_alerts_impl():
+    import config
+
+    api_key = (getattr(config, "NEWS_API_KEY", "") or "").strip()
+    if not api_key:
+        return
+
+    berlin = pytz.timezone(getattr(config, "TIMEZONE", "Europe/Berlin"))
+    now = datetime.now(berlin)
+    if now.weekday() >= 5:
+        return
+    hour = now.hour + now.minute / 60.0
+    if hour < 6.5 or hour > 23.5:
+        return
+
+    tickers = getattr(config, "THESIS_ALERT_TICKERS", None) or []
+    if not tickers:
+        return
+
+    cache = _load_news_alert_cache()
+    dirty = False
+    fired: List[str] = []
+
+    for ticker in tickers:
+        name = config.get_company_name_for_ticker(ticker)
+        query = f"{ticker} {name}"
+        articles = _newsapi_fetch_articles(query, api_key)
+        time.sleep(0.4)
+
+        for art in articles:
+            title = (art.get("title") or "").strip()
+            if not title:
+                continue
+            if _already_news_headline(cache, ticker, title):
+                continue
+            hl = title.lower()
+            kind, kw = _match_news_keyword(hl)
+            if not kind or not kw:
+                continue
+
+            if kind == "danger":
+                msg = (
+                    f"🔴 NEWS ALERT — {ticker}\n"
+                    f"⚠️ DANGER SIGNAL DETECTED\n"
+                    f"Headline: {title}\n"
+                    f"Keyword: {kw}\n"
+                    f"ACTION: Check thesis immediately. Price may not have moved yet."
+                )
+            else:
+                msg = (
+                    f"🟢 NEWS ALERT — {ticker}\n"
+                    f"💡 OPPORTUNITY SIGNAL\n"
+                    f"Headline: {title}\n"
+                    f"Keyword: {kw}\n"
+                    f"ACTION: Review for entry. Check GOD Score before acting."
+                )
+            _send_thesis_plain(msg)
+            _mark_news_headline(cache, ticker, title)
+            dirty = True
+            fired.append(f"{ticker} {kind} {kw[:24]}")
+
+    if dirty:
+        _save_news_alert_cache(cache)
+    if fired:
+        logger.info("check_news_alerts fired: %s", fired)
 
 
 def _fetch_price(ticker: str) -> dict:
@@ -123,7 +301,7 @@ def check_thesis_alerts():
     tiered drops (config ALERT_TIER_WATCH / THESIS / EMERGENCY) and upside spikes
     (config ALERT_TIER_WATCH_UP / MOMENTUM_UP / BREAKOUT_UP). One Telegram per tier
     per ticker per day; highest tier suppresses lower tiers for that day.
-    Scheduler calls this every 30 minutes; this function no-ops outside the window.
+    Scheduler calls this every 5 minutes; this function no-ops outside the window.
     """
     try:
         _check_thesis_alerts_impl()
