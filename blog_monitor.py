@@ -213,7 +213,8 @@ Analyze this blog post and return ONLY this format, nothing else:
 📊 SO WHAT: [1 sentence — exact market impact]
 🎯 STOCKS: [ticker1, ticker2] or NONE
 ⏱ TIMING: [BUY NOW / WATCH / AVOID / HOLD]
-📈 IF RELEVANT — 1M: $X · 6M: $X · 1Y: $X · 5Y: $X
+📈 ESTIMATES (if data supports): 1M: [price or INSUFFICIENT DATA] · 6M: [price] · 1Y: [price] · 5Y: [price]
+Fill in realistic dollar prices only when the post gives enough context (targets, levels, or clear basis). If you cannot estimate from the content, omit the entire 📈 line — do not output placeholder symbols or $X.
 
 Blog post:
 Title: {post.get('title')}
