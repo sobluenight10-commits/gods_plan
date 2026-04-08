@@ -52,6 +52,11 @@ ALERT_TIER_WATCH = -8
 ALERT_TIER_THESIS = -12
 ALERT_TIER_EMERGENCY = -15
 
+# ── Intraday upside spike tiers (%, price_alert.check_thesis_alerts) ─
+ALERT_TIER_WATCH_UP = 5
+ALERT_TIER_MOMENTUM_UP = 10
+ALERT_TIER_BREAKOUT_UP = 15
+
 # ── Berlin schedules (weekday checks are inside battle_rhythm.generate_briefing) ─
 DAILY_SCHEDULE = [
     ("07:00", "master_daily", "🌅 Morning Brief"),

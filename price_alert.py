@@ -120,8 +120,9 @@ def _send_thesis_plain(message: str):
 def check_thesis_alerts():
     """
     Berlin weekdays 15:30–22:00: scan config.THESIS_ALERT_TICKERS with yfinance;
-    tiered drops (config ALERT_TIER_WATCH / THESIS / EMERGENCY), one Telegram per tier
-    per ticker per day; -15% suppresses lower tiers for that day.
+    tiered drops (config ALERT_TIER_WATCH / THESIS / EMERGENCY) and upside spikes
+    (config ALERT_TIER_WATCH_UP / MOMENTUM_UP / BREAKOUT_UP). One Telegram per tier
+    per ticker per day; highest tier suppresses lower tiers for that day.
     Scheduler calls this every 30 minutes; this function no-ops outside the window.
     """
     try:
@@ -136,6 +137,9 @@ def _check_thesis_alerts_impl():
     tw = float(getattr(config, "ALERT_TIER_WATCH", -8))
     tt = float(getattr(config, "ALERT_TIER_THESIS", -12))
     te = float(getattr(config, "ALERT_TIER_EMERGENCY", -15))
+    uw = float(getattr(config, "ALERT_TIER_WATCH_UP", 5))
+    um = float(getattr(config, "ALERT_TIER_MOMENTUM_UP", 10))
+    ub = float(getattr(config, "ALERT_TIER_BREAKOUT_UP", 15))
 
     berlin = pytz.timezone(getattr(config, "TIMEZONE", "Europe/Berlin"))
     now = datetime.now(berlin)
@@ -160,6 +164,15 @@ def _check_thesis_alerts_impl():
     def _k_emergency(t: str) -> str:
         return f"thesis_emergency_{t}"
 
+    def _k_spike_watch(t: str) -> str:
+        return f"spike_watch_{t}"
+
+    def _k_spike_momentum(t: str) -> str:
+        return f"spike_momentum_{t}"
+
+    def _k_spike_breakout(t: str) -> str:
+        return f"spike_breakout_{t}"
+
     cache = _load_alert_cache()
     fired = []
     cache_dirty = False
@@ -169,63 +182,120 @@ def _check_thesis_alerts_impl():
         if not data:
             continue
         chg = data.get("change_pct", 0)
-        if chg > tw:
-            continue
 
         kw = _k_watch(ticker)
         kt = _k_thesis(ticker)
         ke = _k_emergency(ticker)
+        suw = _k_spike_watch(ticker)
+        sumo = _k_spike_momentum(ticker)
+        sb = _k_spike_breakout(ticker)
 
-        # Highest tier only when multiple thresholds apply; suppress lower tiers for the day.
-        if chg <= te:
-            if _already_alerted(cache, ke):
+        # ── Downside tiers ────────────────────────────────────────────────
+        if chg <= tw:
+            # Highest tier only when multiple thresholds apply; suppress lower tiers for the day.
+            if chg <= te:
+                if _already_alerted(cache, ke):
+                    continue
+                msg = (
+                    "🔴 EMERGENCY ALERT\n\n"
+                    f"🔴 EMERGENCY — {ticker}\n"
+                    f"Drop: {chg:+.1f}% today\n"
+                    "CRISIS LEVEL DROP. Thesis likely broken.\n"
+                    "IMMEDIATE ACTION REQUIRED. Do not wait."
+                )
+                _send_thesis_plain(msg)
+                _mark_alerted(cache, ke)
+                _mark_alerted(cache, kt)
+                _mark_alerted(cache, kw)
+                cache_dirty = True
+                fired.append(f"{ticker} EMERGENCY {chg:+.1f}%")
+                continue
+
+            if chg <= tt:
+                if _already_alerted(cache, kt) or _already_alerted(cache, ke):
+                    continue
+                msg = (
+                    "🟠 THESIS ALERT\n\n"
+                    f"🟠 THESIS ALERT — {ticker}\n"
+                    f"Drop: {chg:+.1f}% today\n"
+                    "Significant session drop. Lesson #05 applies.\n"
+                    "ACTION: Check company news NOW before macro."
+                )
+                _send_thesis_plain(msg)
+                _mark_alerted(cache, kt)
+                _mark_alerted(cache, kw)
+                cache_dirty = True
+                fired.append(f"{ticker} THESIS {chg:+.1f}%")
+                continue
+
+            # watch tier
+            if _already_alerted(cache, kw) or _already_alerted(cache, kt) or _already_alerted(cache, ke):
                 continue
             msg = (
-                "🔴 EMERGENCY ALERT\n\n"
-                f"🔴 EMERGENCY — {ticker}\n"
+                "🟡 WATCH ALERT\n\n"
+                f"🟡 POSITION ALERT — {ticker}\n"
                 f"Drop: {chg:+.1f}% today\n"
-                "CRISIS LEVEL DROP. Thesis likely broken.\n"
-                "IMMEDIATE ACTION REQUIRED. Do not wait."
+                "Elevated move. Check company news.\n"
+                "Is this macro noise or thesis risk?"
             )
             _send_thesis_plain(msg)
-            _mark_alerted(cache, ke)
-            _mark_alerted(cache, kt)
             _mark_alerted(cache, kw)
             cache_dirty = True
-            fired.append(f"{ticker} EMERGENCY {chg:+.1f}%")
+            fired.append(f"{ticker} WATCH {chg:+.1f}%")
             continue
 
-        if chg <= tt:
-            if _already_alerted(cache, kt) or _already_alerted(cache, ke):
+        # ── Upside tiers ─────────────────────────────────────────────────
+        if chg >= uw:
+            if chg >= ub:
+                if _already_alerted(cache, sb):
+                    continue
+                msg = (
+                    "🔴 BREAKOUT ALERT\n\n"
+                    f"🔴 BREAKOUT — {ticker}\n"
+                    f"Rise: {chg:+.1f}% today\n"
+                    "MAJOR MOVE. Structural catalyst likely.\n"
+                    "ACTION: Read news before any decision.\n"
+                    "Do not chase. Let price come back to you."
+                )
+                _send_thesis_plain(msg)
+                _mark_alerted(cache, sb)
+                _mark_alerted(cache, sumo)
+                _mark_alerted(cache, suw)
+                cache_dirty = True
+                fired.append(f"{ticker} BREAKOUT {chg:+.1f}%")
+                continue
+
+            if chg >= um:
+                if _already_alerted(cache, sumo) or _already_alerted(cache, sb):
+                    continue
+                msg = (
+                    "🟠 MOMENTUM ALERT\n\n"
+                    f"🟠 MOMENTUM ALERT — {ticker}\n"
+                    f"Rise: {chg:+.1f}% today\n"
+                    "Significant spike. Check catalyst now.\n"
+                    "Is this a new entry opportunity or a trap?"
+                )
+                _send_thesis_plain(msg)
+                _mark_alerted(cache, sumo)
+                _mark_alerted(cache, suw)
+                cache_dirty = True
+                fired.append(f"{ticker} MOMENTUM {chg:+.1f}%")
+                continue
+
+            if _already_alerted(cache, suw) or _already_alerted(cache, sumo) or _already_alerted(cache, sb):
                 continue
             msg = (
-                "🟠 THESIS ALERT\n\n"
-                f"🟠 THESIS ALERT — {ticker}\n"
-                f"Drop: {chg:+.1f}% today\n"
-                "Significant session drop. Lesson #05 applies.\n"
-                "ACTION: Check company news NOW before macro."
+                "🟡 SPIKE WATCH\n\n"
+                f"🟡 SPIKE ALERT — {ticker}\n"
+                f"Rise: {chg:+.1f}% today\n"
+                "Elevated move. Is this news-driven or macro?\n"
+                "Institutions may already be positioned.\n"
+                "Do NOT chase. Wait for Minerva brief."
             )
             _send_thesis_plain(msg)
-            _mark_alerted(cache, kt)
-            _mark_alerted(cache, kw)
+            _mark_alerted(cache, suw)
             cache_dirty = True
-            fired.append(f"{ticker} THESIS {chg:+.1f}%")
-            continue
-
-        # chg <= tw (watch tier)
-        if _already_alerted(cache, kw) or _already_alerted(cache, kt) or _already_alerted(cache, ke):
-            continue
-        msg = (
-            "🟡 WATCH ALERT\n\n"
-            f"🟡 POSITION ALERT — {ticker}\n"
-            f"Drop: {chg:+.1f}% today\n"
-            "Elevated move. Check company news.\n"
-            "Is this macro noise or thesis risk?"
-        )
-        _send_thesis_plain(msg)
-        _mark_alerted(cache, kw)
-        cache_dirty = True
-        fired.append(f"{ticker} WATCH {chg:+.1f}%")
+            fired.append(f"{ticker} SPIKE {chg:+.1f}%")
 
     if cache_dirty:
         _save_alert_cache(cache)
