@@ -33,6 +33,7 @@ def _check_for_new_posts():
             if hasattr(entry, "published_parsed") and entry.published_parsed:
                 pub_date = datetime(*entry.published_parsed[:6])
 
+            # RSS uses entry.link; we normalize to "url". Publish time → "date" (not "link"/"published").
             new_posts.append({
                 "title": entry.get("title", "Untitled"),
                 "url": url,
@@ -64,7 +65,8 @@ def _send_alert(post: dict):
 
     title = post.get("title", "")
     url = post.get("url", "")
-    date = post.get("date", "")
+    # _check_for_new_posts() sets "date"; allow "published" as alias for other callers
+    date = post.get("date") or post.get("published", "")
 
     lines = [
         "📰 <b>NEW BLOG POST DETECTED</b>",
