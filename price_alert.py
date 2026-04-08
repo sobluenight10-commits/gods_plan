@@ -41,14 +41,18 @@ _NEWS_DANGER_KEYWORDS: Tuple[str, ...] = (
     "delisted",
 )
 _NEWS_OPPORTUNITY_KEYWORDS: Tuple[str, ...] = (
+    "major contract",
+    "government contract",
     "contract awarded",
     "deal signed",
-    "partnership",
+    "fda approval",
+    "fda approved",
     "breakthrough",
-    "approval",
-    "upgrade",
-    "record",
-    "beat",
+    "record revenue",
+    "beat estimates",
+    "strategic acquisition",
+    "ipo filed",
+    "s-1 filed",
 )
 
 # Local thresholds (drop tiers: config.ALERT_TIER_WATCH / THESIS / EMERGENCY)
