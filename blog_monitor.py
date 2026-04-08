@@ -205,7 +205,8 @@ def _send_alert(post: dict):
         from scraper import _fetch_post_content
         content = _fetch_post_content(url)
         if content and len(content) > 100:
-            prompt = f"""You are Minerva, investment analyst for GOD's OLYMPUS system.
+            prompt = f"""IMPORTANT: Always respond in ENGLISH regardless of the blog post language.
+You are Minerva, investment analyst for GOD's OLYMPUS system.
 Analyze this blog post and return ONLY this format, nothing else:
 
 📰 [3-5 word title]
