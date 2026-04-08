@@ -147,7 +147,61 @@ def run_olympus_update() -> dict:
         logger.error(f"HTML generation failed: {e}", exc_info=True)
 
     logger.info(f"Olympus update complete — {len(alerts)} alerts")
+
+    write_directives_json(result)
     return result
+
+
+def write_directives_json(data: dict) -> None:
+    """Write data/directives.json for downstream consumers (dashboard, scripts, /olympus)."""
+    regime = data.get("regime", "?")
+    regime_map = {
+        "CALM": "CALM",
+        "NORMAL": "NORMAL",
+        "FEAR": "FEAR ZONE",
+        "CRISIS": "CRISIS",
+    }
+    regime_str = regime_map.get(regime, str(regime))
+
+    fc = data.get("forecasts") or {}
+    issues = [str(x).strip() for x in (fc.get("global_issues") or []) if str(x).strip()]
+    directive_parts: List[str] = issues[:3]
+    for a in data.get("alerts") or []:
+        if len(directive_parts) >= 3:
+            break
+        act = (a.get("action") or a.get("event") or "").strip()
+        line = f"{a.get('ticker', '?')}: {act}".strip()
+        if len(line) > 2:
+            directive_parts.append(line)
+    env_fallback = (data.get("environment") or "Review OLYMPUS dashboard for today's actions.")[:220]
+    pad = ["Review live matrix + alerts in OLYMPUS.", "Confirm limits/stops vs state.json.", env_fallback]
+    i = 0
+    while len(directive_parts) < 3:
+        directive_parts.append(pad[min(i, len(pad) - 1)])
+        i += 1
+    directive_text = " | ".join(directive_parts[:3])
+
+    alert_strs: List[str] = []
+    for a in data.get("alerts") or []:
+        alert_strs.append(
+            f"{a.get('ticker', '?')}: {a.get('event', '')} — {a.get('action', '')} [{a.get('severity', 'INFO')}]"
+        )
+    if not alert_strs:
+        alert_strs = ["No critical alerts."]
+
+    payload = {
+        "date": data.get("date", datetime.now().strftime("%Y-%m-%d")),
+        "vix": round(float(data.get("vix", 0)), 2),
+        "regime": regime_str,
+        "deploy_pct": int(data.get("deploy_pct", 0)),
+        "directive": directive_text,
+        "alerts": alert_strs,
+    }
+    path = os.path.join("data", "directives.json")
+    os.makedirs("data", exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        json.dump(payload, f, ensure_ascii=False, indent=2)
+    logger.info("Wrote %s", path)
 
 
 # ══════════════════════════════════════════════════════════════════════════════

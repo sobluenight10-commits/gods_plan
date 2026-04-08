@@ -174,6 +174,7 @@ def _run_blog():
 
 
 def _run_olympus():
+    """Scheduled Olympus refresh. Telegram /olympus is handled in interactive_bot.cmd_olympus; both paths call run_olympus_update(), which writes data/directives.json."""
     try:
         from olympus_engine import run_olympus_update, get_olympus_telegram_summary
         from telegram_bot import send_telegram

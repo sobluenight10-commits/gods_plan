@@ -141,6 +141,7 @@ async def cmd_olympus(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 def _sync_olympus() -> str:
+    """run_olympus_update() writes data/directives.json (see olympus_engine.write_directives_json)."""
     from olympus_engine import run_olympus_update, get_olympus_telegram_summary
     result = run_olympus_update()
     return get_olympus_telegram_summary(result)
