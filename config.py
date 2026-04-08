@@ -192,6 +192,24 @@ PORTFOLIO: Dict[str, List[Dict]] = {
     ],
 }
 
+# Held positions monitored for intraday -8% thesis alerts (see price_alert.check_thesis_alerts)
+THESIS_ALERT_TICKERS: List[str] = [
+    "TSM",
+    "PLTR",
+    "UEC",
+    "URNM",
+    "KTOS",
+    "RKLB",
+    "COHR",
+    "000660.KS",
+    "272210.KS",
+    "1810.HK",
+    "IONQ",
+    "VRT",
+    "ARKQ",
+    "BOTZ",
+]
+
 WATCHLIST: List[Dict] = [
     {"ticker": "AVAV", "name": "AeroVironment", "score": 8, "entry": "$205-240", "target_usd": None},
     {"ticker": "CRSP", "name": "CRISPR Therapeutics", "score": 8, "entry": "$44 limit", "target_usd": None},

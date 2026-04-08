@@ -100,6 +100,85 @@ def _send_alert(message: str):
         logger.error(f"Alert send failed: {e}")
 
 
+def _send_thesis_plain(message: str):
+    """Plain-text Telegram (no HTML) so /price commands and emojis render as intended."""
+    import config
+    token = config.TELEGRAM_BOT_TOKEN
+    chat_id = config.TELEGRAM_CHAT_ID
+    if not token or not chat_id:
+        return
+    try:
+        requests.post(
+            f"https://api.telegram.org/bot{token}/sendMessage",
+            json={"chat_id": chat_id, "text": message, "disable_web_page_preview": True},
+            timeout=10,
+        )
+        logger.info(f"Thesis alert sent: {message[:80]}")
+    except Exception as e:
+        logger.error(f"Thesis alert send failed: {e}")
+
+
+def check_thesis_alerts():
+    """
+    Berlin weekdays 15:30–22:00: scan config.THESIS_ALERT_TICKERS with yfinance;
+    if session change <= -8%, send one Telegram per ticker per day (Lesson #05).
+    Scheduler calls this every 30 minutes; this function no-ops outside the window.
+    """
+    try:
+        _check_thesis_alerts_impl()
+    except Exception as e:
+        logger.error(f"check_thesis_alerts failed: {e}", exc_info=True)
+
+
+def _check_thesis_alerts_impl():
+    import config
+
+    berlin = pytz.timezone(getattr(config, "TIMEZONE", "Europe/Berlin"))
+    now = datetime.now(berlin)
+    if now.weekday() >= 5:
+        return
+    hour = now.hour + now.minute / 60.0
+    start = float(getattr(config, "THESIS_ALERT_WINDOW_START_HOUR", 15.5))
+    end = float(getattr(config, "THESIS_ALERT_WINDOW_END_HOUR", 22.0))
+    if hour < start or hour > end:
+        return
+
+    tickers = getattr(config, "THESIS_ALERT_TICKERS", None) or []
+    if not tickers:
+        return
+
+    cache = _load_alert_cache()
+    fired = []
+    cache_dirty = False
+
+    for ticker in tickers:
+        if _already_alerted(cache, f"thesis_{ticker}"):
+            continue
+        data = _fetch_price(ticker)
+        if not data:
+            continue
+        chg = data.get("change_pct", 0)
+        if chg > DROP_ALERT_PCT:
+            continue
+
+        msg = (
+            f"🚨 THESIS ALERT — {ticker}\n"
+            f"Drop: {chg:+.1f}% today\n"
+            f"This triggered Lesson #05 — Company news overrides macro.\n"
+            f"ACTION REQUIRED: Check news now. Is thesis broken?\n"
+            f"/price {ticker} for current price"
+        )
+        _send_thesis_plain(msg)
+        _mark_alerted(cache, f"thesis_{ticker}")
+        cache_dirty = True
+        fired.append(f"{ticker} {chg:+.1f}%")
+
+    if cache_dirty:
+        _save_alert_cache(cache)
+    if fired:
+        logger.info(f"check_thesis_alerts fired: {fired}")
+
+
 def run_price_alerts():
     """
     Main entry point. Called every 30 minutes during market hours.
