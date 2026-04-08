@@ -24,7 +24,7 @@ TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID") or "").strip()
 TITAN_BOT_TOKEN = (os.getenv("TITAN_BOT_TOKEN") or TELEGRAM_BOT_TOKEN or "").strip()
 TITAN_SYSTEM_URL = os.getenv(
     "TITAN_SYSTEM_URL",
-    "https://sobluenight10-commits.github.io/gods_plan/TITAN_SYSTEM_v5.html",
+    "http://5.189.176.185/index.html",
 ).strip()
 
 # Legacy / optional
