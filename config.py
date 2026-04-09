@@ -207,20 +207,12 @@ PORTFOLIO: Dict[str, List[Dict]] = {
 
 # Held positions monitored for intraday tiered thesis alerts (see price_alert.check_thesis_alerts)
 THESIS_ALERT_TICKERS: List[str] = [
-    "TSM",
-    "PLTR",
-    "UEC",
-    "URNM",
-    "KTOS",
-    "RKLB",
-    "COHR",
-    "000660.KS",
-    "272210.KS",
-    "1810.HK",
-    "IONQ",
-    "VRT",
-    "ARKQ",
-    "BOTZ",
+    # TR holdings
+    "TSM", "PLTR", "UEC", "URNM", "COHR", "1810.HK", "NTR",
+    # Kiwoom holdings
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IONQ", "IAU",
+    # Core watchlist
+    "NVDA", "CCJ", "OKLO", "RKLB", "ASTS", "CRSP", "NTLA", "BEAM", "ASML", "KTOS"
 ]
 
 WATCHLIST: List[Dict] = [

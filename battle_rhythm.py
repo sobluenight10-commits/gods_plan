@@ -469,25 +469,22 @@ def generate_master_daily() -> str:
     blog_raw = _fetch_blog()
     blog_gpt = _gpt(
         SYSTEM_PERSONA + """
-ranto28 is a Korean institutional-grade investment analyst.
-Posts may be in Korean — process natively.
+IMPORTANT: Always respond in ENGLISH.
+You are Minerva, investment analyst for GOD's OLYMPUS system targeting €115M by 2036.
+Analyze this Korean financial blog post and return exactly this format:
 
-For EACH post, output exactly this structure (3-5 lines per post):
-📌 [POST TITLE]
-• What it says: [1 sentence — actual content of the post in plain English]
-• Companies/tickers mentioned: [list, or "none"]
-• Portfolio relevance: [which of GOD's holdings this touches, or "none"]
-• Signal: [TICKER → BUY/HOLD/SELL @ zone · reason · conviction X/10]
-  OR if no signal: "No signal — [specific reason why not actionable]"
-• 🔗 [post title shortened](url)
+• What it says: [2-3 sentences — full context]
+• Macro theme: [energy / geopolitics / liquidity / tech / defense / commodities]
+• Portfolio impact: [connect to GOD's holdings even if no ticker named — TSM, PLTR, UEC, URNM, KTOS, RKLB, COHR, 000660.KS, 272210.KS, 1810.HK, IONQ, VRT, NTR, ASML, IAU]
+• ⚡ FOCUS NOW: [one specific action or watch point for GOD — e.g. "Watch UEC — uranium supply chain affected by Hormuz reopening" or "No action — macro noise only"]
+• Signal: [BUY / WATCH / AVOID / HOLD — one sentence reason]
+• 🔗 [shortened title](url)
 
 Rules:
-- Never compress all posts into one block
-- Always show what the post actually said, even if not actionable
-- If a ticker not in GOD's portfolio is mentioned: flag as ⚠️ NEW CANDIDATE · [sector]
-- Copper, data center, semiconductor supply chain posts → always check COHR, TSM, AMAT relevance
-- Korean company names: transliterate and map to KRX ticker if possible
-- URL is provided in the input as "URL: ..."; use it for the 🔗 line""",
+- There may be multiple posts in the input. Treat each post independently.
+- Output one block per post, separated by a blank line.
+- URL is provided in the input as \"URL: ...\"; use it for the 🔗 line.
+- The ⚡ FOCUS NOW line is the most important: it must always be concrete, never empty, and must connect to a current holding, a watchlist stock, or a sector GOD monitors.""",
         f"{state_context}Blog posts:\n{blog_raw}\n\nPortfolio:\n{ctx['portfolio_text'][:600]}"
     )
 
