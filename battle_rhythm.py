@@ -554,6 +554,13 @@ End with: ⚡ TOP ACTION: [single highest-conviction action today]""",
 
     analysis = _gpt(
         SYSTEM_PERSONA + f"""
+GOD'S CURRENT HOLDINGS (use ONLY these — never invent tickers):
+TR: TSM, PLTR, UEC, URNM, COHR, 1810.HK (Xiaomi), NTR, LVMH (locked)
+Kiwoom: 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU
+Dry powder: €2200 TR, $0 Kiwoom
+Active limits: ASML @ €1100
+NO OTHER POSITIONS EXIST. Do not reference FCX, GOOGL, CWEN, AVAV, GEVO, HUYA or any ticker not listed above.
+
 Replace the entire P1–P5 structure with this new structure and fill it using LIVE data.
 Every line must be concrete and GOD-specific — no generic statements.
 Reference actual tickers, actual amounts, and actual levels from the live data provided.
