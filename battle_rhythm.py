@@ -535,7 +535,7 @@ End with: ⚡ TOP ACTION: [single highest-conviction action today]""",
     MACRO_PAIRS = {
         "SOX":     [("000660.KS","+"), ("COHR","+")],
         "Uranium": [("UEC","+"), ("URNM","+")],
-        "Oil":     [("FCX","+")],
+        "Oil":     [("UEC","+"), ("URNM","+")],
         "DXY":     [("PLTR","-"), ("UEC","-")],
         "BTC":     [("IONQ","+"), ("RKLB","+")],
     }

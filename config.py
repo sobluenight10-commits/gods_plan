@@ -191,8 +191,6 @@ PORTFOLIO: Dict[str, List[Dict]] = {
         {"ticker": "PLTR", "name": "Palantir", "score": 10, "action": "HOLD + ADD DIPS", "thesis": "AI gov / commercial platform"},
         {"ticker": "UEC", "name": "Uranium Energy", "score": 9, "action": "HOLD", "thesis": "US uranium restart / SWUs"},
         {"ticker": "RKLB", "name": "Rocket Lab", "score": 6, "action": "HOLD", "thesis": "Space launch cadence"},
-        {"ticker": "CWEN", "name": "Clearway Energy", "score": 6, "action": "HOLD", "thesis": "Yieldco renewables"},
-        {"ticker": "FCX", "name": "Freeport-McMoRan", "score": 4, "action": "SELL TR — STOP $54.50", "thesis": "Copper levered trade"},
         {"ticker": "URNM", "name": "Sprott Uranium", "score": 7, "action": "HOLD", "thesis": "Uranium ETF proxy"},
     ],
     "Kiwoom KR": [
@@ -216,7 +214,6 @@ THESIS_ALERT_TICKERS: List[str] = [
 ]
 
 WATCHLIST: List[Dict] = [
-    {"ticker": "AVAV", "name": "AeroVironment", "score": 8, "entry": "$205-240", "target_usd": None},
     {"ticker": "CRSP", "name": "CRISPR Therapeutics", "score": 8, "entry": "$44 limit", "target_usd": None},
     {"ticker": "NTLA", "name": "Intellia", "score": 6, "entry": "$10 limit", "target_usd": None},
     {"ticker": "IAU", "name": "iShares Gold ETF", "score": 10, "entry": "Any dip", "target_usd": None},
