@@ -346,10 +346,17 @@ def _fetch_blog() -> str:
                 title = item.findtext("title", "").strip()
                 desc = item.findtext("description", "").strip()
                 pub = item.findtext("pubDate", "").strip()
+                link = item.findtext("link", "").strip()
                 # Strip HTML tags from description
                 desc_clean = re.sub(r"<[^>]+>", " ", desc).strip()[:300]
                 if title:
-                    posts.append(f"📌 <b>{title}</b>\n{desc_clean}\n({pub[:16]})")
+                    url = link or config.NAVER_BLOG_URL
+                    posts.append(
+                        f"📌 <b>{title}</b>\n"
+                        f"{desc_clean}\n"
+                        f"URL: {url}\n"
+                        f"({pub[:16]})"
+                    )
             logger.info(f"Blog RSS: {len(posts)} posts")
     except Exception as e:
         logger.warning(f"Blog RSS failed: {e}")
@@ -363,7 +370,7 @@ def _fetch_blog() -> str:
                 if not titles:
                     titles = re.findall(r'"title"\s*:\s*"([^"]{10,})"', resp.text)
                 for t in titles[:3]:
-                    posts.append(f"📌 <b>{t.strip()}</b>")
+                    posts.append(f"📌 <b>{t.strip()}</b>\nURL: {config.NAVER_BLOG_URL}")
                 logger.info(f"Blog scrape: {len(posts)} titles")
         except Exception as e:
             logger.warning(f"Blog scrape failed: {e}")
@@ -472,13 +479,15 @@ For EACH post, output exactly this structure (3-5 lines per post):
 • Portfolio relevance: [which of GOD's holdings this touches, or "none"]
 • Signal: [TICKER → BUY/HOLD/SELL @ zone · reason · conviction X/10]
   OR if no signal: "No signal — [specific reason why not actionable]"
+• 🔗 [post title shortened](url)
 
 Rules:
 - Never compress all posts into one block
 - Always show what the post actually said, even if not actionable
 - If a ticker not in GOD's portfolio is mentioned: flag as ⚠️ NEW CANDIDATE · [sector]
 - Copper, data center, semiconductor supply chain posts → always check COHR, TSM, AMAT relevance
-- Korean company names: transliterate and map to KRX ticker if possible""",
+- Korean company names: transliterate and map to KRX ticker if possible
+- URL is provided in the input as "URL: ..."; use it for the 🔗 line""",
         f"{state_context}Blog posts:\n{blog_raw}\n\nPortfolio:\n{ctx['portfolio_text'][:600]}"
     )
 
