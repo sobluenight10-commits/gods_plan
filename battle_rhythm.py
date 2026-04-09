@@ -561,6 +561,15 @@ Dry powder: €2200 TR, $0 Kiwoom
 Active limits: ASML @ €1100
 NO OTHER POSITIONS EXIST. This is a hard rule — if you reference ANY ticker not in the list above, the output is invalid. Never invent positions. Never assume positions. Only use: TSM, PLTR, UEC, URNM, COHR, 1810.HK, NTR, 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU, ASML.
 
+PORTFOLIO STATUS (use these facts — do not contradict them):
+- Overall portfolio: STABLE — no stop losses triggered today
+- Antifragility status: NEUTRAL — no hedges needed, no Black Swan exposure
+- Arbitrage signal: ASML earnings Apr 16 = mispricing opportunity — GOD Score 87, limit set at €1100
+- Active execution: ASML limit €1100 armed — let it work, no new orders today
+- KTOS: defense drone contractor, strong thesis, no recent negative news
+- Regime: FEAR ZONE VIX 21 = deploy 50% rule active but TGA drain → wait until Apr 15
+- Dry powder rule: €2200 reserved for ASML limit fill only
+
 Replace the entire P1–P5 structure with this new structure and fill it using LIVE data.
 Every line must be concrete and GOD-specific — no generic statements.
 Reference actual tickers, actual amounts, and actual levels from the live data provided.
