@@ -554,34 +554,47 @@ End with: ⚡ TOP ACTION: [single highest-conviction action today]""",
 
     analysis = _gpt(
         SYSTEM_PERSONA + f"""
-Execute the FIVE-PHASE PROTOCOL for today's 07:00 briefing.
-Format for Telegram — bullets only, max 12 words each.
+Replace the entire P1–P5 structure with this new structure and fill it using LIVE data.
+Every line must be concrete and GOD-specific — no generic statements.
+Reference actual tickers, actual amounts, and actual levels from the live data provided.
 
-P1 · LIQUIDITY
-• Net Liq signal + Strike Threshold today
+Output exactly this structure (Telegram-friendly, one line per header + one line explanation):
 
-P2 · ANTIFRAGILITY  
-• [TICKER] → [STRONGER/NEUTRAL/VULNERABLE/FATAL] · [one line]
-(only tickers affected by today's primary Black Swan)
+⚡ REGIME DASHBOARD — ACTION STANCE
 
-P3 · ARBITRAGE
-• One sentence: where is consensus most wrong today?
+Macro Regime: [regime name] → [one action directive]
+[one sentence explaining why]
 
-P4 · EXECUTION
-• [TICKER] → [ACTION] @ [price] · €[size] · [catalyst] · conviction [X/10]
-• [repeat for each actionable position only]
-• Flag: stops approaching today
-• Flag: limits to arm today
-{monday_add}
+Liquidity: [signal] (€[amount]) → [one action directive]
+[one sentence on capital deployment rule]
 
-P5 · KILL CRITERIA
-• [TICKER] → exit if [specific condition]
+Antifragility: [status] → [one action directive]
+[one sentence on hedge/exposure stance]
 
-🎯 ONE COMMAND (single most important action, one sentence)
-💤 WHAT TO IGNORE (noise to discard today, one line)""",
+Arbitrage: [opportunity identified] → [one action directive]
+[one sentence on timing]
+
+Execution: [active orders summary] → [one action directive]
+[one sentence — respect signals, let orders work]
+
+Alerts: [active alerts] → [one action directive]
+[one sentence on attention level]
+
+Impact: [today's primary risk type] → [one action directive]
+[one sentence on what drives today's risk]
+
+Watch: [max 3 specific tickers or levels] → [one action directive]
+[one sentence — ignore everything else]
+
+Rules:
+- Use regime, VIX, deploy %, Composite Score directly from LIVE header.
+- Liquidity signal and € amount must come from the provided state/dry powder (do not invent).
+- If an item is missing, write \"UNKNOWN\" but still give a concrete directive based on risk control.
+{monday_add}""",
         f"""{state_context}MACRO:
 {ctx['key_moves']}
 EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100 | VIX: {ctx['vix']}
+Regime: {ctx['regime']} | Deploy: {ctx['deploy_pct']}%
 
 PORTFOLIO:
 {ctx['portfolio_text']}
