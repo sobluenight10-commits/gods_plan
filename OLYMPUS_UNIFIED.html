@@ -655,7 +655,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 <header class="masthead">
   <div>
     <div class="sys-name">OLYMPUS</div>
-    <div class="sys-sub">OLYMPUS Unified · MINERVA Protocol · v6.0 · 2026-04-08</div>
+    <div class="sys-sub">OLYMPUS Unified · MINERVA Protocol · v6.0 · <span id="dashDate"></span> · Last data: <span id="lastUpdate">checking...</span></div>
   </div>
   <div class="regime-block">
     <div class="regime-pill" id="hdr-regime-pill">⚠ FEAR ZONE — DEPLOY 50%</div>
@@ -2679,6 +2679,12 @@ loadLivePrices();
 setInterval(loadLivePrices, 5 * 60 * 1000);
 calcTotal();
 
+// Dashboard date (local)
+{
+  const el = document.getElementById("dashDate");
+  if (el) el.textContent = new Date().toISOString().split("T")[0];
+}
+
 // ══════════════════════════════════════════════════════════════════
 // DIRECTIVES — Minerva data/directives.json (nginx: /data/ → server path)
 // ══════════════════════════════════════════════════════════════════
@@ -2689,6 +2695,8 @@ async function loadDirectives() {
     const resp = await fetch(DIRECTIVES_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     const data = await resp.json();
+    const lu = document.getElementById("lastUpdate");
+    if (lu && data && data.date) lu.textContent = data.date + " " + (data.time || "");
     const dt = document.getElementById("directive-date");
     const tx = document.getElementById("directive-text");
     if (dt && data.date) dt.textContent = data.date;
