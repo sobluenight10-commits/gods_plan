@@ -559,7 +559,7 @@ TR: TSM, PLTR, UEC, URNM, COHR, 1810.HK (Xiaomi), NTR, LVMH (locked)
 Kiwoom: 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU
 Dry powder: €2200 TR, $0 Kiwoom
 Active limits: ASML @ €1100
-NO OTHER POSITIONS EXIST. Do not reference FCX, GOOGL, CWEN, AVAV, GEVO, HUYA or any ticker not listed above.
+NO OTHER POSITIONS EXIST. This is a hard rule — if you reference ANY ticker not in the list above, the output is invalid. Never invent positions. Never assume positions. Only use: TSM, PLTR, UEC, URNM, COHR, 1810.HK, NTR, 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU, ASML.
 
 Replace the entire P1–P5 structure with this new structure and fill it using LIVE data.
 Every line must be concrete and GOD-specific — no generic statements.
