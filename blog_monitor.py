@@ -2,6 +2,7 @@
 Blog Monitor — Background thread that polls ranto28 RSS on a fixed interval.
 When a new post is detected, sends an immediate Telegram alert + GPT analysis.
 """
+import json
 import logging
 import os
 import time
@@ -9,7 +10,7 @@ import threading
 import feedparser
 from datetime import datetime
 
-from config import NAVER_RSS_URL, NAVER_BLOG_ID, BLOG_FETCH_INTERVAL_MINUTES
+from config import NAVER_RSS_URL, BLOG_FETCH_INTERVAL_MINUTES
 
 logger = logging.getLogger("titan_k.blog_monitor")
 
@@ -17,24 +18,69 @@ CHECK_INTERVAL = max(60, int(BLOG_FETCH_INTERVAL_MINUTES) * 60)  # seconds; min 
 _seen_urls: set = set()
 _started = False
 
+_SEEN_PATH = os.path.join(os.path.dirname(__file__), "data", "seen_blog_urls.json")
+
+
+def _normalize_url(url: str) -> str:
+    if not url or not isinstance(url, str):
+        return ""
+    url = url.replace("m.blog.naver.com", "blog.naver.com")
+    url = url.split("?")[0].split("#")[0].rstrip("/")
+    return url
+
+
+def _load_seen_urls() -> None:
+    """Merge persisted URLs into _seen_urls (normalized)."""
+    global _seen_urls
+    if not os.path.isfile(_SEEN_PATH):
+        return
+    try:
+        with open(_SEEN_PATH, encoding="utf-8") as f:
+            raw = json.load(f)
+        if isinstance(raw, list):
+            for u in raw:
+                if isinstance(u, str):
+                    nu = _normalize_url(u)
+                    if nu:
+                        _seen_urls.add(nu)
+        logger.info("Loaded %s seen blog URLs from disk", len(_seen_urls))
+    except Exception as e:
+        logger.warning("Could not load seen_blog_urls.json: %s", e)
+
+
+def _save_seen_urls() -> None:
+    """Persist _seen_urls after changes."""
+    try:
+        os.makedirs(os.path.dirname(_SEEN_PATH), exist_ok=True)
+        tmp = _SEEN_PATH + ".tmp"
+        with open(tmp, "w", encoding="utf-8") as f:
+            json.dump(sorted(_seen_urls), f, ensure_ascii=False, indent=2)
+        os.replace(tmp, _SEEN_PATH)
+    except Exception as e:
+        logger.error("Could not save seen_blog_urls.json: %s", e)
+
 
 def _check_for_new_posts():
     """Poll RSS and return list of posts not seen before."""
     global _seen_urls
     new_posts = []
+    changed = False
     try:
         feed = feedparser.parse(NAVER_RSS_URL)
         for entry in feed.entries[:10]:
-            url = entry.get("link", "")
+            raw = entry.get("link", "")
+            url = _normalize_url(raw)
+            if not url:
+                continue
             if url in _seen_urls:
                 continue
             _seen_urls.add(url)
+            changed = True
 
             pub_date = None
             if hasattr(entry, "published_parsed") and entry.published_parsed:
                 pub_date = datetime(*entry.published_parsed[:6])
 
-            # RSS uses entry.link; we normalize to "url". Publish time → "date" (not "link"/"published").
             new_posts.append({
                 "title": entry.get("title", "Untitled"),
                 "url": url,
@@ -42,24 +88,32 @@ def _check_for_new_posts():
             })
     except Exception as e:
         logger.error(f"RSS check failed: {e}")
+    if changed:
+        _save_seen_urls()
     return new_posts
 
 
 def _seed_seen():
-    """On first run, mark all current posts as 'seen' so we don't spam."""
+    """On first run (no persisted seen set), mark current RSS posts as seen so we don't spam."""
     global _seen_urls
+    _load_seen_urls()
+    if _seen_urls:
+        logger.info("Blog monitor resumed with %s URLs on disk — no RSS re-seed", len(_seen_urls))
+        return
     try:
         feed = feedparser.parse(NAVER_RSS_URL)
         for entry in feed.entries[:20]:
-            _seen_urls.add(entry.get("link", ""))
-        logger.info(f"Blog monitor seeded with {len(_seen_urls)} existing posts")
+            url = _normalize_url(entry.get("link", ""))
+            if url:
+                _seen_urls.add(url)
+        _save_seen_urls()
+        logger.info("Blog monitor first seed: %s existing posts marked seen", len(_seen_urls))
     except Exception as e:
         logger.error(f"Seed failed: {e}")
 
 
 def _extract_and_register_tickers(post_content: str, post_title: str) -> None:
     """Extract tickers from blog post, classify into OLYMPUS sectors, alert GOD."""
-    import json
     import re
 
     from analyzer import client
@@ -189,7 +243,6 @@ def _send_alert(post: dict):
 
     title = post.get("title", "")
     url = post.get("url", "")
-    # _check_for_new_posts() sets "date"; allow "published" as alias for other callers
     date = post.get("date") or post.get("published", "")
 
     lines = [

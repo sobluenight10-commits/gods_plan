@@ -75,10 +75,13 @@ def _footer() -> str:
 # ══════════════════════════════════════════════════════════════════════════════
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    em = update.effective_message
+    if not em:
+        return
     chat_id = str(update.effective_chat.id)
     configured_id = str(TELEGRAM_CHAT_ID).strip()
     if configured_id and chat_id != configured_id:
-        await update.message.reply_text(
+        await em.reply_text(
             f"⚠️ <b>This chat is not configured for briefings.</b>\n\n"
             f"Your chat ID: <code>{chat_id}</code>\n"
             f"Add to .env on your server (Android/laptop):\n"
@@ -87,7 +90,7 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
             parse_mode=ParseMode.HTML,
         )
         return
-    await update.message.reply_text(
+    await em.reply_text(
         "🔱 <b>titan_K — Minerva Online</b>\n\n"
         "<b>Commands:</b>\n"
         "• /macro — Macro briefing now\n"
@@ -107,15 +110,19 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_macro(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔱 Running macro... 30s")
+    em = update.effective_message
+    if not em:
+        return
+    await em.reply_text("🔱 Running macro... 30s")
     try:
         loop = asyncio.get_event_loop()
         msg = await loop.run_in_executor(None, _sync_macro)
         if msg:
             from telegram_bot import send_telegram
             send_telegram(msg)
+            await em.reply_text("✅ Macro briefing sent to your configured chat.", disable_web_page_preview=True)
     except Exception as e:
-        await update.message.reply_text(f"⚠️ {str(e)[:200]}")
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
 
 
 def _sync_macro() -> str:
@@ -124,7 +131,10 @@ def _sync_macro() -> str:
 
 
 async def cmd_olympus(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🏛 Running Olympus update... ~60s")
+    em = update.effective_message
+    if not em:
+        return
+    await em.reply_text("🏛 Running Olympus update... ~60s")
     try:
         loop = asyncio.get_event_loop()
         result = await asyncio.wait_for(
@@ -134,10 +144,11 @@ async def cmd_olympus(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if result:
             from telegram_bot import send_telegram
             send_telegram(result)
+            await em.reply_text("✅ Olympus summary sent to your configured chat.", disable_web_page_preview=True)
     except asyncio.TimeoutError:
-        await update.message.reply_text("⚠️ Olympus timed out (120s). Try again later.")
+        await em.reply_text("⚠️ Olympus timed out (120s). Try again later.")
     except Exception as e:
-        await update.message.reply_text(f"⚠️ {str(e)[:200]}")
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
 
 
 def _sync_olympus() -> str:
@@ -148,7 +159,10 @@ def _sync_olympus() -> str:
 
 
 async def cmd_blog(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔱 Scraping blog... max 45s")
+    em = update.effective_message
+    if not em:
+        return
+    await em.reply_text("🔱 Scraping blog... max 45s")
     try:
         loop = asyncio.get_event_loop()
         result = await asyncio.wait_for(
@@ -156,13 +170,19 @@ async def cmd_blog(update: Update, context: ContextTypes.DEFAULT_TYPE):
             timeout=60,
         )
         if result == "no_posts":
-            await update.message.reply_text("📭 No new posts in 3 days.")
-        elif result != "done":
-            await update.message.reply_text(f"⚠️ {result}")
+            await em.reply_text("📭 No new posts in 3 days.")
+        elif result == "done":
+            await em.reply_text(
+                "✅ Blog briefing generated and sent to your configured chat "
+                "(same channel as scheduled briefings).",
+                disable_web_page_preview=True,
+            )
+        else:
+            await em.reply_text(f"⚠️ {result}")
     except asyncio.TimeoutError:
-        await update.message.reply_text("⚠️ Blog timed out (60s). Naver may be slow.")
+        await em.reply_text("⚠️ Blog timed out (60s). Naver may be slow.")
     except Exception as e:
-        await update.message.reply_text(f"⚠️ {str(e)[:200]}")
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
 
 
 def _sync_blog() -> str:
@@ -191,8 +211,11 @@ def _sync_blog() -> str:
 
 
 async def cmd_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    em = update.effective_message
+    if not em:
+        return
     if not context.args:
-        await update.message.reply_text("Usage: /price PLTR  or  /price UEC KTOS")
+        await em.reply_text("Usage: /price PLTR  or  /price UEC KTOS")
         return
 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
@@ -222,7 +245,7 @@ async def cmd_price(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     lines.append(f"\n💱 EUR/USD: {fx}" + _footer())
 
-    await update.message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    await em.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
 def _fetch_specific_prices(tickers):
@@ -236,6 +259,9 @@ def _get_fx():
 
 
 async def cmd_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    em = update.effective_message
+    if not em:
+        return
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
 
     loop = asyncio.get_event_loop()
@@ -260,10 +286,13 @@ async def cmd_score(update: Update, context: ContextTypes.DEFAULT_TYPE):
         lines.append(f"{badge} <b>{t}</b> {score}/10 ${price} ({arrow}{abs(chg):.1f}%) {action}")
 
     lines.append(_footer())
-    await update.message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    await em.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
 
 async def cmd_regime(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    em = update.effective_message
+    if not em:
+        return
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
 
     loop = asyncio.get_event_loop()
@@ -284,7 +313,7 @@ async def cmd_regime(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     emoji = {"CALM": "🟢", "NORMAL": "🔵", "FEAR": "🟡", "CRISIS": "🔴"}.get(regime, "⚪")
 
-    await update.message.reply_text(
+    await em.reply_text(
         f"🔱 <b>REGIME</b>\n\n"
         f"{emoji} <b>{regime}</b> — {label}\n"
         f"• VIX: {vix}\n"
@@ -295,7 +324,10 @@ async def cmd_regime(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def cmd_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("🔱 Scanning sources... 15s")
+    em = update.effective_message
+    if not em:
+        return
+    await em.reply_text("🔱 Scanning sources... 15s")
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
 
     try:
@@ -331,12 +363,12 @@ async def cmd_news(update: Update, context: ContextTypes.DEFAULT_TYPE):
             lines.append("📭 No news found.")
 
         lines.append(_footer())
-        await update.message.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        await em.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
 
     except asyncio.TimeoutError:
-        await update.message.reply_text("⚠️ News scan timed out.")
+        await em.reply_text("⚠️ News scan timed out.")
     except Exception as e:
-        await update.message.reply_text(f"⚠️ {str(e)[:200]}")
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
 
 
 def _sync_news():
@@ -352,8 +384,11 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if str(update.effective_chat.id) != str(TELEGRAM_CHAT_ID):
         return
 
-    user_msg = update.message.text
-    if not user_msg or len(user_msg.strip()) < 2:
+    em = update.effective_message
+    if not em or not em.text:
+        return
+    user_msg = em.text
+    if len(user_msg.strip()) < 2:
         return
 
     await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
@@ -429,17 +464,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         _conversation_history[chat_id] = history
 
         reply = reply_text + _footer()
-        await update.message.reply_text(reply, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+        await em.reply_text(reply, parse_mode=ParseMode.HTML, disable_web_page_preview=True)
     except Exception as e:
         logger.error(f"GPT error: {e}")
-        await update.message.reply_text(f"⚠️ {str(e)[:200]}")
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
 
 
 async def cmd_reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Clear conversation history for this chat."""
+    em = update.effective_message
+    if not em:
+        return
     chat_id = str(update.effective_chat.id)
     _conversation_history.pop(chat_id, None)
-    await update.message.reply_text(
+    await em.reply_text(
         "🔱 Conversation memory cleared. Fresh context." + _footer(),
         parse_mode=ParseMode.HTML,
         disable_web_page_preview=True,
@@ -478,23 +516,27 @@ async def _error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
             pass
 
 
+def register_interactive_handlers(app: Application) -> None:
+    """Register Telegram handlers. CommandHandlers first (group 0); free-text last (group 1)."""
+    app.add_handler(CommandHandler("start", cmd_start), group=0)
+    app.add_handler(CommandHandler("help", cmd_start), group=0)
+    app.add_handler(CommandHandler("macro", cmd_macro), group=0)
+    app.add_handler(CommandHandler("blog", cmd_blog), group=0)
+    app.add_handler(CommandHandler("olympus", cmd_olympus), group=0)
+    app.add_handler(CommandHandler("price", cmd_price), group=0)
+    app.add_handler(CommandHandler("score", cmd_score), group=0)
+    app.add_handler(CommandHandler("regime", cmd_regime), group=0)
+    app.add_handler(CommandHandler("news", cmd_news), group=0)
+    app.add_handler(CommandHandler("reset", cmd_reset), group=0)
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message), group=1)
+    app.add_error_handler(_error_handler)
+
+
 def start_interactive_bot():
     import time as _time
     logger.info("Starting interactive bot...")
     app = Application.builder().token(TELEGRAM_BOT_TOKEN).build()
-
-    app.add_handler(CommandHandler("start", cmd_start))
-    app.add_handler(CommandHandler("help", cmd_start))
-    app.add_handler(CommandHandler("macro", cmd_macro))
-    app.add_handler(CommandHandler("blog", cmd_blog))
-    app.add_handler(CommandHandler("olympus", cmd_olympus))
-    app.add_handler(CommandHandler("price", cmd_price))
-    app.add_handler(CommandHandler("score", cmd_score))
-    app.add_handler(CommandHandler("regime", cmd_regime))
-    app.add_handler(CommandHandler("news", cmd_news))
-    app.add_handler(CommandHandler("reset", cmd_reset))
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    app.add_error_handler(_error_handler)
+    register_interactive_handlers(app)
 
     for attempt in range(1, 6):
         try:

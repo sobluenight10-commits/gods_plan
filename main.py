@@ -323,6 +323,8 @@ def start_full_system():
     from blog_monitor import start_blog_monitor
     start_blog_monitor()
 
+    # Telegram commands: python-telegram-bot Application in interactive_bot.
+    # register_interactive_handlers() attaches CommandHandlers (group 0) before MessageHandler (group 1).
     from interactive_bot import start_interactive_bot
     start_interactive_bot()
 
