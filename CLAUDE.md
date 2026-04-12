@@ -7,6 +7,37 @@
 - GOD's Law: sci-fi becomes reality — buy before world knows it is possible
 - Mission: €100M by 2031
 
+## CURSOR STANDING RESPONSIBILITIES
+
+### EVERY SUNDAY
+Execute Sunday build queue below. No explanation needed.
+Read this file. Build everything listed under TODAY'S BUILD QUEUE.
+
+### EVERY WEDNESDAY
+1. Read GOD Score recalibration directive from Minerva
+2. Update all scores in config.py
+3. Show GOD a table: [Ticker | Old Score | New Score | Reason]
+4. Wait for approval before saving
+
+### INSTANT COMMANDS (GOD pastes these directly)
+- "Add [TICKER] to portfolio" → update config.py + OLYMPUS_UNIFIED.html
+- "Update [TICKER] limit to [PRICE]" → update config.py + dashboard
+- "Add Lesson [N]: [title]" → add to tuition log in dashboard
+- "Reflexivity signal [TICKER] — set limit [PRICE]" → update config.py instantly
+
+### CURSOR RULES
+1. Always read CLAUDE.md before starting any task
+2. Always show GOD what you changed before git operations
+3. Never modify server files — Claude Code handles deployment
+4. Never delete existing sections — only add or update
+5. When in doubt — ask GOD one question, not five
+
+### BUILD PRIORITY TODAY
+P0 — Reflexivity Signal display panel in OLYMPUS dashboard
+P0 — Update sector layout to 8 sectors (add Global Issue Radar + RADAR)
+P1 — Pre-IPO countdown: SpaceX June 2026 + Anthropic October 2026
+P1 — Track A vs Track B badge per stock in matrix
+
 ## TODAY'S BUILD QUEUE — TYPE "execute" TO START
 
 ### TASK 1 — Open Cursor with this instruction:
