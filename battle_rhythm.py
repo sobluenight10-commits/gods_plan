@@ -69,18 +69,22 @@ def fetch_fred_liquidity() -> dict:
             out[k] = None
 
     if all(out.get(k) is not None for k in ("reserves", "tga", "rrp")):
-        net = out["reserves"] - out["tga"] - out["rrp"]
-        prev = (
-            out.get("reserves_prev", 0)
-            - out.get("tga_prev", 0)
-            - out.get("rrp_prev", 0)
-        )
+        # FRED WRESBAL / WTREGEN / RRP: observations in millions USD → billions for §11 UI
+        _m = 1000.0
+        res_b = out["reserves"] / _m
+        tga_b = out["tga"] / _m
+        rrp_b = out["rrp"] / _m
+        prev_res_b = (out.get("reserves_prev") or 0) / _m
+        prev_tga_b = (out.get("tga_prev") or 0) / _m
+        prev_rrp_b = (out.get("rrp_prev") or 0) / _m
+        net = res_b - tga_b - rrp_b
+        prev = prev_res_b - prev_tga_b - prev_rrp_b
         out["net_liq"] = round(net, 1)
         change = round(net - prev, 1)
         out["change"] = change
         out["direction"] = "EXPANDING ↑" if net > prev else "CONTRACTING ↓"
         out["net_liq_text"] = (
-            f"Net Liq ${net:.0f}B · Res ${out['reserves']:.0f}B − TGA ${out['tga']:.0f}B − RRP ${out['rrp']:.0f}B"
+            f"Net Liq ${net:.0f}B · Res ${res_b:.0f}B − TGA ${tga_b:.0f}B − RRP ${rrp_b:.0f}B"
         )
         if net < 2000:
             zone = "🔴 DANGER — Crisis threshold ($2T floor)"
@@ -110,7 +114,7 @@ def fetch_fred_liquidity() -> dict:
             d = {}
         d["liquidity"] = {
             "net_liq_text": (
-                f"Net Liq ${net:.0f}B · Res ${out['reserves']:.0f}B − TGA ${out['tga']:.0f}B − RRP ${out['rrp']:.0f}B"
+                f"Net Liq ${net:.0f}B · Res ${res_b:.0f}B − TGA ${tga_b:.0f}B − RRP ${rrp_b:.0f}B"
             ),
             "outlook_text": f"{out['direction']} · Δ${out['change']:+.0f}B vs prev week",
             "action_text": (
