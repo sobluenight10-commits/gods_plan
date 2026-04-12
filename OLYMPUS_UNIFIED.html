@@ -535,6 +535,52 @@ table.master tbody tr{animation:fadeUp 0.2s ease both;}
 table.master tbody tr:nth-child(1){animation-delay:.02s}table.master tbody tr:nth-child(2){animation-delay:.04s}
 table.master tbody tr:nth-child(3){animation-delay:.06s}table.master tbody tr:nth-child(4){animation-delay:.08s}
 table.master tbody tr:nth-child(n+5){animation-delay:.10s}
+
+/* ── SOROS REFLEXIVITY PANEL (Master Matrix tab) ── */
+.soros-wrap{padding:16px 40px 20px;background:#070a0e;border-bottom:2px solid rgba(212,175,55,0.45);}
+.soros-card{
+  background:linear-gradient(165deg,#05080c 0%,#0f141c 45%,#121a26 100%);
+  border:3px solid #d4af37;border-radius:14px;padding:22px 26px 20px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.35),inset 0 1px 0 rgba(212,175,55,0.1);
+}
+.soros-h{font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.26em;text-transform:uppercase;color:#e8c547;margin-bottom:12px;}
+.soros-subh{font-size:9px;font-weight:800;letter-spacing:0.18em;color:#94a3b8;margin:14px 0 8px;text-transform:uppercase;border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;}
+.soros-line{font-size:12px;color:#e8e4dc;line-height:1.55;margin-bottom:10px;font-family:'DM Mono',monospace;}
+.soros-line .sl-main{display:block;color:#f5f0e6;font-weight:600;}
+.soros-line .sl-sub{display:block;font-size:11px;color:#94a3b8;font-weight:400;margin-top:3px;}
+.soros-line .sl-soros{display:block;font-size:10px;color:#fbbf24;margin-top:4px;font-weight:700;}
+.soros-cmd{margin-top:16px;padding-top:14px;border-top:1px solid rgba(212,175,55,0.35);font-size:14px;font-weight:800;color:#f5e6a3;font-family:'Syne',sans-serif;}
+.soros-upd{font-size:9px;color:#64748b;margin-top:8px;font-family:'DM Mono',monospace;}
+.pf-line-compact{
+  padding:8px 40px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);
+  border-bottom:1px solid var(--es-rule);background:linear-gradient(90deg,#f8f7f3,#fff);
+  white-space:normal;line-height:1.5;
+}
+.sector-min-warn{
+  display:inline-block;margin-left:10px;padding:2px 8px;border-radius:4px;background:#fde8e8;color:#b91c1c;
+  font-size:8px;font-weight:800;letter-spacing:0.06em;vertical-align:middle;
+}
+table.master.matrix-v2 thead th{font-size:8px;padding:8px 6px;}
+table.master.matrix-v2 td{padding:7px 6px;vertical-align:middle;}
+.mx-tk{font-family:'Syne',sans-serif;font-weight:700;font-size:11px;}
+.mx-nm{font-size:9px;color:var(--es-ink4);max-width:140px;white-space:normal;line-height:1.25;}
+.sec-badge{display:inline-block;padding:2px 7px;border-radius:3px;font-size:7px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#fff;}
+.mx-godwrap{display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+.mx-godbar{width:40px;height:4px;background:var(--es-paper3);border-radius:2px;overflow:hidden;}
+.mx-godfill{height:100%;border-radius:2px;}
+.mx-en{font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);white-space:normal;max-width:200px;line-height:1.35;}
+.mx-thesis{font-size:11px;font-weight:700;white-space:nowrap;}
+.mx-sgap{font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink3);}
+.mx-act{display:inline-block;padding:4px 10px;border-radius:6px;font-size:9px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;font-family:'Syne',sans-serif;}
+.mx-act-buy{background:#eaf4ee;color:#1a5c35;border:1px solid #1a5c35;}
+.mx-act-add{background:#e8f5e9;color:#15803d;border:1px solid #15803d;}
+.mx-act-hold{background:#fdf6e0;color:#854d0e;border:1px solid #ca8a04;}
+.mx-act-trim{background:#fff7ed;color:#c2410c;border:1px solid #ea580c;}
+.mx-act-exit{background:#fdf0f0;color:#991b1b;border:1px solid #dc2626;}
+.mx-act-watch{background:#f4f4f5;color:#3f3f46;border:1px solid #a1a1aa;}
+.mx-act-ipo{background:#f5eeff;color:#5b21b6;border:1px solid #7c3aed;}
+.mx-tgt{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:var(--es-ink2);}
+
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--es-paper)}::-webkit-scrollbar-thumb{background:var(--es-rule)}
 
 </style>
@@ -563,26 +609,23 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <button class="tab-btn"          onclick="showTab('telegram')">TELEGRAM</button>
 </div>
 
-<!-- DECISION ENGINE — first surface after header + nav (directives.json) -->
-<div class="decision-engine-hero-wrap" id="decision-engine-anchor">
-  <div class="decision-engine-card">
-    <div class="de-h">🎯 DECISION ENGINE</div>
-    <div id="de-one-command" class="de-command">⏳ Awaiting next brief — 07:00 Berlin</div>
-    <ul id="de-actions" class="de-actions"></ul>
-    <div class="de-subh">DEPLOYMENT PLAN</div>
-    <div id="de-deployment" class="de-deployment"></div>
-    <div id="de-updated" class="de-updated"></div>
-  </div>
-</div>
-
 <!-- ═══════════════════════════════════ -->
 <!-- TAB: PORTFOLIO                     -->
 <!-- ═══════════════════════════════════════════════════════ -->
 <div class="tab-panel active" id="tab-matrix" style="padding:0;background:var(--es-paper);">
 
-  <!-- Nudge / Alert strip from v5 -->
-  <!-- NUDGE BANNER -->
-<!-- MASTHEAD -->
+<div class="soros-wrap">
+  <div class="soros-card">
+    <div class="soros-h">SOROS REFLEXIVITY PANEL</div>
+    <div class="soros-subh">Inside portfolio</div>
+    <div id="soros-inside-portfolio"><div class="soros-line sl-sub">Loading directives…</div></div>
+    <div class="soros-subh">Outside portfolio · limits</div>
+    <div id="soros-outside-portfolio"></div>
+    <div id="soros-one-command" class="soros-cmd">⏳ Awaiting directives…</div>
+    <div id="soros-updated" class="soros-upd"></div>
+  </div>
+</div>
+
 <header class="masthead">
   <div>
     <div class="sys-name">OLYMPUS</div>
@@ -600,7 +643,6 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   </div>
 </header>
 
-<!-- ALERTS -->
 <div class="alert-bar">
   <div class="alert-lbl">⚑ Alerts</div>
   <div class="alert-chip">🟡 OKLO $44 armed — Meta 1.2GW + NRC 2026</div>
@@ -612,889 +654,139 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <div class="alert-chip">🟢 Anthropic IPO Oct 2026 — prepare capital</div>
 </div>
 
-<!-- REFLEXIVITY + PRE-IPO COUNTDOWN (CLAUDE.md monthly upgrade) -->
-<div class="reflex-wrap">
-  <div class="reflex-panel">
-    <div class="reflex-h">↺ Reflexivity signals — limits armed</div>
-    <div id="reflexivity-list"><div class="reflex-line" style="border:none;color:var(--es-ink4);">Loading…</div></div>
-  </div>
-  <div class="reflex-panel">
-    <div class="reflex-h">Pre-IPO countdown</div>
-    <div class="ipo-grid">
-      <div class="ipo-tile">
-        <div class="ipo-name">SpaceX · Jun 2026</div>
-        <div class="ipo-d" id="ipo-days-spacex">—</div>
-        <div class="ipo-sub">days · target window</div>
-      </div>
-      <div class="ipo-tile">
-        <div class="ipo-name">Anthropic · Oct 2026</div>
-        <div class="ipo-d" id="ipo-days-anthropic">—</div>
-        <div class="ipo-sub">days · target window</div>
-      </div>
-    </div>
-  </div>
+<div id="pf-line-compact" class="pf-line-compact">
+  TR: <strong id="pf-tr-n">—</strong> positions · Kiwoom: <strong id="pf-kw-n">—</strong> positions · Dry Powder: <strong>€1,500</strong> ·
+  Active Limits: OKLO $44 · CCJ $100 · UEC €11 · Next Catalyst: <strong>ASML Apr 16</strong>
 </div>
-
-<!-- NAV -->
 
   <div style="font-size:9px;color:var(--es-ink4);font-family:'DM Mono',monospace;padding:6px 16px 0;letter-spacing:0.1em;" id="es-price-status">prices loading...</div>
-  <div class="es-eight-wrap">
-    <div class="es-eight-h">8 Earth Shifter sectors — layout</div>
-    <div class="es-eight-row" aria-label="Eight sectors">
-      <span class="es-eight-pill"><span class="es-eight-num">1</span><span style="color:var(--c1)">●</span> Intelligence</span>
-      <span class="es-eight-pill"><span class="es-eight-num">2</span><span style="color:var(--c2)">●</span> Energy</span>
-      <span class="es-eight-pill"><span class="es-eight-num">3</span><span style="color:var(--c3)">●</span> Space</span>
-      <span class="es-eight-pill"><span class="es-eight-num">4</span><span style="color:var(--c4)">●</span> Bio</span>
-      <span class="es-eight-pill"><span class="es-eight-num">5</span><span style="color:var(--c5)">●</span> Robotics</span>
-      <span class="es-eight-pill"><span class="es-eight-num">6</span><span style="color:var(--c6)">●</span> Infrastructure</span>
-      <span class="es-eight-pill"><span class="es-eight-num">7</span><span style="color:var(--c-radar)">●</span> Global Issue Radar</span>
-      <span class="es-eight-pill"><span class="es-eight-num">8</span><span style="color:var(--radar)">●</span> RADAR</span>
-    </div>
-  </div>
 
-  <!-- Matrix panel -->
   <div id="es-panel-matrix">
-
-<!-- ── PORTFOLIO SUMMARY (TR total from data-tr-total-eur; cards removed) ─────────── -->
-<div id="portfolio-summary-bar" data-kiwoom-eur="0" data-tr-total-eur="7067" style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:10px 14px;margin:0 0 10px;background:linear-gradient(90deg,#f8f7f3,#fff);border:1px solid var(--es-rule);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);">
-  <span style="font-weight:800;letter-spacing:2px;color:var(--es-ink4);">PORTFOLIO SUMMARY</span>
-  <span>TR Total <strong id="pf-tr-total" style="color:var(--ink);">—</strong></span>
-  <span>Kiwoom Total <strong id="pf-kw-total" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">(<code>data-kiwoom-eur</code>)</span></span>
-  <span>Grand Total EUR <strong id="pf-grand-total" style="color:var(--gold);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">TR+Kiwoom</span></span>
-  <span>Goal Gap <strong id="pf-goal-gap" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">€100M − Grand</span></span>
-</div>
-
-<!-- ── SECTOR HEATMAP — SIGNAL DETECTION ─────────────────────────────── -->
-<div id="sector-heatmap" style="padding:10px 14px 4px;">
-  <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--es-ink4);margin-bottom:8px;">SECTOR HEATMAP — SIGNAL DETECTION · <span id="heatmap-refresh-ts">—</span></div>
-  <div id="heatmap-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;"></div>
-</div>
-
-<script>
-(function(){
-  const PRICES_URLS = [
-    "http://5.189.176.185/data/prices.json",
-    "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/prices.json",
-  ];
-  const BLOG_TICKERS_URL = "http://5.189.176.185/data/blog_tickers.json";
-
-  /** GOD portfolio tickers only — blog hits outside this set show as NEW SIGNAL */
-  const PORTFOLIO_TICKERS = new Set([
-    "TSM","PLTR","UEC","URNM","COHR","1810.HK","NTR","RKLB","PL","FCX",
-    "000660.KS","272210.KS","ARKQ","BOTZ","VRT","IAU","KTOS",
-  ]);
-
-  const SECTORS = [
-    { name:"Intelligence", dot:"#1e3a6e", tickers:["000660.KS","TSM","PLTR","1810.HK","NVDA"] },
-    { name:"Energy",       dot:"#1e5c2a", tickers:["UEC","URNM","CCJ","OKLO"] },
-    { name:"Space",        dot:"#4a1a7a", tickers:["RKLB","PL","ASTS"] },
-    { name:"Bio-Engineering", dot:"#1a4f4f", tickers:["CRSP","NTLA","BEAM","TMO"] },
-    { name:"Robotics",     dot:"#6b2d14", tickers:["272210.KS","KTOS","ARKQ","BOTZ"] },
-    { name:"Infrastructure", dot:"#1e3050", tickers:["COHR","VRT","LVMH"] },
-    { name:"Global Issue Radar", dot:"#7a3500", tickers:["NTR"] },
-  ];
-
-  function signalLabel(avg){
-    if(avg >= 1.0)  return {text:"BULLISH",  color:"var(--bull)"};
-    if(avg <= -1.0) return {text:"BEARISH",  color:"var(--bear)"};
-    return               {text:"NEUTRAL",  color:"var(--ink3)"};
-  }
-
-  function chgFor(prices, t){
-    const v = prices[t];
-    if(v == null) return null;
-    if(typeof v === "number") return v;
-    if(typeof v === "object" && v.change_pct != null) return Number(v.change_pct);
-    return null;
-  }
-
-  /** Normalize Minerva prices.json (nested or flat) → { ticker: change_pct } */
-  function normalizePrices(raw){
-    const out = {};
-    if(!raw || typeof raw !== "object") return out;
-    const bag = raw.prices && typeof raw.prices === "object" ? raw.prices : raw;
-    Object.keys(bag).forEach(tk => {
-      const c = chgFor(bag, tk);
-      if(c != null && !Number.isNaN(c)) out[tk] = c;
-    });
-    return out;
-  }
-
-  async function fetchJsonFirstOk(urls){
-    for(const u of urls){
-      try{
-        const r = await fetch(u + "?t=" + Date.now(), { cache: "no-store" });
-        if(r.ok) return await r.json();
-      }catch(_){ /* next */ }
-    }
-    return null;
-  }
-
-  /** blog_tickers.json: { tickers, by_sector, history } */
-  function normalizeBlog(raw){
-    const rows = [];
-    if(!raw || typeof raw !== "object") return rows;
-    if(Array.isArray(raw)){
-      raw.forEach(x=>{
-        if(typeof x === "string") rows.push({ ticker:x, date:"", source:"" });
-        else if(x && x.ticker) rows.push({ ticker:String(x.ticker), date:String(x.date||x.added||""), source:String(x.source||"") });
-      });
-      return rows;
-    }
-    const tickers = Array.isArray(raw.tickers) ? raw.tickers : [];
-    const bySec = raw.by_sector && typeof raw.by_sector === "object" ? raw.by_sector : {};
-    function dateFromBySector(tk){
-      for(const arr of Object.values(bySec)){
-        if(!Array.isArray(arr)) continue;
-        for(const row of arr){
-          if(row && row.ticker === tk) return String(row.added || "");
-        }
-      }
-      return "";
-    }
-    function dateFromHistory(tk){
-      const hist = Array.isArray(raw.history) ? raw.history : [];
-      for(let i = hist.length - 1; i >= 0; i--){
-        const h = hist[i];
-        const added = Array.isArray(h && h.added) ? h.added : [];
-        if(added.indexOf(tk) >= 0) return String((h && h.date) || "");
-      }
-      return "";
-    }
-    tickers.forEach(tk=>{
-      if(typeof tk !== "string" || !tk.trim()) return;
-      const d = dateFromBySector(tk) || dateFromHistory(tk);
-      rows.push({ ticker: tk.trim(), date: d, source: "" });
-    });
-    return rows;
-  }
-
-  function renderHeatmap(pricesMap, blogRows){
-    const cards = document.getElementById("heatmap-cards");
-    if(!cards) return;
-    cards.innerHTML = "";
-
-    SECTORS.forEach(sec => {
-      const data = sec.tickers
-        .map(t => ({ t, chg: chgFor(pricesMap, t) }))
-        .filter(x => x.chg !== null);
-
-      let bestTicker="-", bestChg=null, worstTicker="-", worstChg=null, avg=0;
-      if(data.length){
-        data.forEach(x=>{ avg += x.chg; });
-        avg = avg / data.length;
-        const sorted = [...data].sort((a,b)=>b.chg-a.chg);
-        bestTicker  = sorted[0].t;  bestChg  = sorted[0].chg;
-        worstTicker = sorted[sorted.length-1].t; worstChg = sorted[sorted.length-1].chg;
-      }
-      const sig = signalLabel(data.length ? avg : 0);
-
-      const card = document.createElement("div");
-      card.style.cssText = "background:var(--white);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;";
-      card.innerHTML =
-        `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
-           <span style="width:8px;height:8px;border-radius:50%;background:${sec.dot};flex-shrink:0;"></span>
-           <span style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--es-ink2);text-transform:uppercase;">${sec.name}</span>
-         </div>
-         <div style="font-size:10px;color:var(--bull);margin-bottom:2px;">▲ ${bestTicker} ${bestChg!==null?bestChg.toFixed(1)+'%':'—'}</div>
-         <div style="font-size:10px;color:var(--bear);margin-bottom:5px;">▼ ${worstTicker} ${worstChg!==null?worstChg.toFixed(1)+'%':'—'}</div>
-         <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:${sig.color};">SECTOR SIGNAL: ${sig.text}</div>`;
-      cards.appendChild(card);
-    });
-
-    const radarItems = (blogRows || []).filter(b => b && b.ticker && !PORTFOLIO_TICKERS.has(b.ticker));
-
-    const radarCard = document.createElement("div");
-    radarCard.style.cssText = "background:var(--radar-bg);border:1px solid #e8c9a0;border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;";
-    let radarInner =
-      `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
-         <span style="width:8px;height:8px;border-radius:50%;background:var(--c-radar);flex-shrink:0;"></span>
-         <span style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--radar);text-transform:uppercase;">RADAR</span>
-       </div>`;
-    if(radarItems.length){
-      radarItems.slice(0,6).forEach(b=>{
-        radarInner += `<div style="font-size:9px;color:var(--radar);margin-bottom:3px;">
-          <span style="font-weight:700;">${b.ticker}</span>
-          <span style="color:var(--warn);margin-left:4px;">NEW SIGNAL</span>
-          <span style="color:var(--es-ink4);margin-left:4px;">${b.date||""}</span>
-        </div>`;
-      });
-    } else {
-      radarInner += `<div style="font-size:9px;color:var(--es-ink4);">No new signals</div>`;
-    }
-    radarCard.innerHTML = radarInner;
-    cards.appendChild(radarCard);
-
-    const tsEl = document.getElementById("heatmap-refresh-ts");
-    if(tsEl) tsEl.textContent = "updated " + new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
-  }
-
-  async function loadHeatmap(){
-    const rawPrices = await fetchJsonFirstOk(PRICES_URLS);
-    const pricesMap = normalizePrices(rawPrices || {});
-    let blogRaw = null;
-    try{
-      const r = await fetch(BLOG_TICKERS_URL + "?t=" + Date.now(), { cache: "no-store" });
-      if(r.ok) blogRaw = await r.json();
-    }catch(_){ /* ignore */ }
-    const blogRows = normalizeBlog(blogRaw || {});
-    renderHeatmap(pricesMap, blogRows);
-    if(typeof window.OLY_fillRadar === "function") window.OLY_fillRadar(blogRows);
-  }
-
-  document.addEventListener("DOMContentLoaded", function(){
-    loadHeatmap();
-    setInterval(loadHeatmap, 5 * 60 * 1000);
-  });
-})();
-</script>
-
 <div class="tbl-scroll">
-<table class="master">
-<thead><tr>
-  <th style="min-width:130px">Stock</th>
-  <th>Status</th>
-  <th>Type</th>
-  <th class="r">GOD</th>
-  <th class="r">Price</th>
-  <th class="r" style="min-width:80px">Gap·1Y</th>
-  <th class="r" style="min-width:55px;font-size:10px;">1W</th>
-  <th class="r" style="min-width:55px;font-size:10px;">1M</th>
-  <th class="r" style="min-width:65px;">1Y</th>
-  <th class="r" style="min-width:65px;">5Y</th>
-  <th class="r" style="min-width:70px;font-size:10px;">ENTRY</th>
-  <th class="r" style="min-width:75px;font-size:10px;">VS NOW</th>
-  <th>Signal</th>
-  <th style="min-width:200px">Action · Catalyst</th>
-</tr></thead>
-<tbody>
-
-<!-- ══ INTELLIGENCE ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c1)"></div><div class="cname" style="color:var(--c1)">Intelligence</div><div class="cdesc">AGI · Quantum · Neural Interfaces · Advanced Memory · AI Hardware</div></div></td></tr>
-
-<tr class="r1">
-  <td><div class="tsym">000660.KS</div><div class="tname">SK Hynix</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:95%;background:var(--c1)"></div></div><div class="god-num">95</div></div></td>
-  <td class="r"><span class="pnow" id="price-000660.KS" data-ticker="000660.KS">₩955K</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+17.3%</span><span class="gap-label">to ₩1.12M</span></div></td>
-  <td class="r"><span class="fest pup">₩965K</span></td>
-  <td class="r"><span class="fest pup">₩995K</span></td>
-  <td class="r"><span class="fest pup">₩1.12M</span></td>
-  <td class="r"><span class="fest pup">₩1.52M</span></td>
-  <td><span class="sig s-legend">LEGEND</span></td>
-  <td class="act">NEVER SELL. HBM3E backbone of AGI. Every AI stack runs here.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ HBM4 ramp 2026</span></td>
-</tr>
-
-<tr class="r1">
-  <td><div class="tsym">TSM</div><div class="tname">TSMC ADR</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:90%;background:var(--c1)"></div></div><div class="god-num">90</div></div></td>
-  <td class="r"><span class="pnow" id="price-TSM" data-ticker="TSM">$178</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+23.6%</span><span class="gap-label">to $220</span></div></td>
-  <td class="r"><span class="fest pup">$182</span></td>
-  <td class="r"><span class="fest pup">$188</span></td>
-  <td class="r"><span class="fest pup">$220</span></td>
-  <td class="r"><span class="fest pup">$380</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">World #1 foundry. Makes every leading chip. Irreplaceable infrastructure.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ N2 node · CoWoS demand</span></td>
-</tr>
-
-<tr class="r1">
-  <td><div class="tsym">PLTR</div><div class="tname">Palantir Technologies</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:72%;background:var(--c1)"></div></div><div class="god-num">72</div></div></td>
-  <td class="r"><span class="pnow" id="price-PLTR" data-ticker="PLTR">$150.68</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+13.5%</span><span class="gap-label">to $171</span></div></td>
-  <td class="r"><span class="fest pdn">$144</span></td>
-  <td class="r"><span class="fest pfl">$151</span></td>
-  <td class="r"><span class="fest pup">$171</span></td>
-  <td class="r"><span class="fest pup">$241</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Hold + add dips. Maven = NATO war AI. +65% gap to 2026 goal.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Defense contracts Q2</span></td>
-</tr>
-
-<tr class="r1">
-  <td><div class="tsym">1810.HK</div><div class="tname">Xiaomi</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:68%;background:var(--c1)"></div></div><div class="god-num">68</div></div></td>
-  <td class="r"><span class="pnow" id="price-1810.HK" data-ticker="1810.HK">HK$40</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+62%</span><span class="gap-label">to HK$65</span></div></td>
-  <td class="r"><span class="fest pup">HK$42</span></td>
-  <td class="r"><span class="fest pup">HK$45</span></td>
-  <td class="r"><span class="fest pup">HK$65</span></td>
-  <td class="r"><span class="fest pup">HK$120</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">⏳ OBSERVE. Wait Mar 24 earnings. No average down before signal.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Mar 24 Earnings ← WATCH</span></td>
-</tr>
-
-
-<tr class="r1">
-  <td><div class="tsym">NVDA</div><div class="tname">Nvidia Corporation</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:96%;background:var(--c1)"></div></div><div class="god-num">96</div></div></td>
-  <td class="r">—</td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td class="r"><span class="fest pup">$175+</span></td>
-  <td class="r"><span class="fest pup">$400+</span></td>
-  <td><span class="sig s-buy">BUY</span></td>
-  <td class="act">GPU = printing press of AGI. #1 Future-Fit stock. Enter on correction.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ GTC 2026 · Blackwell</span></td>
-</tr>
-
-<!-- ══ ENERGY ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c2)"></div><div class="cname" style="color:var(--c2)">Energy</div><div class="cdesc">Uranium · Nuclear Renaissance · Solid-State Batteries</div></div></td></tr>
-
-<tr class="r2">
-  <td><div class="tsym">UEC</div><div class="tname">Uranium Energy Corp</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:78%;background:var(--c2)"></div></div><div class="god-num">78</div></div></td>
-  <td class="r"><span class="pnow" id="price-UEC" data-ticker="UEC">$12.09</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+69.6%</span><span class="gap-label">to $20.50</span></div></td>
-  <td class="r"><span class="fest pup">$15.50</span></td>
-  <td class="r"><span class="fest pup">$16.50</span></td>
-  <td class="r"><span class="fest pup">$20.50</span></td>
-  <td class="r"><span class="fest pup">$30.50</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Stop $11.50. -14.68% today = noise. Nuclear renaissance is structural.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Stop $11.50 · Watch</span></td>
-</tr>
-
-<tr class="r2">
-  <td><div class="tsym">URNM</div><div class="tname">Sprott Uranium ETF</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:74%;background:var(--c2)"></div></div><div class="god-num">74</div></div></td>
-  <td class="r"><span class="pnow" id="price-URNM" data-ticker="URNM">$58.13</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+47%</span><span class="gap-label">to $85.50</span></div></td>
-  <td class="r"><span class="fest pup">$70.50</span></td>
-  <td class="r"><span class="fest pup">$72.50</span></td>
-  <td class="r"><span class="fest pup">$85.50</span></td>
-  <td class="r"><span class="fest pup">$121</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Uranium basket ETF. Structural not cyclical. Add in 2 weeks.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Nuclear policy Q2</span></td>
-</tr>
-
-<tr class="r2">
-  <td><div class="tsym">CCJ</div><div class="tname">Cameco Corporation</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:82%;background:var(--c2)"></div></div><div class="god-num">82</div></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td class="r"><span class="fest pup">$65+</span></td>
-  <td class="r"><span class="fest pup">$110+</span></td>
-  <td><span class="sig s-buy">BUY</span></td>
-  <td class="act">Saudi Aramco of uranium. Set limit on pullback. Unavoidable.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Utility contracts</span></td>
-</tr>
-
-<tr class="r2">
-  <td><div class="tsym">OKLO</div><div class="tname">Oklo Inc</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:70%;background:var(--c2)"></div></div><div class="god-num">70</div></div></td>
-  <td class="r"><span class="pnow" id="price-OKLO" data-ticker="OKLO">$49.20</span></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td class="r"><span class="fest pup">Very High</span></td>
-  <td><span class="sig s-buy">BUY</span></td>
-  <td class="act">Micro-nuclear for AI data centers. Sam Altman backed. NRC 2026.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ NRC license 2026</span></td>
-</tr>
-
-<!-- ══ SPACE ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c3)"></div><div class="cname" style="color:var(--c3)">Space / Logistics</div><div class="cdesc">Orbital Infrastructure · Satellite Networks · Lunar Economy</div></div></td></tr>
-
-<tr class="r3">
-  <td><div class="tsym">RKLB</div><div class="tname">Rocket Lab USA</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:58%;background:var(--c3)"></div></div><div class="god-num">58</div></div></td>
-  <td class="r"><span class="pnow" id="price-RKLB" data-ticker="RKLB">$68.36</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+30.2%</span><span class="gap-label">to $87.50</span></div></td>
-  <td class="r"><span class="fest pdn">$70.50</span></td>
-  <td class="r"><span class="fest pup">$73.50</span></td>
-  <td class="r"><span class="fest pup">$87.50</span></td>
-  <td class="r"><span class="fest pup">$124</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Only vertically integrated small-launch co actually launching. Neutron next.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Neutron launch · NASA</span></td>
-</tr>
-
-<tr class="r3">
-  <td><div class="tsym">PL</div><div class="tname">Planet Labs PBC <span class="track-pill track-b" title="Track B — paradigm / inflection">B</span></div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:84%;background:var(--c3)"></div></div><div class="god-num">84</div></div></td>
-  <td class="r"><span class="pnow" id="price-PL" data-ticker="PL">$35.89</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+14%</span><span class="gap-label">to €32+</span></div></td>
-  <td class="r"><span class="fest pup">€28 avg</span></td>
-  <td class="r"><span class="fest pup">$32</span></td>
-  <td class="r"><span class="fest pup">$40</span></td>
-  <td class="r"><span class="fest pup">$55</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">HOLD. NASA contract expansion 2026 — satellite imagery = AI data layer.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ NASA contract expansion 2026</span></td>
-</tr>
-
-<tr class="r3">
-  <td><div class="tsym">ASTS</div><div class="tname">AST SpaceMobile</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:72%;background:var(--c3)"></div></div><div class="god-num">72</div></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td class="r"><span class="fest pup">Very High</span></td>
-  <td class="r"><span class="fest pup">Extreme</span></td>
-  <td><span class="sig s-buy">BUY</span></td>
-  <td class="act">Direct-to-phone satellite. AT&T + Verizon. 3B unconnected humans.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ BlueBird deploy 2026</span></td>
-</tr>
-
-<tr class="r3">
-  <td><div class="tsym">xAI</div><div class="tname">xAI Corp</div></td>
-  <td><span class="badge b-ipo">IPO 2026</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:88%;background:var(--c3)"></div></div><div class="god-num">88</div></div></td>
-  <td class="r"><span style="font-size:9px;color:var(--ipo)">$50B+ val.</span></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td class="r"><span class="fest" style="color:var(--ipo)">Civilizational</span></td>
-  <td><span class="sig s-ipo">IPO READY</span></td>
-  <td class="act">Colossus = world's largest AI cluster. Buy IPO day. Prepare capital now.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ S-1 filing H1 2026</span></td>
-</tr>
-
-<!-- ══ BIO ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c4)"></div><div class="cname" style="color:var(--c4)">Bio-Engineering</div><div class="cdesc">CRISPR · Base Editing · Longevity · AI Drug Discovery</div></div></td></tr>
-
-<tr class="r4">
-  <td><div class="tsym">CRSP</div><div class="tname">CRISPR Therapeutics</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:48%;background:var(--c4)"></div></div><div class="god-num">48</div></div></td>
-  <td class="r"><span class="pnow" id="price-CRSP" data-ticker="CRSP">$51.87</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+8.1%</span><span class="gap-label">to $50</span></div></td>
-  <td class="r"><span class="fest pdn">$40</span></td>
-  <td class="r"><span class="fest pdn">$42</span></td>
-  <td class="r"><span class="fest pfl">$50</span></td>
-  <td class="r"><span class="fest pup">$70</span></td>
-  <td><span class="sig s-sell">CAUTION</span></td>
-  <td class="act">Not held. $350M dilution. Wait below $40. Mar 26 catalyst.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Earnings Mar 26</span></td>
-</tr>
-
-<tr class="r4">
-  <td><div class="tsym">NTLA</div><div class="tname">Intellia Therapeutics</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:55%;background:var(--c4)"></div></div><div class="god-num">55</div></div></td>
-  <td class="r"><span class="pnow" id="price-NTLA" data-ticker="NTLA">$62</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+67.4%</span><span class="gap-label">to $21.50</span></div></td>
-  <td class="r"><span class="fest pup">$14.70</span></td>
-  <td class="r"><span class="fest pup">$15.70</span></td>
-  <td class="r"><span class="fest pup">$21.50</span></td>
-  <td class="r"><span class="fest pup">$36.50</span></td>
-  <td><span class="sig s-watch">WATCH</span></td>
-  <td class="act">Not held. Limit $10 when ready. In-vivo gene editing. +67% gap.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Phase 3 TTR H2 2026</span></td>
-</tr>
-
-<tr class="r4">
-  <td><div class="tsym">BEAM</div><div class="tname">Beam Therapeutics</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:70%;background:var(--c4)"></div></div><div class="god-num">70</div></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-buy">BUY</span></td>
-  <td class="act">Base editing = next-gen CRISPR. David Liu. More precise. Set limit.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Phase 1/2 data 2026</span></td>
-</tr>
-
-<tr class="r4">
-  <td><div class="tsym">TMO</div><div class="tname">Thermo Fisher</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:68%;background:var(--c4)"></div></div><div class="god-num">68</div></div></td>
-  <td class="r"><span class="pnow" id="price-TMO" data-ticker="TMO">$474.39</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+26.7%</span><span class="gap-label">to $601</span></div></td>
-  <td class="r"><span class="fest pup">$506</span></td>
-  <td class="r"><span class="fest pup">$521</span></td>
-  <td class="r"><span class="fest pup">$601</span></td>
-  <td class="r"><span class="fest pup">$801</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Life science instruments. Every gene editing lab needs TMO.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Q1 2026 earnings</span></td>
-</tr>
-
-<!-- ══ ROBOTICS ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c5)"></div><div class="cname" style="color:var(--c5)">Robotics</div><div class="cdesc">Humanoids · Autonomous Manufacturing · Defense Drones · Physical Weapons</div></div></td></tr>
-
-<tr class="r5">
-  <td><div class="tsym">272210.KS</div><div class="tname">Hanwha Systems</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:92%;background:var(--c5)"></div></div><div class="god-num">92</div></div></td>
-  <td class="r"><span class="pnow" id="price-272210.KS" data-ticker="272210.KS">₩136K</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+34.9%</span><span class="gap-label">to ₩183.5K</span></div></td>
-  <td class="r"><span class="fest pup">₩158.5K</span></td>
-  <td class="r"><span class="fest pup">₩163.5K</span></td>
-  <td class="r"><span class="fest pup">₩183.5K</span></td>
-  <td class="r"><span class="fest pup">₩253.5K</span></td>
-  <td><span class="sig s-legend">LEGEND</span></td>
-  <td class="act">NEVER SELL. Korea's autonomous weapons + propulsion. +820% thesis intact.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ K-defense budget 2026</span></td>
-</tr>
-
-<tr class="r5">
-  <td><div class="tsym">KTOS</div><div class="tname">Kratos Defense</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:80%;background:var(--c5)"></div></div><div class="god-num">80</div></div></td>
-  <td class="r"><span class="pnow" id="price-KTOS" data-ticker="KTOS">$84.62</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+17.6%</span><span class="gap-label">to $99.50</span></div></td>
-  <td class="r"><span class="fest pdn">$87.50</span></td>
-  <td class="r"><span class="fest pup">$89.50</span></td>
-  <td class="r"><span class="fest pup">$99.50</span></td>
-  <td class="r"><span class="fest pup">$130</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Drones deployed in live conflict = real revenue. Add at $80. Stop $75.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ DoD contract Q2</span></td>
-</tr>
-
-<tr class="r5">
-  <td><div class="tsym">ARKQ</div><div class="tname">ARK Autonomous ETF</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:62%;background:var(--c5)"></div></div><div class="god-num">62</div></div></td>
-  <td class="r"><span class="pnow" id="price-ARKQ" data-ticker="ARKQ">$62</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+37.1%</span><span class="gap-label">to $85</span></div></td>
-  <td class="r"><span class="fest pup">$64</span></td>
-  <td class="r"><span class="fest pup">$67</span></td>
-  <td class="r"><span class="fest pup">$85</span></td>
-  <td class="r"><span class="fest pup">$150</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Autonomous vehicles + robotics basket. +30% unrealized. Hold.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Tesla Optimus · EV</span></td>
-</tr>
-
-<tr class="r5">
-  <td><div class="tsym">BOTZ</div><div class="tname">Global X Robotics ETF</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:60%;background:var(--c5)"></div></div><div class="god-num">60</div></div></td>
-  <td class="r"><span class="pnow" id="price-BOTZ" data-ticker="BOTZ">$33</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+36.4%</span><span class="gap-label">to $45</span></div></td>
-  <td class="r"><span class="fest pup">$34</span></td>
-  <td class="r"><span class="fest pup">$36</span></td>
-  <td class="r"><span class="fest pup">$45</span></td>
-  <td class="r"><span class="fest pup">$80</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">AI + robotics basket. +11.6% unrealized. Complements ARKQ.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Humanoid production</span></td>
-</tr>
-
-<tr class="r5">
-  <td><div class="tsym">Figure AI</div><div class="tname">Figure AI Inc</div></td>
-  <td><span class="badge b-ipo">IPO Watch</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:85%;background:var(--c5)"></div></div><div class="god-num">85</div></div></td>
-  <td class="r"><span style="font-size:9px;color:var(--ipo)">$40B private</span></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td class="r"><span style="color:var(--ipo)">Generational</span></td>
-  <td><span class="sig s-ipo">IPO WATCH</span></td>
-  <td class="act">BMW factory live. Most advanced humanoid. IPO 2026/27. Watch S-1.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ BMW deploy · IPO S-1</span></td>
-</tr>
-
-<!-- ══ INFRASTRUCTURE ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c6)"></div><div class="cname" style="color:var(--c6)">Infrastructure</div><div class="cdesc">Photonics · Data Center Power · Semiconductor Equipment</div></div></td></tr>
-
-<tr class="r6">
-  <td><div class="tsym">COHR</div><div class="tname">Coherent Corp</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:76%;background:var(--c6)"></div></div><div class="god-num">76</div></div></td>
-  <td class="r"><span class="pnow" id="price-COHR" data-ticker="COHR">$84.70</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+24.2%</span><span class="gap-label">to $315</span></div></td>
-  <td class="r"><span class="fest pup">$275</span></td>
-  <td class="r"><span class="fest pup">$280</span></td>
-  <td class="r"><span class="fest pup">$315</span></td>
-  <td class="r"><span class="fest pup">$425</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">NVIDIA supply deal locked. 800G = photonics backbone of AI networks.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ 800G ramp Q2</span></td>
-</tr>
-
-<tr class="r6">
-  <td><div class="tsym">VRT</div><div class="tname">Vertiv Holdings</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:84%;background:var(--c6)"></div></div><div class="god-num">84</div></div></td>
-  <td class="r"><span class="pnow" id="price-VRT" data-ticker="VRT">$89</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+40.4%</span><span class="gap-label">to $125</span></div></td>
-  <td class="r"><span class="fest pup">$92</span></td>
-  <td class="r"><span class="fest pup">$96</span></td>
-  <td class="r"><span class="fest pup">$125</span></td>
-  <td class="r"><span class="fest pup">$220</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">AI data center power + cooling. Every hyperscaler needs Vertiv.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ AI capex supercycle</span></td>
-</tr>
-
-<tr class="r6">
-  <td><div class="tsym">AMAT</div><div class="tname">Applied Materials</div></td>
-  <td><span class="badge b-watch">Watchlist</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:79%;background:var(--c6)"></div></div><div class="god-num">79</div></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-buy">BUY</span></td>
-  <td class="act">Chip manufacturing equipment. SK Hynix partner. Cannot build chips without AMAT.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Chip capex cycle</span></td>
-</tr>
-
-<!-- ══ GLOBAL ISSUE RADAR ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#fff8f0"><div class="cdot" style="background:var(--c-radar)"></div><div class="cname" style="color:var(--c-radar)">⚑ Global Issue Radar</div><div class="cdesc">Current: Food Security / War Fertilizer · Wolsong Nuclear Signal · Review weekly</div></div></td></tr>
-
-<tr class="rr">
-  <td><div class="tsym">NTR</div><div class="tname">Nutrien Ltd</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:72%;background:var(--c-radar)"></div></div><div class="god-num">72</div></div></td>
-  <td class="r"><span class="pnow" id="price-NTR" data-ticker="NTR">$47</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+53.2%</span><span class="gap-label">to $72</span></div></td>
-  <td class="r"><span class="fest pup">$50</span></td>
-  <td class="r"><span class="fest pup">$54</span></td>
-  <td class="r"><span class="fest pup">$72</span></td>
-  <td class="r"><span class="fest pup">$110</span></td>
-  <td><span class="sig s-strike">🟢 STRIKE</span></td>
-  <td class="act">⚔ ACTIVE MISSION. Add before Mar 31 dividend. War premium not priced in.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Mar 31 Dividend · War</span></td>
-</tr>
-
-<tr class="r6">
-  <td><div class="tsym">FCX</div><div class="tname">Freeport-McMoRan</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:45%;background:var(--c6)"></div></div><div class="god-num">45</div></div></td>
-  <td class="r"><span class="pnow" id="price-FCX" data-ticker="FCX">$52.09</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-dn">-0.8%</span><span class="gap-label">from entry</span></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Kiwoom — copper tactical hold. Macro cycle intact; monitor stop $54.50.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Kiwoom book</span></td>
-</tr>
-
-<tr class="rr">
-  <td><div class="tsym">POSCO</div><div class="tname">POSCO Holdings</div></td>
-  <td><span class="badge b-radar">Radar</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:65%;background:var(--c-radar)"></div></div><div class="god-num">65</div></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-watch">WATCH</span></td>
-  <td class="act">NEW — ranto28 signal today. Wolsong tritium + H2 steelmaking. Research needed.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Wolsong · H2 steel</span></td>
-</tr>
-
-<!-- ══ RADAR (sector 8 · ranto28) ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#fffdfb;border-top:1px solid #e8c9a0;"><div class="cdot" style="background:var(--radar)"></div><div class="cname" style="color:var(--radar)">8 · RADAR</div><div class="cdesc">Blog-detected names not in portfolio · syncs with heatmap (5 min)</div></div></td></tr>
-<tr class="rr"><td colspan="13" id="radar-matrix-compact" style="padding:10px 40px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);background:var(--radar-bg);">Loading blog signals…</td></tr>
-
-<!-- ══ LOCKED ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#f4f4f8"><div class="cdot" style="background:var(--locked)"></div><div class="cname" style="color:var(--locked)">Locked Position</div><div class="cdesc">TR promotional gift — cannot sell for 1 year</div></div></td></tr>
-
-<tr class="rl">
-  <td><div class="tsym">MC.PA</div><div class="tname">LVMH</div></td>
-  <td><span class="badge b-locked">Locked</span></td>
-  <td><span class="shield-badge">🛡 SHIELD</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:75%;background:var(--locked)"></div></div><div class="god-num">75</div></div></td>
-  <td class="r"><span class="pnow" id="price-MC.PA" data-ticker="MC.PA">€500</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+20.4%</span><span class="gap-label">to $602</span></div></td>
-  <td class="r">—</td><td class="r">—</td>
-  <td class="r"><span class="fest pup">$602</span></td>
-  <td class="r"><span class="fest pup">$802</span></td>
-  <td><span class="sig s-locked">LOCKED</span></td>
-  <td class="act">TR gift. Cannot sell ~1yr. Track only. Generational brand basket.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Lock expiry — check TR</span></td>
-</tr>
-
-<!-- ══ TACTICAL — GOLD SATELLITE ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#f8f8f8"><div class="cdot" style="background:var(--exit)"></div><div class="cname" style="color:var(--exit)">Tactical · Gold satellite</div><div class="cdesc">Single remaining tactical exit sleeve · Kiwoom / macro overlay</div></div></td></tr>
-
-<tr class="re">
-  <td><div class="tsym">IAU</div><div class="tname">iShares Gold ETF</div></td>
-  <td><span class="badge b-exit">Exit</span></td>
-  <td>—</td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:30%;background:var(--exit)"></div></div><div class="god-num">30</div></div></td>
-  <td class="r"><span class="pnow" id="price-IAU" data-ticker="IAU">$175</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+128%</span><span class="gap-label">unrealized</span></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-exit">EXIT SOON</span></td>
-  <td class="act">+128% = EXIT GIFT. Sell on next gold strength. Redeploy into NVDA or CCJ.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Next gold rally = exit</span></td>
-</tr>
-
-</tbody></table>
+<table class="master matrix-v2">
+<thead><tr><th>Stock</th><th>Sector</th><th class="r">GOD</th><th class="r">Entry Now</th><th>Thesis</th><th class="r">Soros</th><th>Action</th><th class="r">Target</th></tr></thead><tbody>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c1)"></div><div class="cname" style="color:var(--c1)">Intelligence</div><div class="cdesc">AGI · Quantum · Neural Interfaces · Advanced Memory · AI Hardware</div></div></td></tr>
+<tr class="mx-row" data-ticker="000660.KS" data-entry-num="85000" data-entry-mode="krw" data-entry-disp="₩85,000" title="HBM3E backbone of AGI — NEVER SELL."><td><div class="mx-tk">000660.KS</div><div class="mx-nm">SK Hynix</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:95%;background:var(--c1)"></div></div><span class="god-num">95</span></div></td><td class="r mx-en"><span class="mx-ed">₩85,000</span> → <span class="mx-nowwrap"><span class="pnow" id="price-000660.KS" data-ticker="000660.KS">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="TSM" data-entry-num="152" data-entry-mode="usd" data-entry-disp="€140" title="Foundry monopoly — N2 / CoWoS demand."><td><div class="mx-tk">TSM</div><div class="mx-nm">TSMC ADR</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:90%;background:var(--c1)"></div></div><span class="god-num">90</span></div></td><td class="r mx-en"><span class="mx-ed">€140</span> → <span class="mx-nowwrap"><span class="pnow" id="price-TSM" data-ticker="TSM">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="PLTR" data-entry-num="109" data-entry-mode="usd" data-entry-disp="$109" title="Defense + Maven — stop defines risk."><td><div class="mx-tk">PLTR</div><div class="mx-nm">Palantir</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:72%;background:var(--c1)"></div></div><span class="god-num">72</span></div></td><td class="r mx-en"><span class="mx-ed">$109</span> → <span class="mx-nowwrap"><span class="pnow" id="price-PLTR" data-ticker="PLTR">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">Stop €95</td></tr>
+<tr class="mx-row" data-ticker="1810.HK" data-entry-num="42" data-entry-mode="hkd" data-entry-disp="HK$42" title="EV + phones + IoT scale."><td><div class="mx-tk">1810.HK</div><div class="mx-nm">Xiaomi</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:68%;background:var(--c1)"></div></div><span class="god-num">68</span></div></td><td class="r mx-en"><span class="mx-ed">HK$42</span> → <span class="mx-nowwrap"><span class="pnow" id="price-1810.HK" data-ticker="1810.HK">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="NVDA" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Enter on correction — AGI compute layer."><td><div class="mx-tk">NVDA</div><div class="mx-nm">Nvidia</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:96%;background:var(--c1)"></div></div><span class="god-num">96</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-NVDA" data-ticker="NVDA">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-buy">BUY</span></td><td class="r mx-tgt">Pullback</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c2)"></div><div class="cname" style="color:var(--c2)">Energy</div><span class="sector-min-warn">⚠️ Energy — only 4/5 minimum — add watchlist position</span><div class="cdesc">Uranium · Nuclear Renaissance · Solid-State Batteries</div></div></td></tr>
+<tr class="mx-row" data-ticker="UEC" data-entry-num="11.9" data-entry-mode="usd" data-entry-disp="€11" title="Burke Hollow / spot leverage thesis."><td><div class="mx-tk">UEC</div><div class="mx-nm">Uranium Energy</div></td><td><span class="sec-badge" style="background:var(--c2)">Energy</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:78%;background:var(--c2)"></div></div><span class="god-num">78</span></div></td><td class="r mx-en"><span class="mx-ed">€11</span> → <span class="mx-nowwrap"><span class="pnow" id="price-UEC" data-ticker="UEC">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">€11 limit</td></tr>
+<tr class="mx-row" data-ticker="URNM" data-entry-num="77.8" data-entry-mode="usd" data-entry-disp="€72" title="Basket — structural uranium."><td><div class="mx-tk">URNM</div><div class="mx-nm">Sprott Uranium ETF</div></td><td><span class="sec-badge" style="background:var(--c2)">Energy</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:74%;background:var(--c2)"></div></div><span class="god-num">74</span></div></td><td class="r mx-en"><span class="mx-ed">€72</span> → <span class="mx-nowwrap"><span class="pnow" id="price-URNM" data-ticker="URNM">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="CCJ" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Western producer — utility contracts."><td><div class="mx-tk">CCJ</div><div class="mx-nm">Cameco</div></td><td><span class="sec-badge" style="background:var(--c2)">Energy</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:82%;background:var(--c2)"></div></div><span class="god-num">82</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-CCJ" data-ticker="CCJ">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-buy">BUY</span></td><td class="r mx-tgt">$100</td></tr>
+<tr class="mx-row" data-ticker="OKLO" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="SMR + Meta power deal / NRC path."><td><div class="mx-tk">OKLO</div><div class="mx-nm">Oklo Inc</div></td><td><span class="sec-badge" style="background:var(--c2)">Energy</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:70%;background:var(--c2)"></div></div><span class="god-num">70</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-OKLO" data-ticker="OKLO">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-buy">BUY</span></td><td class="r mx-tgt">$44</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c3)"></div><div class="cname" style="color:var(--c3)">Space / Logistics</div><span class="sector-min-warn">⚠️ Space / Logistics — only 4/5 minimum — add watchlist position</span><div class="cdesc">Orbital Infrastructure · Satellite Networks · Lunar Economy</div></div></td></tr>
+<tr class="mx-row" data-ticker="PL" data-entry-num="28" data-entry-mode="eur_from_usd" data-entry-disp="€28" title="NASA contract expansion 2026."><td><div class="mx-tk">PL</div><div class="mx-nm">Planet Labs</div></td><td><span class="sec-badge" style="background:var(--c3)">Space</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:84%;background:var(--c3)"></div></div><span class="god-num">84</span></div></td><td class="r mx-en"><span class="mx-ed">€28</span> → <span class="mx-nowwrap"><span class="pnow" id="price-PL" data-ticker="PL">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="RKLB" data-entry-num="62.6" data-entry-mode="usd" data-entry-disp="€58" title="Neutron / NASA cadence."><td><div class="mx-tk">RKLB</div><div class="mx-nm">Rocket Lab</div></td><td><span class="sec-badge" style="background:var(--c3)">Space</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:58%;background:var(--c3)"></div></div><span class="god-num">58</span></div></td><td class="r mx-en"><span class="mx-ed">€58</span> → <span class="mx-nowwrap"><span class="pnow" id="price-RKLB" data-ticker="RKLB">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="ASTS" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="BlueBird / telco LEO."><td><div class="mx-tk">ASTS</div><div class="mx-nm">AST SpaceMobile</div></td><td><span class="sec-badge" style="background:var(--c3)">Space</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:72%;background:var(--c3)"></div></div><span class="god-num">72</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-ASTS" data-ticker="ASTS">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-watch">WATCH</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="xAI" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Colossus cluster — IPO window."><td><div class="mx-tk">xAI</div><div class="mx-nm">xAI Corp</div></td><td><span class="sec-badge" style="background:var(--c3)">Space</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:88%;background:var(--c3)"></div></div><span class="god-num">88</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-xAI" data-ticker="xAI">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-ipo">IPO</span></td><td class="r mx-tgt">S-1 H1</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c4)"></div><div class="cname" style="color:var(--c4)">Bio-Engineering</div><span class="sector-min-warn">⚠️ Bio-Engineering — only 4/5 minimum — add watchlist position</span><div class="cdesc">CRISPR · Base Editing · Longevity · AI Drug Discovery</div></div></td></tr>
+<tr class="mx-row" data-ticker="TMO" data-entry-num="518" data-entry-mode="usd" data-entry-disp="€480" title="Instruments layer for gene editing labs."><td><div class="mx-tk">TMO</div><div class="mx-nm">Thermo Fisher</div></td><td><span class="sec-badge" style="background:var(--c4)">Bio-Engineerin</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:68%;background:var(--c4)"></div></div><span class="god-num">68</span></div></td><td class="r mx-en"><span class="mx-ed">€480</span> → <span class="mx-nowwrap"><span class="pnow" id="price-TMO" data-ticker="TMO">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="BEAM" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Base editing — clinical milestones."><td><div class="mx-tk">BEAM</div><div class="mx-nm">Beam Therapeutics</div></td><td><span class="sec-badge" style="background:var(--c4)">Bio-Engineerin</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:70%;background:var(--c4)"></div></div><span class="god-num">70</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-BEAM" data-ticker="BEAM">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-buy">BUY</span></td><td class="r mx-tgt">Limit</td></tr>
+<tr class="mx-row" data-ticker="NTLA" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Volatility — wait Phase 3 TTR."><td><div class="mx-tk">NTLA</div><div class="mx-nm">Intellia</div></td><td><span class="sec-badge" style="background:var(--c4)">Bio-Engineerin</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:55%;background:var(--c4)"></div></div><span class="god-num">55</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-NTLA" data-ticker="NTLA">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--warn);">Wounded</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-watch">WATCH</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="CRSP" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Dilution overhang — caution."><td><div class="mx-tk">CRSP</div><div class="mx-nm">CRISPR Tx</div></td><td><span class="sec-badge" style="background:var(--c4)">Bio-Engineerin</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:48%;background:var(--c4)"></div></div><span class="god-num">48</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-CRSP" data-ticker="CRSP">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--warn);">Wounded</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-trim">TRIM</span></td><td class="r mx-tgt">&lt;$40</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c5)"></div><div class="cname" style="color:var(--c5)">Robotics</div><div class="cdesc">Humanoids · Autonomous Manufacturing · Defense Drones</div></div></td></tr>
+<tr class="mx-row" data-ticker="272210.KS" data-entry-num="45000" data-entry-mode="krw" data-entry-disp="₩45,000" title="K-defense — NEVER SELL."><td><div class="mx-tk">272210.KS</div><div class="mx-nm">Hanwha Systems</div></td><td><span class="sec-badge" style="background:var(--c5)">Robotics</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:92%;background:var(--c5)"></div></div><span class="god-num">92</span></div></td><td class="r mx-en"><span class="mx-ed">₩45,000</span> → <span class="mx-nowwrap"><span class="pnow" id="price-272210.KS" data-ticker="272210.KS">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="KTOS" data-entry-num="80" data-entry-mode="usd" data-entry-disp="$80" title="Drones in conflict = revenue."><td><div class="mx-tk">KTOS</div><div class="mx-nm">Kratos Defense</div></td><td><span class="sec-badge" style="background:var(--c5)">Robotics</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:80%;background:var(--c5)"></div></div><span class="god-num">80</span></div></td><td class="r mx-en"><span class="mx-ed">$80</span> → <span class="mx-nowwrap"><span class="pnow" id="price-KTOS" data-ticker="KTOS">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">Add $80</td></tr>
+<tr class="mx-row" data-ticker="ARKQ" data-entry-num="55" data-entry-mode="usd" data-entry-disp="$55" title="Robotics basket exposure."><td><div class="mx-tk">ARKQ</div><div class="mx-nm">ARK Autonomous ETF</div></td><td><span class="sec-badge" style="background:var(--c5)">Robotics</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:62%;background:var(--c5)"></div></div><span class="god-num">62</span></div></td><td class="r mx-en"><span class="mx-ed">$55</span> → <span class="mx-nowwrap"><span class="pnow" id="price-ARKQ" data-ticker="ARKQ">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="BOTZ" data-entry-num="23" data-entry-mode="usd" data-entry-disp="$23" title="Humanoid / automation basket."><td><div class="mx-tk">BOTZ</div><div class="mx-nm">Global X Robotics ETF</div></td><td><span class="sec-badge" style="background:var(--c5)">Robotics</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:60%;background:var(--c5)"></div></div><span class="god-num">60</span></div></td><td class="r mx-en"><span class="mx-ed">$23</span> → <span class="mx-nowwrap"><span class="pnow" id="price-BOTZ" data-ticker="BOTZ">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Humanoid BMW deploy — IPO watch."><td><div class="mx-tk">Figure AI</div><div class="mx-nm">Figure AI Inc</div></td><td><span class="sec-badge" style="background:var(--c5)">Robotics</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:85%;background:var(--c5)"></div></div><span class="god-num">85</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap">—</span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-ipo">IPO</span></td><td class="r mx-tgt">S-1</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c6)"></div><div class="cname" style="color:var(--c6)">Infrastructure</div><span class="sector-min-warn">⚠️ Infrastructure — only 3/5 minimum — add watchlist position</span><div class="cdesc">Photonics · Data Center Power · Semiconductor Equipment</div></div></td></tr>
+<tr class="mx-row" data-ticker="VRT" data-entry-num="65" data-entry-mode="usd" data-entry-disp="$65" title="AI power / cooling hyperscale."><td><div class="mx-tk">VRT</div><div class="mx-nm">Vertiv</div></td><td><span class="sec-badge" style="background:var(--c6)">Infrastructure</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:84%;background:var(--c6)"></div></div><span class="god-num">84</span></div></td><td class="r mx-en"><span class="mx-ed">$65</span> → <span class="mx-nowwrap"><span class="pnow" id="price-VRT" data-ticker="VRT">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="COHR" data-entry-num="59.4" data-entry-mode="usd" data-entry-disp="€55" title="800G photonics / NVIDIA supply."><td><div class="mx-tk">COHR</div><div class="mx-nm">Coherent</div></td><td><span class="sec-badge" style="background:var(--c6)">Infrastructure</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:76%;background:var(--c6)"></div></div><span class="god-num">76</span></div></td><td class="r mx-en"><span class="mx-ed">€55</span> → <span class="mx-nowwrap"><span class="pnow" id="price-COHR" data-ticker="COHR">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row" data-ticker="AMAT" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="Semi equipment — Hynix partner."><td><div class="mx-tk">AMAT</div><div class="mx-nm">Applied Materials</div></td><td><span class="sec-badge" style="background:var(--c6)">Infrastructure</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:79%;background:var(--c6)"></div></div><span class="god-num">79</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-AMAT" data-ticker="AMAT">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-buy">BUY</span></td><td class="r mx-tgt">Chip capex</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c-radar)"></div><div class="cname" style="color:var(--c-radar)">Global Issue Radar</div><span class="sector-min-warn">⚠️ Global Issue Radar — only 3/5 minimum — add watchlist position</span><div class="cdesc">Food Security / Fertilizer · War premium · Review weekly</div></div></td></tr>
+<tr class="mx-row" data-ticker="NTR" data-entry-num="58.3" data-entry-mode="usd" data-entry-disp="€54" title="War fertilizer / potash levered."><td><div class="mx-tk">NTR</div><div class="mx-nm">Nutrien</div></td><td><span class="sec-badge" style="background:var(--c-radar)">Global Issue R</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:72%;background:var(--c-radar)"></div></div><span class="god-num">72</span></div></td><td class="r mx-en"><span class="mx-ed">€54</span> → <span class="mx-nowwrap"><span class="pnow" id="price-NTR" data-ticker="NTR">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-add">ADD</span></td><td class="r mx-tgt">Div</td></tr>
+<tr class="mx-row" data-ticker="FCX" data-entry-num="52" data-entry-mode="usd" data-entry-disp="$52" title="Kiwoom copper tactical — macro cycle."><td><div class="mx-tk">FCX</div><div class="mx-nm">Freeport-McMoRan</div></td><td><span class="sec-badge" style="background:var(--c-radar)">Global Issue R</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:45%;background:var(--c-radar)"></div></div><span class="god-num">45</span></div></td><td class="r mx-en"><span class="mx-ed">$52</span> → <span class="mx-nowwrap"><span class="pnow" id="price-FCX" data-ticker="FCX">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">$54.50</td></tr>
+<tr class="mx-row" data-ticker="POSCO" data-entry-num="0" data-entry-mode="usd" data-entry-disp="—" title="ranto28 — Wolsong / H2 steel."><td><div class="mx-tk">POSCO</div><div class="mx-nm">POSCO Holdings</div></td><td><span class="sec-badge" style="background:var(--c-radar)">Global Issue R</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:65%;background:var(--c-radar)"></div></div><span class="god-num">65</span></div></td><td class="r mx-en"><span class="mx-ed">—</span> → <span class="mx-nowwrap"><span class="pnow" id="price-POSCO" data-ticker="POSCO">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-watch">WATCH</span></td><td class="r mx-tgt">—</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--radar)"></div><div class="cname" style="color:var(--radar)">8 · RADAR</div><div class="cdesc">Blog-detected names not in portfolio</div></div></td></tr>
+<tr class="rr"><td colspan="8" id="radar-matrix-compact" style="padding:10px 24px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);background:var(--radar-bg);">Loading blog signals</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--locked)"></div><div class="cname" style="color:var(--locked)">Locked Position</div><div class="cdesc">TR promotional gift — cannot sell ~1 year</div></div></td></tr>
+<tr class="mx-row" data-ticker="MC.PA" data-entry-num="0" data-entry-mode="gift" data-entry-disp="Gift" title="Locked TR gift — track only."><td><div class="mx-tk">MC.PA</div><div class="mx-nm">LVMH</div></td><td><span class="sec-badge" style="background:var(--locked)">Locked Positio</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:75%;background:var(--locked)"></div></div><span class="god-num">75</span></div></td><td class="r mx-en"><span class="mx-ed">Gift</span> → <span class="mx-nowwrap"><span class="pnow" id="price-MC.PA" data-ticker="MC.PA">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr><td colspan="8" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--exit)"></div><div class="cname" style="color:var(--exit)">Tactical · Gold satellite</div><div class="cdesc">Kiwoom / macro overlay — exit sleeve</div></div></td></tr>
+<tr class="mx-row" data-ticker="IAU" data-entry-num="175" data-entry-mode="usd" data-entry-disp="$175" title="Take profit on strength — redeploy."><td><div class="mx-tk">IAU</div><div class="mx-nm">iShares Gold ETF</div></td><td><span class="sec-badge" style="background:var(--exit)">Tactical · Gol</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:30%;background:var(--exit)"></div></div><span class="god-num">30</span></div></td><td class="r mx-en"><span class="mx-ed">$175</span> → <span class="mx-nowwrap"><span class="pnow" id="price-IAU" data-ticker="IAU">—</span></span><span class="mx-pct" style="display:block;font-size:9px;"></span></td><td><span class="mx-thesis" style="color:var(--buy);">Intact</span></td><td class="r mx-sgap">—</td><td><span class="mx-act mx-act-exit">EXIT</span></td><td class="r mx-tgt">Next rally</td></tr>
+</tbody></table></div>
 
 <script>
-// ── ENTRY PRICE + VS NOW COLUMN INJECTION ──────────────────────────────────
-(function(){
-  // Entry prices in native trading currency (USD unless noted)
-  const ENTRY = {
-    "000660.KS": { val: 85000,  lbl: "₩85,000" },
-    "272210.KS": { val: 45000,  lbl: "₩45,000" },
-    "TSM":       { val: 152,    lbl: "€140" },   // EUR→USD approx
-    "PLTR":      { val: 109,    lbl: "€109 avg" },
-    "PL":        { val: 28,     lbl: "€28 avg",  vsEur: true },
-    "1810.HK":   { val: 42,     lbl: "HK$42"  },
-    "UEC":       { val: 11.9,   lbl: "€11"    },
-    "URNM":      { val: 77.8,   lbl: "€72"    },
-    "COHR":      { val: 59.4,   lbl: "€55"    },
-    "RKLB":      { val: 62.6,   lbl: "€58"    },
-    "NTR":       { val: 58.3,   lbl: "€54"    },
-    "TMO":       { val: 518,    lbl: "€480"   },
-    "ARKQ":      { val: 55,     lbl: "$55"    },
-    "BOTZ":      { val: 23,     lbl: "$23"    },
-    "VRT":       { val: 65,     lbl: "$65"    },
-    "IAU":       { val: 175,    lbl: "$175"   },
-    "FCX":       { val: 52,     lbl: "$52"    },
-    "MC.PA":     { val: 0,      lbl: "Gift"   },
-  };
+(function() {
+  const EURUSD = 1.127;
+  const TR_TICKERS = new Set(["TSM","PLTR","UEC","URNM","COHR","1810.HK","NTR","RKLB","PL","MC.PA"]);
+  const KW_TICKERS = new Set(["000660.KS","272210.KS","ARKQ","BOTZ","VRT","FCX","IAU","KTOS"]);
 
-  const tbody = document.querySelector("table.master tbody");
-  if (!tbody) return;
-
-  // Fix colspan on category/band rows (added 2 columns → was 13, now 15)
-  tbody.querySelectorAll("td[colspan='13']").forEach(td => td.setAttribute("colspan", "15"));
-
-  // Add entry + vs-now cells to every stock row
-  function rowTicker(symEl) {
-    const c = symEl.cloneNode(true);
-    c.querySelectorAll(".track-pill").forEach(p => p.remove());
-    const t = (c.textContent || "").trim().split(/\s+/)[0];
-    return t || "";
-  }
-
-  tbody.querySelectorAll("tr").forEach(tr => {
-    const symEl = tr.querySelector(".tsym");
-    if (!symEl) return; // category band row already handled above
-    const ticker = rowTicker(symEl);
-    const entry  = ENTRY[ticker];
-
-    // Entry price cell
-    const tdEntry = document.createElement("td");
-    tdEntry.className = "r";
-    tdEntry.style.cssText = "font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink3);white-space:nowrap;";
-    tdEntry.textContent = entry ? entry.lbl : "—";
-
-    // VS NOW cell — filled by updateVsNow()
-    const tdVs = document.createElement("td");
-    tdVs.className = "r vs-now-cell";
-    tdVs.setAttribute("data-ticker", ticker);
-    tdVs.setAttribute("data-entry-val", entry ? entry.val : "");
-    tdVs.style.cssText = "font-family:'DM Mono',monospace;font-size:10px;font-weight:700;white-space:nowrap;";
-    tdVs.textContent = "—";
-
-    // Insert before the Signal column (first td containing a .sig span)
-    const sigTd = Array.from(tr.querySelectorAll("td")).find(td => td.querySelector(".sig"));
-    if (sigTd) {
-      tr.insertBefore(tdVs, sigTd);
-      tr.insertBefore(tdEntry, tdVs);
-    } else {
-      tr.appendChild(tdEntry);
-      tr.appendChild(tdVs);
-    }
-  });
-
-  const EURUSD_FOR_VS = 1.127; // USD→EUR for TR-held US names vs € entry (live USD from prices.json)
-
-  function firstNumericFromPriceCell(el) {
-    const t = (el && el.textContent) ? el.textContent : "";
-    const m = t.replace(/,/g, "").match(/-?[\d]+(?:\.\d+)?/);
+  function firstNum(el) {
+    if (!el) return NaN;
+    const t = (el.textContent || "").replace(/,/g, "");
+    const m = t.match(/-?[\d.]+/);
     return m ? parseFloat(m[0]) : NaN;
   }
 
-  function syncPlPortCardFromMatrix() {
-    /* TR position cards removed — noop kept for live price loader hooks */
+  function fmtPct(p) {
+    if (p == null || Number.isNaN(p)) return "";
+    const c = p >= 0 ? "var(--buy)" : "var(--bear)";
+    return '<span style="color:' + c + ';font-weight:800;">' + (p >= 0 ? "+" : "") + p.toFixed(1) + "%</span>";
   }
 
-  function updatePortfolioSummaryBar() {
-    const bar = document.getElementById("portfolio-summary-bar");
-    const trEl = document.getElementById("pf-tr-total");
-    const kwEl = document.getElementById("pf-kw-total");
-    const grandEl = document.getElementById("pf-grand-total");
-    const gapEl = document.getElementById("pf-goal-gap");
-    if (!bar || !trEl || !kwEl || !grandEl || !gapEl) return;
-    const cards = document.querySelectorAll("#es-panel-matrix .port-card[data-eur]");
-    let trSum = 0;
-    if (cards.length) {
-      cards.forEach(card => {
-        trSum += parseFloat(card.getAttribute("data-eur") || "0") || 0;
-      });
-    } else {
-      trSum = parseFloat(bar.getAttribute("data-tr-total-eur") || "0") || 0;
-    }
-    const kw = parseFloat(bar.getAttribute("data-kiwoom-eur") || "0") || 0;
-    const grand = trSum + kw;
-    const goalGap = 100000000 - grand;
-    const fmt = n => "€" + Math.round(n).toLocaleString("en-IE");
-    trEl.textContent = fmt(trSum);
-    kwEl.textContent = fmt(kw);
-    grandEl.textContent = fmt(grand);
-    gapEl.textContent = fmt(goalGap);
-  }
-
-  function updateVsNow() {
-    document.querySelectorAll(".vs-now-cell").forEach(td => {
-      const evRaw = td.getAttribute("data-entry-val");
-      const entryVal = parseFloat(evRaw);
-      const ticker = td.getAttribute("data-ticker");
-      const entryMeta = ENTRY[ticker];
-
-      if (evRaw === "0") {
-        td.textContent = "Gift";
+  function updateMatrixV2Rows() {
+    document.querySelectorAll("tr.mx-row[data-ticker]").forEach(function (tr) {
+      const tk = tr.getAttribute("data-ticker");
+      const mode = tr.getAttribute("data-entry-mode");
+      const en = parseFloat(tr.getAttribute("data-entry-num") || "0");
+      const ed = tr.getAttribute("data-entry-disp") || "";
+      const pEl = document.getElementById("price-" + tk);
+      const pctEl = tr.querySelector(".mx-pct");
+      if (!pctEl) return;
+      if (mode === "gift" || !en) {
+        pctEl.innerHTML = "";
         return;
       }
-      if (!entryVal || entryVal === 0) return;
-
-      const pnow = document.getElementById("price-" + ticker) ||
-                   document.querySelector(".pnow[data-ticker='" + ticker + "']");
-      if (!pnow) return;
-
-      if (ticker === "PLTR") {
-        const liveUsd = firstNumericFromPriceCell(pnow);
-        if (!liveUsd || isNaN(liveUsd)) return;
-        const eEntry = entryVal;
-        const pct = ((liveUsd - eEntry) / eEntry) * 100;
-        const col = pct >= 0 ? "var(--bull)" : "var(--bear)";
-        td.innerHTML =
-          "<span style=\"color:" + col + "\">" + (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%</span> <span style=\"color:#94a3b8;font-weight:500;\">vs $109 entry</span>";
-        td.style.color = col;
+      let live = firstNum(pEl);
+      if (tk === "PL" && mode === "eur_from_usd" && !Number.isNaN(live)) {
+        const eur = live / EURUSD;
+        const pct = ((eur - en) / en) * 100;
+        pctEl.innerHTML = fmtPct(pct);
         return;
       }
-
-      if (ticker === "PL" && entryMeta && entryMeta.vsEur) {
-        const liveUsd = firstNumericFromPriceCell(pnow);
-        if (!liveUsd || isNaN(liveUsd)) return;
-        const eur = liveUsd / EURUSD_FOR_VS;
-        const eEntry = entryVal;
-        const diff = eur - eEntry;
-        const pct = (diff / eEntry) * 100;
-        const col = pct >= 0 ? "var(--bull)" : "var(--bear)";
-        td.innerHTML =
-          "≈€" + eur.toFixed(2) + " vs <b>€" + eEntry + "</b> (" + (diff >= 0 ? "+" : "") + "€" + Math.abs(diff).toFixed(2) + ") " +
-          "<span style=\"color:" + col + "\">" + (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%</span>";
-        td.style.color = col;
+      if (mode === "krw") {
+        const raw = (pEl && pEl.textContent) ? pEl.textContent.replace(/,/g, "") : "";
+        let v = NaN;
+        const m = raw.match(/([\d.]+)\s*K/i);
+        if (m) v = parseFloat(m[1]) * 1000;
+        else v = parseFloat(raw.replace(/[^\d.\-]/g, "")) || NaN;
+        if (!Number.isNaN(v) && en) pctEl.innerHTML = fmtPct(((v - en) / en) * 100);
         return;
       }
-
-      const raw = pnow.textContent.replace(/[₩$HK€,\s]/g, "").replace(/K$/i, "000").replace(/M$/i, "000000");
-      const liveVal = parseFloat(raw);
-      if (!liveVal || isNaN(liveVal)) return;
-      const pct = (liveVal - entryVal) / entryVal * 100;
-      const sign = pct >= 0 ? "+" : "";
-      td.textContent = sign + pct.toFixed(1) + "%";
-      td.style.color = pct >= 0 ? "var(--bull)" : "var(--bear)";
+      if (mode === "hkd") {
+        if (!Number.isNaN(live) && en) pctEl.innerHTML = fmtPct(((live - en) / en) * 100);
+        return;
+      }
+      if (!Number.isNaN(live) && en) pctEl.innerHTML = fmtPct(((live - en) / en) * 100);
     });
-    syncPlPortCardFromMatrix();
-    updatePortfolioSummaryBar();
   }
 
-  // Run once on load, then watch for price updates
-  setTimeout(updateVsNow, 1000);
-  setInterval(updateVsNow, 30000);
+  function updatePfCounts() {
+    const trN = document.getElementById("pf-tr-n");
+    const kwN = document.getElementById("pf-kw-n");
+    if (trN) trN.textContent = String(TR_TICKERS.size);
+    if (kwN) kwN.textContent = String(KW_TICKERS.size);
+  }
 
-  // MutationObserver on pnow spans for live updates
-  const observer = new MutationObserver(updateVsNow);
-  document.querySelectorAll(".pnow").forEach(el =>
-    observer.observe(el, { characterData: true, childList: true, subtree: true })
-  );
+  updatePfCounts();
+  setTimeout(updateMatrixV2Rows, 400);
+  setInterval(updateMatrixV2Rows, 30000);
+  const mo = new MutationObserver(updateMatrixV2Rows);
+  document.querySelectorAll(".pnow").forEach(function (el) {
+    mo.observe(el, { subtree: true, characterData: true, childList: true });
+  });
 
-  window.updatePortfolioSummaryBar = updatePortfolioSummaryBar;
-  window.syncPlPortCardFromMatrix = syncPlPortCardFromMatrix;
-  window.updateVsNowMatrix = updateVsNow;
+  window.updateMatrixV2Rows = updateMatrixV2Rows;
+  window.updatePortfolioSummaryBar = updatePfCounts;
+  window.syncPlPortCardFromMatrix = function () {};
+  window.updateVsNowMatrix = updateMatrixV2Rows;
 })();
 </script>
 
-</div>
+  </div>
 </div>
 
   <!-- Principles panel -->
@@ -2162,7 +1454,7 @@ window.OLY_fillRadar = function (blogRows) {
   if (!el) return;
   const PORT = new Set([
     "TSM", "PLTR", "UEC", "URNM", "COHR", "1810.HK", "NTR", "RKLB",
-    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IAU", "KTOS", "PL", "FCX",
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IAU", "KTOS", "PL", "FCX", "MC.PA",
   ]);
   const items = (blogRows || []).filter(function (b) {
     return b && b.ticker && !PORT.has(b.ticker);
@@ -2205,28 +1497,6 @@ function updateIPOPanels() {
   const an = document.getElementById("ipo-days-anthropic");
   if (sx) sx.textContent = String(daysUntilUtcMidnight("2026-06-01"));
   if (an) an.textContent = String(daysUntilUtcMidnight("2026-10-01"));
-}
-
-const TRACK_B_TICKERS = new Set([
-  "PLTR", "1810.HK", "UEC", "NVDA", "CCJ", "OKLO", "RKLB", "ASTS",
-  "CRSP", "NTLA", "BEAM", "KTOS", "AMAT",
-]);
-
-function injectTrackBadges() {
-  document.querySelectorAll("table.master tbody tr").forEach(function (tr) {
-    const sym = tr.querySelector(".tsym");
-    if (!sym || sym.querySelector(".track-pill")) return;
-    const raw = (sym.textContent || "").trim();
-    const first = (raw.split(/\s+/)[0] || "");
-    let isB = TRACK_B_TICKERS.has(first);
-    if (raw.indexOf("Figure") >= 0 || raw.indexOf("xAI") >= 0) isB = true;
-    if (raw.indexOf("POSCO") >= 0) isB = true;
-    const pill = document.createElement("span");
-    pill.className = "track-pill " + (isB ? "track-b" : "track-a");
-    pill.textContent = isB ? "B" : "A";
-    pill.title = isB ? "Track B — paradigm / inflection" : "Track A — established quality";
-    sym.appendChild(pill);
-  });
 }
 
 const RANTO_RSS_PROXY =
@@ -2307,7 +1577,6 @@ function initMonthlyDashboardUpgrade() {
   loadReflexivityPanel();
   loadRanto28BlogCard();
   updateIPOPanels();
-  injectTrackBadges();
   setInterval(updateIPOPanels, 6 * 60 * 60 * 1000);
   setInterval(loadReflexivityPanel, 5 * 60 * 1000);
   setInterval(loadRanto28BlogCard, 15 * 60 * 1000);
@@ -2347,12 +1616,94 @@ function deEsc(s) {
 }
 
 async function loadDecisionEngine() {
-  const cmdEl = document.getElementById("de-one-command");
-  const updEl = document.getElementById("de-updated");
-  const listEl = document.getElementById("de-actions");
-  const depEl = document.getElementById("de-deployment");
+  const insideEl = document.getElementById("soros-inside-portfolio");
+  const outsideEl = document.getElementById("soros-outside-portfolio");
+  const cmdEl = document.getElementById("soros-one-command");
+  const updEl = document.getElementById("soros-updated");
   const lastUp = document.getElementById("lastUpdate");
-  if (!cmdEl || !updEl || !listEl) return;
+  if (!insideEl || !outsideEl || !cmdEl || !updEl) return;
+
+  const ENTRY_LBL = {
+    "000660.KS": "₩85,000",
+    "272210.KS": "₩45,000",
+    TSM: "€140",
+    PLTR: "$109",
+    "1810.HK": "HK$42",
+    UEC: "€11",
+    URNM: "€72",
+    COHR: "€55",
+    RKLB: "€58",
+    NTR: "€54",
+    TMO: "€480",
+    ARKQ: "$55",
+    BOTZ: "$23",
+    VRT: "$65",
+    IAU: "$175",
+    FCX: "$52",
+    PL: "€28",
+    "MC.PA": "Gift",
+  };
+  const HELD_ORDER = [
+    "000660.KS",
+    "TSM",
+    "PLTR",
+    "1810.HK",
+    "UEC",
+    "URNM",
+    "RKLB",
+    "PL",
+    "NTR",
+    "FCX",
+    "272210.KS",
+    "KTOS",
+    "ARKQ",
+    "BOTZ",
+    "VRT",
+    "COHR",
+    "TMO",
+    "IAU",
+    "MC.PA",
+  ];
+  const HELD_SET = new Set(HELD_ORDER);
+
+  function nowSnippet(tk) {
+    const el = document.getElementById("price-" + tk);
+    if (!el) return "—";
+    return (el.textContent || "").trim().replace(/\s+/g, " ").slice(0, 36);
+  }
+
+  function pctSnippet(tk) {
+    const tr = document.querySelector('tr.mx-row[data-ticker="' + tk + '"]');
+    const p = tr && tr.querySelector(".mx-pct");
+    return p ? (p.textContent || "").trim() : "";
+  }
+
+  function stanceFor(tk, typ) {
+    if (tk === "IAU") return "EXIT";
+    const u = String(typ || "").toUpperCase();
+    if (u === "BUY") return "ADD";
+    if (u === "HOLD") return "STAY";
+    return "STAY";
+  }
+
+  function sorosExtra(tk, refMap) {
+    const s = refMap[String(tk || "").toUpperCase()];
+    if (!s) return "";
+    const gp = s.gap_pct != null ? Number(s.gap_pct) : NaN;
+    const tgt = s.target_price != null ? String(s.target_price) : "";
+    if (!Number.isNaN(gp) && tgt)
+      return (
+        '<span class="sl-soros">SOROS SIGNAL — narrative gap ' +
+        (gp >= 0 ? "+" : "") +
+        gp.toFixed(1) +
+        "% \u2192 target " +
+        deEsc(tgt) +
+        "</span>"
+      );
+    if (s.note)
+      return '<span class="sl-soros">REFLEXIVITY — ' + deEsc(String(s.note)) + "</span>";
+    return "";
+  }
 
   let data = null;
   for (let i = 0; i < DIRECTIVES_JSON_URLS.length; i++) {
@@ -2367,25 +1718,108 @@ async function loadDecisionEngine() {
     }
   }
 
+  let refMap = {};
+  try {
+    const rawR = await fetchJsonFirstOkDash(REFLEXIVITY_JSON_URLS);
+    const sigs = rawR && Array.isArray(rawR.signals) ? rawR.signals : [];
+    sigs.forEach(function (s) {
+      if (s && s.ticker) refMap[String(s.ticker).toUpperCase()] = s;
+    });
+  } catch (_) {
+    refMap = {};
+  }
+
   if (!data || typeof data !== "object") {
-    cmdEl.textContent = "\u23F3 Awaiting next brief — 07:00 Berlin";
+    insideEl.innerHTML =
+      '<div class="soros-line"><span class="sl-sub">\u23F3 Awaiting next brief — 07:00 Berlin</span></div>';
+    outsideEl.innerHTML = "";
+    cmdEl.textContent = "\u2694 ONE COMMAND: \u2014";
     updEl.textContent = "";
-    listEl.innerHTML = "";
-    if (depEl) depEl.innerHTML = "";
     if (lastUp) lastUp.textContent = "2026-04-12";
     return;
   }
 
+  const actions = Array.isArray(data.actions) ? data.actions : [];
+  const byTicker = {};
+  actions.forEach(function (a) {
+    if (a && a.ticker) byTicker[String(a.ticker).toUpperCase()] = a;
+  });
+
+  let inHtml = "";
+  HELD_ORDER.forEach(function (tk) {
+    const act = byTicker[tk.toUpperCase()];
+    const typ = act && act.type ? act.type : "HOLD";
+    const em = deEmojiForType(typ);
+    const st = stanceFor(tk, typ);
+    const ent = ENTRY_LBL[tk] || "\u2014";
+    const nowS = nowSnippet(tk);
+    const pct = pctSnippet(tk);
+    const pctPart = pct ? " = " + pct : "";
+    const reason =
+      act && act.reason
+        ? deEsc(act.reason)
+        : "Hold per OLYMPUS thesis — no directive override.";
+    const sx = sorosExtra(tk, refMap);
+    inHtml +=
+      '<div class="soros-line"><span class="sl-main">' +
+      em +
+      " " +
+      deEsc(tk) +
+      " \u2014 " +
+      st +
+      " \u2014 Entry " +
+      deEsc(ent) +
+      " \u2192 Now " +
+      deEsc(nowS) +
+      pctPart +
+      "</span>" +
+      '<span class="sl-sub">' +
+      reason +
+      "</span>" +
+      sx +
+      "</div>";
+  });
+  insideEl.innerHTML = inHtml || '<div class="soros-line sl-sub">\u2014</div>';
+
+  let outHtml = "";
+  const plan = Array.isArray(data.deployment_plan) ? data.deployment_plan : [];
+  plan.forEach(function (row) {
+    if (!row || !row.ticker) return;
+    const tk = deEsc(row.ticker);
+    const lim = row.limit != null ? deEsc(String(row.limit)) : "\u2014";
+    const amt = row.amount_eur != null ? Math.round(Number(row.amount_eur)) : null;
+    const rs = row.reason != null ? deEsc(String(row.reason)) : "";
+    const eur = amt != null && !Number.isNaN(amt) ? "\u20AC" + amt.toLocaleString("en-IE") : "\u2014";
+    outHtml +=
+      '<div class="soros-line"><span class="sl-main">\uD83D\uDCB0 ' +
+      tk +
+      " \u2014 BUY at " +
+      lim +
+      " \u2014 " +
+      eur +
+      "</span>" +
+      '<span class="sl-sub">' +
+      (rs || "Limit armed — size when spot confirms.") +
+      "</span></div>";
+  });
+  actions.forEach(function (a) {
+    if (!a || String(a.type || "").toUpperCase() !== "WATCH") return;
+    const tku = String(a.ticker || "").toUpperCase();
+    if (HELD_SET.has(a.ticker) || HELD_SET.has(tku)) return;
+    const tk = deEsc(a.ticker);
+    const rs = deEsc(a.reason || "");
+    outHtml +=
+      '<div class="soros-line"><span class="sl-main">\uD83D\uDD0D ' +
+      tk +
+      " \u2014 WATCH \u2014 prepare capital</span>" +
+      '<span class="sl-sub">' +
+      (rs || "IPO / catalyst window — narrative vs reality.") +
+      "</span></div>";
+  });
+  outsideEl.innerHTML = outHtml || '<div class="soros-line sl-sub">\u2014</div>';
+
   const oc = data.one_command != null ? String(data.one_command) : "";
-  if (oc) {
-    cmdEl.innerHTML =
-      '<span class="de-oc-pref">\u2694 ONE COMMAND</span><span class="de-oc-body">' +
-      deEsc(oc) +
-      "</span>";
-  } else {
-    cmdEl.innerHTML =
-      '<span class="de-oc-pref">\u2694 ONE COMMAND</span><span class="de-oc-body">\u2014</span>';
-  }
+  cmdEl.textContent = "\u2694 ONE COMMAND: " + (oc ? oc : "\u2014");
 
   const lu = data.last_updated != null ? String(data.last_updated) : "";
   updEl.textContent = lu ? "Last updated: " + lu : "";
@@ -2398,72 +1832,6 @@ async function loadDecisionEngine() {
   const pill = document.getElementById("hdr-regime-pill");
   if (pill != null && data.regime != null && data.deploy_pct != null) {
     pill.textContent = "\u26A0 " + data.regime + " \u2014 DEPLOY " + data.deploy_pct + "%";
-  }
-
-  const actions = Array.isArray(data.actions) ? data.actions : [];
-  listEl.innerHTML = actions.length
-    ? actions
-        .map(function (a) {
-          const em = deEmojiForType(a && a.type);
-          const tk = deEsc(a && a.ticker);
-          const rs = deEsc(a && a.reason);
-          const tp = deEsc(a && a.type);
-          return (
-            "<li><span class=\"de-emoji\">" +
-            em +
-            "</span> <span style=\"font-size:10px;color:#94a3b8;\">" +
-            tp +
-            "</span> &nbsp;<span class=\"de-tk\">" +
-            tk +
-            "</span> <span style=\"font-weight:400;color:#cbd5e1;\">" +
-            rs +
-            "</span></li>"
-          );
-        })
-        .join("")
-    : "";
-
-  if (depEl) {
-    const plan = Array.isArray(data.deployment_plan) ? data.deployment_plan : [];
-    const total = data.total_deploy_eur != null ? Number(data.total_deploy_eur) : NaN;
-    const after = data.dry_powder_after != null ? Number(data.dry_powder_after) : NaN;
-    const timing = data.deploy_timing != null ? String(data.deploy_timing).trim() : "";
-    let html = "";
-    plan.forEach(function (row) {
-      if (!row || !row.ticker) return;
-      const tk = deEsc(row.ticker);
-      const lim = deEsc(row.limit != null ? String(row.limit) : "");
-      const amt = row.amount_eur != null ? Math.round(Number(row.amount_eur)) : null;
-      const rs = deEsc(row.reason != null ? String(row.reason) : "");
-      const approx =
-        lim.indexOf("$") >= 0 && amt != null && !Number.isNaN(amt)
-          ? " (\u2248\u20AC" + Math.max(1, Math.round(amt * 0.86)) + ")"
-          : "";
-      html +=
-        "<div class=\"de-line\">\uD83D\uDCB0 " +
-        tk +
-        ": \u20AC" +
-        (amt != null && !Number.isNaN(amt) ? amt.toLocaleString("en-IE") : "\u2014") +
-        " at limit " +
-        lim +
-        approx +
-        " \u2014 " +
-        rs +
-        "</div>";
-    });
-    if (html) {
-      html += "<hr class=\"de-rule\" />";
-      html +=
-        "<div class=\"de-total\">Total deploy: \u20AC" +
-        (!Number.isNaN(total) ? Math.round(total).toLocaleString("en-IE") : "\u2014") +
-        " \u00b7 Dry powder after: \u20AC" +
-        (!Number.isNaN(after) ? Math.round(after).toLocaleString("en-IE") : "\u2014") +
-        "</div>";
-      if (timing) {
-        html += "<div class=\"de-line\" style=\"margin-top:10px;color:#94a3b8;\"><strong>Timing:</strong> " + deEsc(timing) + "</div>";
-      }
-    }
-    depEl.innerHTML = html;
   }
 }
 

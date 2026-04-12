@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ssh:*)",
+      "Bash(sshpass:*)",
+      "Bash(python -c \"import battle_rhythm, price_alert\")"
+    ]
+  }
+}
