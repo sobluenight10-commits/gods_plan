@@ -597,7 +597,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     <span style="font-size:20px;">🔱</span>
     <div>
       <div class="hdr-name">OLYMPUS · TITAN INVESTMENT SYSTEM</div>
-      <div class="hdr-sub">GOD / MINERVA / OPENCLAW · ISLAND MISSION 2036</div>
+      <div class="hdr-sub">GOD / MINERVA / OPENCLAW · ISLAND MISSION 2031</div>
     </div>
   </div>
   <div class="hdr-right">
@@ -621,12 +621,12 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 <div class="tab-panel active" id="tab-mission">
   <div class="mission-card" style="margin-bottom:20px;">
     <div class="mission-top">🏝️ ISLAND MISSION — 10-YEAR COMPOUNDING PLAN</div>
-    <div class="mission-num">₩170,000,000,000</div>
-    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px;">Target by 2036 · ~€115M · Required CAGR: 47%</div>
+    <div class="mission-num">€100,000,000</div>
+    <div style="font-size:13px;color:rgba(255,255,255,0.5);margin-top:4px;">Target by 2031 · Required CAGR: 47%</div>
     <div class="mission-row">
       <div class="mrow-item"><div class="mrow-val">47%</div><div class="mrow-lbl">REQUIRED CAGR</div></div>
-      <div class="mrow-item"><div class="mrow-val">2036</div><div class="mrow-lbl">TARGET YEAR</div></div>
-      <div class="mrow-item"><div class="mrow-val">BUFFETT</div><div class="mrow-lbl">BENCHMARK TO BEAT</div></div>
+      <div class="mrow-item"><div class="mrow-val">2031</div><div class="mrow-lbl">TARGET YEAR</div></div>
+      <div class="mrow-item"><div class="mrow-val" style="font-size:11px;">BEAT BUFFETT</div><div class="mrow-lbl">47% CAGR TARGET</div></div>
       <div class="mrow-item"><div class="mrow-val">€1,500</div><div class="mrow-lbl">MONTHLY ADD</div></div>
     </div>
   </div>
@@ -743,7 +743,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <div class="alert-chip">HUYA -76.96% · EXIT NOW — any green candle</div>
   <div class="alert-chip">GEVO -86.61% · EXIT MAR 26 — earnings = forced exit</div>
   <div class="alert-chip">UEC -14.68% today · Stop $11.50 · HOLD — thesis intact</div>
-  <div class="alert-chip">AVAV ▼ 8→6 · Earnings miss · Do not add</div>
+  <div class="alert-chip">AVAV ✅ EXITED Apr 8 2026 · DoD contract terminated · Lesson #05</div>
   <div class="alert-chip">xAI IPO · S-1 expected H1 2026 · Prepare capital</div>
   <div class="alert-chip">IAU +128% · Exit on next gold strength — redeploy</div>
 </div>
@@ -817,11 +817,11 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   /** GOD portfolio tickers only — blog hits outside this set show as NEW SIGNAL */
   const PORTFOLIO_TICKERS = new Set([
     "TSM","PLTR","UEC","URNM","COHR","1810.HK","NTR","RKLB",
-    "000660.KS","272210.KS","ARKQ","BOTZ","VRT","IONQ","IAU","KTOS",
+    "000660.KS","272210.KS","ARKQ","BOTZ","VRT","IAU","KTOS",
   ]);
 
   const SECTORS = [
-    { name:"Intelligence", dot:"#1e3a6e", tickers:["000660.KS","TSM","PLTR","1810.HK","IONQ","NVDA"] },
+    { name:"Intelligence", dot:"#1e3a6e", tickers:["000660.KS","TSM","PLTR","1810.HK","NVDA"] },
     { name:"Energy",       dot:"#1e5c2a", tickers:["UEC","URNM","CCJ","OKLO"] },
     { name:"Space",        dot:"#4a1a7a", tickers:["RKLB","ASTS"] },
     { name:"Bio",          dot:"#1a4f4f", tickers:["CRSP","NTLA","BEAM","TMO"] },
@@ -998,6 +998,8 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <th class="r" style="min-width:55px;font-size:10px;">1M</th>
   <th class="r" style="min-width:65px;">1Y</th>
   <th class="r" style="min-width:65px;">5Y</th>
+  <th class="r" style="min-width:70px;font-size:10px;">ENTRY</th>
+  <th class="r" style="min-width:75px;font-size:10px;">VS NOW</th>
   <th>Signal</th>
   <th style="min-width:200px">Action · Catalyst</th>
 </tr></thead>
@@ -1066,20 +1068,6 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td class="act">⏳ OBSERVE. Wait Mar 24 earnings. No average down before signal.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Mar 24 Earnings ← WATCH</span></td>
 </tr>
 
-<tr class="r1">
-  <td><div class="tsym">IONQ</div><div class="tname">IonQ Quantum</div></td>
-  <td><span class="badge b-port">Portfolio</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:65%;background:var(--c1)"></div></div><div class="god-num">65</div></div></td>
-  <td class="r"><span class="pnow" id="price-IONQ" data-ticker="IONQ">$31.20</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+41%</span><span class="gap-label">to $44</span></div></td>
-  <td class="r"><span class="fest pup">$35</span></td>
-  <td class="r"><span class="fest pup">$37</span></td>
-  <td class="r"><span class="fest pup">$44</span></td>
-  <td class="r"><span class="fest pup">$69</span></td>
-  <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Limit $25 active. Quantum inflection 2026-2027. Near stop = asymmetry.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Quantum milestone Q3</span></td>
-</tr>
 
 <tr class="r1">
   <td><div class="tsym">NVDA</div><div class="tname">Nvidia Corporation</div></td>
@@ -1268,19 +1256,19 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td class="act">Drones deployed in live conflict = real revenue. Add at $80. Stop $75.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ DoD contract Q2</span></td>
 </tr>
 
-<tr class="r5">
-  <td><div class="tsym">AVAV</div><div class="tname">AeroVironment</div></td>
-  <td><span class="badge b-exit">Exit</span></td>
+<tr class="r5" style="opacity:0.5;">
+  <td><div class="tsym" style="text-decoration:line-through;">AVAV</div><div class="tname">AeroVironment</div></td>
+  <td><span class="badge b-exit">Exited</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:45%;background:var(--c5)"></div></div><div class="god-num">45</div></div></td>
-  <td class="r"><span class="pnow" id="price-CRSP" data-ticker="CRSP">$197.72</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-up">+3.7%</span><span class="gap-label">to $205</span></div></td>
-  <td class="r"><span class="fest pdn">$180</span></td>
-  <td class="r"><span class="fest pdn">$185</span></td>
-  <td class="r"><span class="fest pfl">$205</span></td>
-  <td class="r"><span class="fest pup">$250</span></td>
-  <td><span class="sig s-flush">📉 FLUSH</span></td>
-  <td class="act">SOLD Apr 8 -7%. SCAR contract terminated by DoD. Thesis dead — not earnings miss. Lesson #05.</td>
+  <td class="r">—</td>
+  <td class="r">—</td>
+  <td class="r">—</td>
+  <td class="r">—</td>
+  <td class="r">—</td>
+  <td class="r">—</td>
+  <td><span class="sig s-flush">✅ EXITED</span></td>
+  <td class="act" style="color:var(--es-ink4);">EXITED Apr 8 2026. DoD terminated SCAR contract — thesis dead, not earnings miss. Lesson #05: company news overrides macro.</td>
 </tr>
 
 <tr class="r5">
@@ -1363,7 +1351,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:68%;background:var(--c6)"></div></div><div class="god-num">68</div></div></td>
-  <td class="r"><span class="pnow" id="price-AVAV" data-ticker="AVAV">$474.39</span></td>
+  <td class="r"><span class="pnow" id="price-TMO" data-ticker="TMO">$474.39</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+26.7%</span><span class="gap-label">to $601</span></div></td>
   <td class="r"><span class="fest pup">$506</span></td>
   <td class="r"><span class="fest pup">$521</span></td>
@@ -1484,6 +1472,103 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 </tr>
 
 </tbody></table>
+
+<script>
+// ── ENTRY PRICE + VS NOW COLUMN INJECTION ──────────────────────────────────
+(function(){
+  // Entry prices in native trading currency (USD unless noted)
+  const ENTRY = {
+    "000660.KS": { val: 85000,  lbl: "₩85,000" },
+    "272210.KS": { val: 45000,  lbl: "₩45,000" },
+    "TSM":       { val: 152,    lbl: "€140" },   // EUR→USD approx
+    "PLTR":      { val: 118,    lbl: "€109" },
+    "1810.HK":   { val: 42,     lbl: "HK$42"  },
+    "UEC":       { val: 11.9,   lbl: "€11"    },
+    "URNM":      { val: 77.8,   lbl: "€72"    },
+    "COHR":      { val: 59.4,   lbl: "€55"    },
+    "RKLB":      { val: 62.6,   lbl: "€58"    },
+    "NTR":       { val: 58.3,   lbl: "€54"    },
+    "TMO":       { val: 518,    lbl: "€480"   },
+    "ARKQ":      { val: 55,     lbl: "$55"    },
+    "BOTZ":      { val: 23,     lbl: "$23"    },
+    "VRT":       { val: 65,     lbl: "$65"    },
+    "IAU":       { val: 175,    lbl: "$175"   },
+    "FCX":       { val: 52,     lbl: "$52"    },
+    "MC.PA":     { val: 0,      lbl: "Gift"   },
+  };
+
+  const tbody = document.querySelector("table.master tbody");
+  if (!tbody) return;
+
+  // Fix colspan on category/band rows (added 2 columns → was 13, now 15)
+  tbody.querySelectorAll("td[colspan='13']").forEach(td => td.setAttribute("colspan", "15"));
+
+  // Add entry + vs-now cells to every stock row
+  tbody.querySelectorAll("tr").forEach(tr => {
+    const symEl = tr.querySelector(".tsym");
+    if (!symEl) return; // category band row already handled above
+    const ticker = symEl.textContent.trim();
+    const entry  = ENTRY[ticker];
+
+    // Entry price cell
+    const tdEntry = document.createElement("td");
+    tdEntry.className = "r";
+    tdEntry.style.cssText = "font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink3);white-space:nowrap;";
+    tdEntry.textContent = entry ? entry.lbl : "—";
+
+    // VS NOW cell — filled by updateVsNow()
+    const tdVs = document.createElement("td");
+    tdVs.className = "r vs-now-cell";
+    tdVs.setAttribute("data-ticker", ticker);
+    tdVs.setAttribute("data-entry-val", entry ? entry.val : "");
+    tdVs.style.cssText = "font-family:'DM Mono',monospace;font-size:10px;font-weight:700;white-space:nowrap;";
+    tdVs.textContent = "—";
+
+    // Insert before the Signal column (first td containing a .sig span)
+    const sigTd = Array.from(tr.querySelectorAll("td")).find(td => td.querySelector(".sig"));
+    if (sigTd) {
+      tr.insertBefore(tdVs, sigTd);
+      tr.insertBefore(tdEntry, tdVs);
+    } else {
+      tr.appendChild(tdEntry);
+      tr.appendChild(tdVs);
+    }
+  });
+
+  function updateVsNow() {
+    document.querySelectorAll(".vs-now-cell").forEach(td => {
+      const entryVal = parseFloat(td.getAttribute("data-entry-val"));
+      if (!entryVal || entryVal === 0) {
+        if (td.getAttribute("data-entry-val") === "0") td.textContent = "Gift";
+        return;
+      }
+      const ticker = td.getAttribute("data-ticker");
+      // Try to read live price from pnow span
+      const pnow = document.getElementById("price-" + ticker) ||
+                   document.querySelector(".pnow[data-ticker='" + ticker + "']");
+      if (!pnow) return;
+      const raw = pnow.textContent.replace(/[₩$HK€,\s]/g, "").replace(/K$/i, "000").replace(/M$/i, "000000");
+      const liveVal = parseFloat(raw);
+      if (!liveVal || isNaN(liveVal)) return;
+      const pct = (liveVal - entryVal) / entryVal * 100;
+      const sign = pct >= 0 ? "+" : "";
+      td.textContent = sign + pct.toFixed(1) + "%";
+      td.style.color = pct >= 0 ? "var(--bull)" : "var(--bear)";
+    });
+  }
+
+  // Run once on load, then watch for price updates
+  setTimeout(updateVsNow, 1000);
+  setInterval(updateVsNow, 30000);
+
+  // MutationObserver on pnow spans for live updates
+  const observer = new MutationObserver(updateVsNow);
+  document.querySelectorAll(".pnow").forEach(el =>
+    observer.observe(el, { characterData: true, childList: true, subtree: true })
+  );
+})();
+</script>
+
 </div>
 </div>
 
@@ -2228,7 +2313,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
           <span id="tgA1">1. Hold NTR through Mar 31</span><br>
           <span id="tgA2">2. ASML limit €1,100 armed</span><br>
           <span id="tgA3">3. Reduce exposure by Apr 10</span><br><br>
-          <span class="tg-gr">MINERVA · TITAN · 2036 🔱</span>
+          <span class="tg-gr">MINERVA · TITAN · 2031 🔱</span>
         </div>
         <div class="tg-ts">07:00 · Berlin</div>
       </div>
@@ -2264,7 +2349,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 </div>
 
 <div class="footer">
-  OLYMPUS · TITAN INVESTMENT SYSTEM · GOD / MINERVA / OPENCLAW · §11 LIQUIDITY ENGINE INTEGRATED · ISLAND MISSION 2036 🔱
+  OLYMPUS · TITAN INVESTMENT SYSTEM · GOD / MINERVA / OPENCLAW · §11 LIQUIDITY ENGINE INTEGRATED · ISLAND MISSION 2031 🔱
 </div>
 
 <script>
@@ -2563,7 +2648,7 @@ function drawBubble(){
   const stocks=[
     ['000660',2,7,95,C.c1,'S','LEGEND'],['TSM',3,7,90,C.c1,'D','HOLD'],
     ['NVDA',4,9,96,C.c1,'S','BUY'],['PLTR',4,6,72,C.c1,'S','HOLD'],
-    ['Xiaomi',6,8,68,C.c1,'S','HOLD'],['IONQ',7,7,65,C.c1,'S','HOLD'],
+    ['Xiaomi',6,8,68,C.c1,'S','HOLD'],
     ['UEC',6,9,78,C.c2,'S','HOLD'],['URNM',5,8,74,C.c2,'D','HOLD'],
     ['CCJ',4,7,82,C.c2,'S','BUY'],['OKLO',8,9,70,C.c2,'S','BUY'],
     ['RKLB',7,7,58,C.c3,'S','HOLD'],['ASTS',9,9,72,C.c3,'S','BUY'],
@@ -2571,7 +2656,7 @@ function drawBubble(){
     ['CRSP',6,3,48,C.c4,'S','CAUTION'],['NTLA',7,8,55,C.c4,'S','WATCH'],
     ['BEAM',8,8,70,C.c4,'S','BUY'],
     ['272210',3,7,92,C.c5,'S','LEGEND'],['KTOS',5,6,80,C.c5,'S','HOLD'],
-    ['AVAV',6,3,45,C.c5,'E','EXIT'],['ARKQ',5,6,62,C.c5,'S','HOLD'],
+    ['ARKQ',5,6,62,C.c5,'S','HOLD'],
     ['BOTZ',5,6,60,C.c5,'S','HOLD'],
     ['COHR',5,7,76,C.c6,'D','HOLD'],['VRT',4,8,84,C.c6,'D','HOLD'],
     ['TMO',4,6,68,C.c6,'D','HOLD'],['AMAT',4,7,79,C.c6,'D','BUY'],
@@ -2643,7 +2728,7 @@ runLiq();
 </script>
 
 <div class="footer">
-  OLYMPUS · TITAN INVESTMENT SYSTEM · GOD / MINERVA / OPENCLAW · §11 LIQUIDITY ENGINE INTEGRATED · ISLAND MISSION 2036 🔱
+  OLYMPUS · TITAN INVESTMENT SYSTEM · GOD / MINERVA / OPENCLAW · §11 LIQUIDITY ENGINE INTEGRATED · ISLAND MISSION 2031 🔱
 </div>
 
 <script>
@@ -2936,7 +3021,7 @@ function drawBubble(){
   const stocks=[
     ['000660',2,7,95,C.c1,'S','LEGEND'],['TSM',3,7,90,C.c1,'D','HOLD'],
     ['NVDA',4,9,96,C.c1,'S','BUY'],['PLTR',4,6,72,C.c1,'S','HOLD'],
-    ['Xiaomi',6,8,68,C.c1,'S','HOLD'],['IONQ',7,7,65,C.c1,'S','HOLD'],
+    ['Xiaomi',6,8,68,C.c1,'S','HOLD'],
     ['UEC',6,9,78,C.c2,'S','HOLD'],['URNM',5,8,74,C.c2,'D','HOLD'],
     ['CCJ',4,7,82,C.c2,'S','BUY'],['OKLO',8,9,70,C.c2,'S','BUY'],
     ['RKLB',7,7,58,C.c3,'S','HOLD'],['ASTS',9,9,72,C.c3,'S','BUY'],
@@ -2944,7 +3029,7 @@ function drawBubble(){
     ['CRSP',6,3,48,C.c4,'S','CAUTION'],['NTLA',7,8,55,C.c4,'S','WATCH'],
     ['BEAM',8,8,70,C.c4,'S','BUY'],
     ['272210',3,7,92,C.c5,'S','LEGEND'],['KTOS',5,6,80,C.c5,'S','HOLD'],
-    ['AVAV',6,3,45,C.c5,'E','EXIT'],['ARKQ',5,6,62,C.c5,'S','HOLD'],
+    ['ARKQ',5,6,62,C.c5,'S','HOLD'],
     ['BOTZ',5,6,60,C.c5,'S','HOLD'],
     ['COHR',5,7,76,C.c6,'D','HOLD'],['VRT',4,8,84,C.c6,'D','HOLD'],
     ['TMO',4,6,68,C.c6,'D','HOLD'],['AMAT',4,7,79,C.c6,'D','BUY'],
@@ -3172,7 +3257,7 @@ function updateIPOPanels() {
 }
 
 const TRACK_B_TICKERS = new Set([
-  "PLTR", "IONQ", "1810.HK", "UEC", "NVDA", "CCJ", "OKLO", "RKLB", "ASTS",
+  "PLTR", "1810.HK", "UEC", "NVDA", "CCJ", "OKLO", "RKLB", "ASTS",
   "CRSP", "NTLA", "BEAM", "KTOS", "AMAT",
 ]);
 
