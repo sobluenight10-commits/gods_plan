@@ -1,0 +1,12 @@
+{
+  "last_updated": "2026-04-12 14:00 CET",
+  "one_command": "Set OKLO limit $44 in Trade Republic today — Soros entry zone active",
+  "actions": [
+    {"type": "BUY", "ticker": "OKLO", "reason": "Limit $44 (~€38). Meta 1.2GW signed. 5Y hold. Set in TR now."},
+    {"type": "BUY", "ticker": "CCJ", "reason": "Limit $100. Blue chip uranium anchor. Set in TR now."},
+    {"type": "HOLD", "ticker": "PLTR", "reason": "Entry €109. Burry noise — Army $10B intact. Stop €95."},
+    {"type": "HOLD", "ticker": "UEC", "reason": "Uranium thesis structural. Stop €11. Do not add yet."},
+    {"type": "WATCH", "ticker": "ASML", "reason": "April 16 earnings. Decision: beat=buy market, miss=wait €1,100."},
+    {"type": "DEPLOY", "ticker": "DRY POWDER", "reason": "€1,500 → OKLO $44 + CCJ $100 after April 15 TGA drain ends."}
+  ]
+}

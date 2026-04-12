@@ -344,7 +344,24 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--ink);min-h
 .dp-total{margin-left:auto;font-size:11px;color:var(--es-ink3);}
 .dp-total strong{font-family:'Playfair Display',serif;font-size:18px;color:var(--es-ink);}
 
-/* ── 3-CARD MISSION BOARD ── */
+/* ── DECISION ENGINE (live directives.json) ── */
+.decision-engine-wrap{padding:0 40px 16px;background:var(--es-paper);border-bottom:1px solid var(--es-rule);}
+.decision-engine-card{
+  background:linear-gradient(165deg,#0c1016 0%,#151d2a 55%,#1a2433 100%);
+  border:2px solid var(--gold);
+  border-radius:12px;
+  padding:20px 24px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.25);
+}
+.de-h{font-family:'Syne',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:0.9;}
+.de-command{font-size:clamp(16px,2.1vw,22px);font-weight:800;color:var(--gold);line-height:1.35;margin-bottom:10px;font-family:'Syne',sans-serif;}
+.de-updated{font-size:10px;color:#94a3b8;margin-bottom:16px;font-family:'DM Mono',monospace;}
+.de-actions{list-style:none;margin:0;padding:0;}
+.de-actions li{font-size:13px;color:#e8e4dc;line-height:1.55;margin-bottom:12px;padding:8px 0 8px 14px;border-left:3px solid rgba(212,175,55,0.4);}
+.de-emoji{margin-right:8px;font-style:normal;}
+.de-tk{font-weight:800;color:#fff;}
+
+/* ── 3-CARD MISSION BOARD (deprecated — kept for any legacy refs) ── */
 .mission-board {
   padding: 20px 40px;
   border-bottom: 2px solid var(--es-ink);
@@ -665,20 +682,11 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 
   <!-- Nudge / Alert strip from v5 -->
   <!-- NUDGE BANNER -->
-<div class="nudge-banner">
-  <span class="nudge-icon">⚠</span>
-  <div class="nudge-text">
-    <strong>TODAY'S DIRECTIVE — <span id="directive-date">—</span></strong> &nbsp;·&nbsp;
-    <span id="directive-text">Loading directives…</span>
-  </div>
-  <div class="nudge-date">Updated 07:00 CET</div>
-</div>
-
 <!-- MASTHEAD -->
 <header class="masthead">
   <div>
     <div class="sys-name">OLYMPUS</div>
-    <div class="sys-sub">OLYMPUS Unified · MINERVA Protocol · v7.0 · <span id="dashDate"></span> · Last data: <span id="lastUpdate">checking...</span></div>
+    <div class="sys-sub">OLYMPUS Unified · MINERVA Protocol · v7.0 · <span id="dashDate"></span> · Last data: <span id="lastUpdate">2026-04-12</span></div>
   </div>
   <div class="regime-block">
     <div class="regime-pill" id="hdr-regime-pill">⚠ FEAR ZONE — DEPLOY 50%</div>
@@ -702,50 +710,26 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <div class="dp-total">Total (EUR eq.) &nbsp;<strong id="dp-total">—</strong></div>
 </div>
 
-<!-- 3-CARD MISSION BOARD -->
-<div class="mission-board">
-  <div class="mission-header">⚔ Current Mission — 3 Active Directives</div>
-  <div class="mission-cards">
-
-    <div class="mission-card strike">
-      <div class="mc-status strike">🟢 STRIKE — BUY</div>
-      <span class="mc-icon">🌾</span>
-      <div class="mc-asset">Nutrien (NTR)</div>
-      <div class="mc-sub">Food Security · War Fertilizer Premium · Already held TR €323</div>
-      <div class="mc-directive">War-driven fertilizer premium is NOT priced in. Belarus/Russia supply disruption = structural deficit. Add aggressively before Mar 31 dividend record. Deploy from HUYA/GEVO exit proceeds immediately.</div>
-      <span class="mc-trigger strike">Target: €63.50 – €64.20 · Mar 31 Dividend</span>
-    </div>
-
-    <div class="mission-card wait">
-      <div class="mc-status wait">⏳ OBSERVE — WAIT</div>
-      <span class="mc-icon">📱</span>
-      <div class="mc-asset">Xiaomi (1810.HK)</div>
-      <div class="mc-sub">Intelligence · AI Smartphone + EV Hardware · Held TR €602</div>
-      <div class="mc-directive">Do NOT average down before earnings. Wait for Mar 24 earnings confirmation. If beats + EV guidance strong → hold conviction. If misses → reassess position size. No new capital until signal is clear.</div>
-      <span class="mc-trigger wait">Trigger: Mar 24 Earnings Confirmation</span>
-    </div>
-
-    <div class="mission-card flush">
-      <div class="mc-status flush">📉 FLUSH — EXIT</div>
-      <span class="mc-icon">🗑</span>
-      <div class="mc-asset">HUYA + GEVO</div>
-      <div class="mc-sub">Legacy Thesis Rot · -76.96% and -86.61% · Kiwoom</div>
-      <div class="mc-directive">Total liquidation. These are thesis rot assets — no recovery path, no civilization-shift thesis, no analyst support. Sell on ANY green candle. Do not negotiate. Do not wait for break-even. Capital recovered → immediately into NTR or UEC.</div>
-      <span class="mc-trigger flush">Execute: Any Green Candle · No Exceptions</span>
-    </div>
-
+<!-- DECISION ENGINE — live directives.json (first surface after liquidity bar) -->
+<div class="decision-engine-wrap">
+  <div class="decision-engine-card">
+    <div class="de-h">🎯 DECISION ENGINE</div>
+    <div id="de-one-command" class="de-command">⏳ Awaiting next brief — 07:00 Berlin</div>
+    <div id="de-updated" class="de-updated"></div>
+    <ul id="de-actions" class="de-actions"></ul>
   </div>
 </div>
 
 <!-- ALERTS -->
 <div class="alert-bar">
   <div class="alert-lbl">⚑ Alerts</div>
-  <div class="alert-chip">HUYA -76.96% · EXIT NOW — any green candle</div>
-  <div class="alert-chip">GEVO -86.61% · EXIT MAR 26 — earnings = forced exit</div>
-  <div class="alert-chip">UEC -14.68% today · Stop $11.50 · HOLD — thesis intact</div>
-  <div class="alert-chip">AVAV ✅ EXITED Apr 8 2026 · DoD contract terminated · Lesson #05</div>
-  <div class="alert-chip">xAI IPO · S-1 expected H1 2026 · Prepare capital</div>
-  <div class="alert-chip">IAU +128% · Exit on next gold strength — redeploy</div>
+  <div class="alert-chip">OKLO limit $44 active — SMR + Meta deal — 5Y hold</div>
+  <div class="alert-chip">CCJ limit $100 active — uranium blue chip</div>
+  <div class="alert-chip">UEC limit €11 active — spot leverage add</div>
+  <div class="alert-chip">PLTR stop €95 — hold above this level</div>
+  <div class="alert-chip">ASML April 16 earnings — decision point</div>
+  <div class="alert-chip">SpaceX IPO June 2026 — prepare capital</div>
+  <div class="alert-chip">Anthropic IPO October 2026 — prepare capital</div>
 </div>
 
 <!-- REFLEXIVITY + PRE-IPO COUNTDOWN (CLAUDE.md monthly upgrade) -->
@@ -800,12 +784,13 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <div id="es-panel-matrix" class="es-panel active">
 
 <!-- ── PORTFOLIO SUMMARY + TR CARDS (single source of truth) ─────────── -->
-<div id="portfolio-summary-bar" data-kiwoom-eur="0" style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:10px 14px;margin:0 0 10px;background:linear-gradient(90deg,#f8f7f3,#fff);border:1px solid var(--es-rule);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);">
+<div id="portfolio-summary-bar" data-kiwoom-eur="0" style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:10px 14px;margin:0 0 10px;background:linear-gradient(90deg,#f8f7f3,#fff);border:1px solid var(--es-rule);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);">
   <span style="font-weight:800;letter-spacing:2px;color:var(--es-ink4);">PORTFOLIO SUMMARY</span>
-  <span>TR total <strong id="pf-tr-total" style="color:var(--ink);">—</strong></span>
-  <span style="opacity:0.85;">Kiwoom <strong id="pf-kw-total" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">(set <code>data-kiwoom-eur</code> on this bar)</span></span>
-  <span>Dry powder <strong style="color:var(--bull);">€1,500</strong></span>
-  <span>Combined <strong id="pf-combined-total" style="color:var(--gold);">—</strong></span>
+  <span>TR Total <strong id="pf-tr-total" style="color:var(--ink);">—</strong></span>
+  <span>Kiwoom Total <strong id="pf-kw-total" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">(<code>data-kiwoom-eur</code>)</span></span>
+  <span>Dry Powder (TR) <strong style="color:var(--bull);">€1,500</strong></span>
+  <span>Grand Total EUR <strong id="pf-grand-total" style="color:var(--gold);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">TR+Kiwoom</span></span>
+  <span>Goal Gap <strong id="pf-goal-gap" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">€100M − Grand</span></span>
 </div>
 <div class="sec-t" style="margin:0 14px 10px;">TR POSITION CARDS</div>
 <div class="port-grid" style="margin:0 14px 14px;">
@@ -863,6 +848,12 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     <div class="pc-chg dn">-11.22%</div>
     <div class="pc-score">GOD Score: <span class="score-pill sp-low">65</span></div>
   </div>
+  <div class="port-card" data-eur="742" style="border-left-color:#0050cc;">
+    <div class="pc-name">Palantir (PLTR)</div>
+    <div class="pc-val" id="port-pltr-val" style="color:#008c35;">€742</div>
+    <div class="pc-chg up">vs entry €109</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-82">78</span> · TR book</div>
+  </div>
 </div>
 <div class="card" style="margin:0 14px 12px;background:var(--gold-lt);border:1px solid #f0d090;">
   <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">⚠️ TR DISPLAY RULE</div>
@@ -885,7 +876,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 
   /** GOD portfolio tickers only — blog hits outside this set show as NEW SIGNAL */
   const PORTFOLIO_TICKERS = new Set([
-    "TSM","PLTR","UEC","URNM","COHR","1810.HK","NTR","RKLB","PL",
+    "TSM","PLTR","UEC","URNM","COHR","1810.HK","NTR","RKLB","PL","FCX",
     "000660.KS","272210.KS","ARKQ","BOTZ","VRT","IAU","KTOS",
   ]);
 
@@ -895,7 +886,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     { name:"Space",        dot:"#4a1a7a", tickers:["RKLB","PL","ASTS"] },
     { name:"Bio",          dot:"#1a4f4f", tickers:["CRSP","NTLA","BEAM","TMO"] },
     { name:"Robotics",     dot:"#6b2d14", tickers:["272210.KS","KTOS","ARKQ","BOTZ"] },
-    { name:"Infrastructure", dot:"#1e3050", tickers:["COHR","VRT","LVMH"] },
+    { name:"Infrastructure", dot:"#1e3050", tickers:["COHR","VRT","FCX","LVMH"] },
     { name:"Global Issue Radar", dot:"#7a3500", tickers:["NTR"] },
   ];
 
@@ -1201,7 +1192,8 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-watch">Watchlist</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:70%;background:var(--c2)"></div></div><div class="god-num">70</div></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
+  <td class="r"><span class="pnow" id="price-OKLO" data-ticker="OKLO">$49.20</span></td>
+  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
   <td class="r"><span class="fest pup">Very High</span></td>
   <td><span class="sig s-buy">BUY</span></td>
   <td class="act">Micro-nuclear for AI data centers. Sam Altman backed. NRC 2026.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ NRC license 2026</span></td>
@@ -1237,7 +1229,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td class="r"><span class="fest pup">$40</span></td>
   <td class="r"><span class="fest pup">$55</span></td>
   <td><span class="sig s-hold">HOLD</span></td>
-  <td class="act">Earth observation + defense analytics. Apr 27 warrant overhang — size discipline.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Warrant window Apr 27</span></td>
+  <td class="act">Hold. Satellite imagery = AI data layer. NASA contract.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Government contract expansion 2026</span></td>
 </tr>
 
 <tr class="r3">
@@ -1272,7 +1264,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-watch">Watchlist</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:48%;background:var(--c4)"></div></div><div class="god-num">48</div></div></td>
-  <td class="r"><span class="pnow" id="price-CCJ" data-ticker="CCJ">$46.24</span></td>
+  <td class="r"><span class="pnow" id="price-CRSP" data-ticker="CRSP">$51.87</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+8.1%</span><span class="gap-label">to $50</span></div></td>
   <td class="r"><span class="fest pdn">$40</span></td>
   <td class="r"><span class="fest pdn">$42</span></td>
@@ -1287,7 +1279,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-watch">Watchlist</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:55%;background:var(--c4)"></div></div><div class="god-num">55</div></div></td>
-  <td class="r"><span class="pnow" id="price-OKLO" data-ticker="OKLO">$12.84</span></td>
+  <td class="r"><span class="pnow" id="price-NTLA" data-ticker="NTLA">$62</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+67.4%</span><span class="gap-label">to $21.50</span></div></td>
   <td class="r"><span class="fest pup">$14.70</span></td>
   <td class="r"><span class="fest pup">$15.70</span></td>
@@ -1360,7 +1352,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:62%;background:var(--c5)"></div></div><div class="god-num">62</div></div></td>
-  <td class="r"><span class="pnow" id="price-NTLA" data-ticker="NTLA">$62</span></td>
+  <td class="r"><span class="pnow" id="price-ARKQ" data-ticker="ARKQ">$62</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+37.1%</span><span class="gap-label">to $85</span></div></td>
   <td class="r"><span class="fest pup">$64</span></td>
   <td class="r"><span class="fest pup">$67</span></td>
@@ -1375,7 +1367,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:60%;background:var(--c5)"></div></div><div class="god-num">60</div></div></td>
-  <td class="r"><span class="pnow" id="price-BEAM" data-ticker="BEAM">$33</span></td>
+  <td class="r"><span class="pnow" id="price-BOTZ" data-ticker="BOTZ">$33</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+36.4%</span><span class="gap-label">to $45</span></div></td>
   <td class="r"><span class="fest pup">$34</span></td>
   <td class="r"><span class="fest pup">$36</span></td>
@@ -1405,7 +1397,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:76%;background:var(--c6)"></div></div><div class="god-num">76</div></div></td>
-  <td class="r"><span class="pnow" id="price-272210.KS" data-ticker="272210.KS">$253.63</span></td>
+  <td class="r"><span class="pnow" id="price-COHR" data-ticker="COHR">$84.70</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+24.2%</span><span class="gap-label">to $315</span></div></td>
   <td class="r"><span class="fest pup">$275</span></td>
   <td class="r"><span class="fest pup">$280</span></td>
@@ -1420,7 +1412,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:84%;background:var(--c6)"></div></div><div class="god-num">84</div></div></td>
-  <td class="r"><span class="pnow" id="price-KTOS" data-ticker="KTOS">$89</span></td>
+  <td class="r"><span class="pnow" id="price-VRT" data-ticker="VRT">$89</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+40.4%</span><span class="gap-label">to $125</span></div></td>
   <td class="r"><span class="fest pup">$92</span></td>
   <td class="r"><span class="fest pup">$96</span></td>
@@ -1448,7 +1440,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="shield-badge">🛡 SHIELD</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:72%;background:var(--c-radar)"></div></div><div class="god-num">72</div></div></td>
-  <td class="r"><span class="pnow" id="price-ARKQ" data-ticker="ARKQ">$47</span></td>
+  <td class="r"><span class="pnow" id="price-NTR" data-ticker="NTR">$47</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+53.2%</span><span class="gap-label">to $72</span></div></td>
   <td class="r"><span class="fest pup">$50</span></td>
   <td class="r"><span class="fest pup">$54</span></td>
@@ -1456,6 +1448,18 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td class="r"><span class="fest pup">$110</span></td>
   <td><span class="sig s-strike">🟢 STRIKE</span></td>
   <td class="act">⚔ ACTIVE MISSION. Add before Mar 31 dividend. War premium not priced in.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Mar 31 Dividend · War</span></td>
+</tr>
+
+<tr class="r6">
+  <td><div class="tsym">FCX</div><div class="tname">Freeport-McMoRan</div></td>
+  <td><span class="badge b-port">Portfolio</span></td>
+  <td><span class="shield-badge">🛡 SHIELD</span></td>
+  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:45%;background:var(--c6)"></div></div><div class="god-num">45</div></div></td>
+  <td class="r"><span class="pnow" id="price-FCX" data-ticker="FCX">$52.09</span></td>
+  <td class="r"><div class="gap-cell"><span class="gap-dn">-0.8%</span><span class="gap-label">from entry</span></div></td>
+  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
+  <td><span class="sig s-hold">HOLD</span></td>
+  <td class="act">Kiwoom — copper tactical hold. Macro cycle intact; monitor stop $54.50. Not legacy flush.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Kiwoom book</span></td>
 </tr>
 
 <tr class="rr">
@@ -1489,51 +1493,15 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td class="act">TR gift. Cannot sell ~1yr. Track only. Generational brand basket.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Lock expiry — check TR</span></td>
 </tr>
 
-<!-- ══ EXIT QUEUE ══ -->
-<tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#f8f8f8"><div class="cdot" style="background:var(--exit)"></div><div class="cname" style="color:var(--exit)">Legacy Flush — Exit Queue</div><div class="cdesc">Thesis Rot · Capital recovered → immediately into SPEAR positions · Do not average down</div></div></td></tr>
-
-<tr class="re">
-  <td><div class="tsym">GEVO</div><div class="tname">Gevo Inc</div></td>
-  <td><span class="badge b-exit">Exit</span></td>
-  <td>—</td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:15%;background:var(--exit)"></div></div><div class="god-num">15</div></div></td>
-  <td class="r"><span class="pnow" style="color:var(--exit)">$2.27</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-dn">-86.6%</span><span class="gap-label">from entry</span></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-flush">📉 FLUSH</span></td>
-  <td class="act">LEGACY FLUSH. Mar 26 = forced exit. All scenarios → sell. Proceeds → NTR.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Mar 26 EXIT DAY</span></td>
-</tr>
-
-<tr class="re">
-  <td><div class="tsym">HUYA</div><div class="tname">HUYA Inc</div></td>
-  <td><span class="badge b-exit">Exit</span></td>
-  <td>—</td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:12%;background:var(--exit)"></div></div><div class="god-num">12</div></div></td>
-  <td class="r"><span class="pnow" style="color:var(--exit)">$3.04</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-dn">-76.9%</span><span class="gap-label">from entry</span></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-flush">📉 FLUSH</span></td>
-  <td class="act">LEGACY FLUSH. Any green candle → sell ALL. China ADR = thesis rot. Proceeds → UEC.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ EXIT NOW — overdue</span></td>
-</tr>
-
-<tr class="re">
-  <td><div class="tsym">FCX</div><div class="tname">Freeport-McMoRan</div></td>
-  <td><span class="badge b-exit">Exit</span></td>
-  <td>—</td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:45%;background:var(--exit)"></div></div><div class="god-num">45</div></div></td>
-  <td class="r"><span class="pnow" style="color:var(--exit)">$52.09</span></td>
-  <td class="r"><div class="gap-cell"><span class="gap-dn">-0.8%</span><span class="gap-label">from entry</span></div></td>
-  <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
-  <td><span class="sig s-exit">REDUCE</span></td>
-  <td class="act">Stop $54.50 on Kiwoom. Copper long-term intact but exit this position.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Stop $54.50 · Apr 16</span></td>
-</tr>
+<!-- ══ TACTICAL — GOLD SATELLITE ══ -->
+<tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#f8f8f8"><div class="cdot" style="background:var(--exit)"></div><div class="cname" style="color:var(--exit)">Tactical · Gold satellite</div><div class="cdesc">Single remaining tactical exit sleeve · Kiwoom / macro overlay</div></div></td></tr>
 
 <tr class="re">
   <td><div class="tsym">IAU</div><div class="tname">iShares Gold ETF</div></td>
   <td><span class="badge b-exit">Exit</span></td>
   <td>—</td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:30%;background:var(--exit)"></div></div><div class="god-num">30</div></div></td>
-  <td class="r"><span class="pnow" id="price-COHR" data-ticker="COHR">$84.70</span></td>
+  <td class="r"><span class="pnow" id="price-IAU" data-ticker="IAU">$175</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+128%</span><span class="gap-label">unrealized</span></div></td>
   <td class="r">—</td><td class="r">—</td><td class="r">—</td><td class="r">—</td>
   <td><span class="sig s-exit">EXIT SOON</span></td>
@@ -1634,19 +1602,21 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     const bar = document.getElementById("portfolio-summary-bar");
     const trEl = document.getElementById("pf-tr-total");
     const kwEl = document.getElementById("pf-kw-total");
-    const combEl = document.getElementById("pf-combined-total");
-    if (!bar || !trEl || !kwEl || !combEl) return;
+    const grandEl = document.getElementById("pf-grand-total");
+    const gapEl = document.getElementById("pf-goal-gap");
+    if (!bar || !trEl || !kwEl || !grandEl || !gapEl) return;
     let trSum = 0;
     document.querySelectorAll("#es-panel-matrix .port-card[data-eur]").forEach(card => {
       trSum += parseFloat(card.getAttribute("data-eur") || "0") || 0;
     });
     const kw = parseFloat(bar.getAttribute("data-kiwoom-eur") || "0") || 0;
-    const dry = 1500;
-    const combined = trSum + kw + dry;
+    const grand = trSum + kw;
+    const goalGap = 100000000 - grand;
     const fmt = n => "€" + Math.round(n).toLocaleString("en-IE");
     trEl.textContent = fmt(trSum);
     kwEl.textContent = fmt(kw);
-    combEl.textContent = fmt(combined);
+    grandEl.textContent = fmt(grand);
+    gapEl.textContent = fmt(goalGap);
   }
 
   function updateVsNow() {
@@ -1755,7 +1725,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
       <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;border-top:3px solid var(--purple);">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;">07:50</div>
         <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--purple);margin:4px 0 6px;">PORTFOLIO CHECK</div>
-        <div style="font-size:10px;color:var(--ink2);line-height:1.6;">60-day calendar update<br>Dry powder review<br>Tuition log review<br>GEVO+HUYA exit check</div>
+        <div style="font-size:10px;color:var(--ink2);line-height:1.6;">60-day calendar update<br>Dry powder review<br>Tuition log review<br>Decision Engine sync</div>
       </div>
       <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;border-top:3px solid var(--bull);">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;">08:10</div>
@@ -1805,7 +1775,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
           <span style="font-size:11px;font-weight:700;color:#6b2d14;">⑤ ROBOTICS</span>
           <span style="font-size:9px;padding:2px 8px;background:#e8f5e9;color:#1a5c35;border-radius:3px;font-weight:800;">BULL</span>
         </div>
-        <div style="font-size:10px;color:#555;line-height:1.6;">한화시스템 · KTOS · ARKQ · BOTZ<br>T-modifier: <strong>+1</strong> · Iran war + NATO rearm<br>AVAV: EXITED Apr 8 — matrix only</div>
+        <div style="font-size:10px;color:#555;line-height:1.6;">한화시스템 · KTOS · ARKQ · BOTZ<br>T-modifier: <strong>+1</strong> · Iran war + NATO rearm<br>FCX: Kiwoom tactical hold</div>
       </div>
 
       <div style="border-radius:8px;border:1px solid #d4d0c4;padding:14px;background:#f8f7f3;">
@@ -2282,9 +2252,9 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     <div class="lesson-body">CRSP was in the target zone. Missed entry by €1. Stock moved. The €1 saved cost thousands in missed upside. When a high-conviction stock is in the zone — execute.</div>
   </div>
   <div class="tuition-card">
-    <div class="lesson-num">LESSON #02 — THE HOPE-HOLD TRAP · GEVO -83%</div>
+    <div class="lesson-num">LESSON #02 — THE HOPE-HOLD TRAP</div>
     <div class="lesson-title">A spike in a broken thesis is an exit gift, not a reason to hold.</div>
-    <div class="lesson-body">GEVO spiked temporarily. Thesis was broken. Held hoping for recovery. Lost -83%. When the thesis breaks — the next green day is the exit, not the reversal.</div>
+    <div class="lesson-body">A legacy bio name spiked on dead thesis. Held hoping for recovery. Deep drawdown. When the thesis breaks — the next green day is the exit, not the reversal.</div>
   </div>
   <div class="tuition-card" style="background:var(--blue-lt);border-left-color:var(--blue);">
     <div class="lesson-num" style="color:var(--blue);">LESSON #03 — LET THE MARKET COME TO GOD · RKLB Mar 27, 2026</div>
@@ -2714,8 +2684,7 @@ function drawBubble(){
     ['COHR',5,7,76,C.c6,'D','HOLD'],['VRT',4,8,84,C.c6,'D','HOLD'],
     ['TMO',4,6,68,C.c4,'D','HOLD'],['AMAT',4,7,79,C.c6,'D','BUY'],
     ['NTR',4,7,72,C.cr,'D','STRIKE'],
-    ['GEVO',5,1,15,C.cr,'E','EXIT'],['HUYA',6,1,12,C.cr,'E','EXIT'],
-    ['FCX',5,2,45,C.cr,'E','EXIT'],['IAU',3,2,30,C.cr,'E','EXIT'],
+    ['FCX',5,2,45,C.c6,'D','HOLD'],['IAU',3,2,30,C.cr,'E','EXIT'],
   ];
 
   // Grid lines
@@ -3087,8 +3056,7 @@ function drawBubble(){
     ['COHR',5,7,76,C.c6,'D','HOLD'],['VRT',4,8,84,C.c6,'D','HOLD'],
     ['TMO',4,6,68,C.c4,'D','HOLD'],['AMAT',4,7,79,C.c6,'D','BUY'],
     ['NTR',4,7,72,C.cr,'D','STRIKE'],
-    ['GEVO',5,1,15,C.cr,'E','EXIT'],['HUYA',6,1,12,C.cr,'E','EXIT'],
-    ['FCX',5,2,45,C.cr,'E','EXIT'],['IAU',3,2,30,C.cr,'E','EXIT'],
+    ['FCX',5,2,45,C.c6,'D','HOLD'],['IAU',3,2,30,C.cr,'E','EXIT'],
   ];
 
   // Grid lines
@@ -3267,7 +3235,7 @@ window.OLY_fillRadar = function (blogRows) {
   if (!el) return;
   const PORT = new Set([
     "TSM", "PLTR", "UEC", "URNM", "COHR", "1810.HK", "NTR", "RKLB",
-    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IONQ", "IAU", "KTOS", "PL",
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IAU", "KTOS", "PL", "FCX",
   ]);
   const items = (blogRows || []).filter(function (b) {
     return b && b.ticker && !PORT.has(b.ticker);
@@ -3425,36 +3393,103 @@ if (document.readyState === "loading") {
 }
 
 // ══════════════════════════════════════════════════════════════════
-// DIRECTIVES — Minerva data/directives.json (nginx: /data/ → server path)
+// DECISION ENGINE — directives.json (Minerva /data/)
 // ══════════════════════════════════════════════════════════════════
-const DIRECTIVES_JSON_URL = "http://5.189.176.185/data/directives.json";
+const DIRECTIVES_JSON_URLS = [
+  "http://5.189.176.185/data/directives.json",
+  "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/data/directives.json",
+];
 
-async function loadDirectives() {
-  try {
-    const resp = await fetch(DIRECTIVES_JSON_URL + "?t=" + Date.now(), { cache: "no-store" });
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    const data = await resp.json();
-    const lu = document.getElementById("lastUpdate");
-    if (lu && data && data.date) lu.textContent = data.date + " " + (data.time || "");
-    const dt = document.getElementById("directive-date");
-    const tx = document.getElementById("directive-text");
-    if (dt && data.date) dt.textContent = data.date;
-    if (tx && data.directive != null) tx.textContent = data.directive;
-    const vixEl = document.getElementById("hdr-vix-num");
-    if (vixEl != null && data.vix != null && data.vix !== "") {
-      vixEl.textContent = Number(data.vix).toFixed(2);
-    }
-    const pill = document.getElementById("hdr-regime-pill");
-    if (pill != null && data.regime != null && data.deploy_pct != null) {
-      pill.textContent = "\u26A0 " + data.regime + " \u2014 DEPLOY " + data.deploy_pct + "%";
-    }
-  } catch (e) {
-    console.warn("Directives load failed:", e.message);
-  }
+function deEmojiForType(t) {
+  const u = String(t || "").toUpperCase();
+  if (u === "SELL") return "🔴";
+  if (u === "REVIEW") return "🟠";
+  if (u === "WATCH") return "🟡";
+  if (u === "BUY") return "🟢";
+  if (u === "HOLD") return "💤";
+  if (u === "DEPLOY") return "💰";
+  return "⚪";
 }
 
-loadDirectives();
-setInterval(loadDirectives, 5 * 60 * 1000);
+function deEsc(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+async function loadDecisionEngine() {
+  const cmdEl = document.getElementById("de-one-command");
+  const updEl = document.getElementById("de-updated");
+  const listEl = document.getElementById("de-actions");
+  const lastUp = document.getElementById("lastUpdate");
+  if (!cmdEl || !updEl || !listEl) return;
+
+  let data = null;
+  for (let i = 0; i < DIRECTIVES_JSON_URLS.length; i++) {
+    try {
+      const r = await fetch(DIRECTIVES_JSON_URLS[i] + "?t=" + Date.now(), { cache: "no-store" });
+      if (r.ok) {
+        data = await r.json();
+        break;
+      }
+    } catch (_) {
+      /* try next */
+    }
+  }
+
+  if (!data || typeof data !== "object") {
+    cmdEl.textContent = "\u23F3 Awaiting next brief — 07:00 Berlin";
+    updEl.textContent = "";
+    listEl.innerHTML = "";
+    if (lastUp) lastUp.textContent = "2026-04-12";
+    return;
+  }
+
+  const oc = data.one_command != null ? String(data.one_command) : "";
+  cmdEl.textContent = oc ? "\u2694 ONE COMMAND: " + oc : "\u2694 ONE COMMAND: \u2014";
+  const lu = data.last_updated != null ? String(data.last_updated) : "";
+  updEl.textContent = lu ? "Last updated: " + lu : "";
+  if (lastUp) lastUp.textContent = lu || "2026-04-12";
+
+  const vixEl = document.getElementById("hdr-vix-num");
+  if (vixEl != null && data.vix != null && data.vix !== "") {
+    vixEl.textContent = Number(data.vix).toFixed(2);
+  }
+  const pill = document.getElementById("hdr-regime-pill");
+  if (pill != null && data.regime != null && data.deploy_pct != null) {
+    pill.textContent = "\u26A0 " + data.regime + " \u2014 DEPLOY " + data.deploy_pct + "%";
+  }
+
+  const actions = Array.isArray(data.actions) ? data.actions : [];
+  if (!actions.length) {
+    listEl.innerHTML = "";
+    return;
+  }
+  listEl.innerHTML = actions
+    .map(function (a) {
+      const em = deEmojiForType(a && a.type);
+      const tk = deEsc(a && a.ticker);
+      const rs = deEsc(a && a.reason);
+      const tp = deEsc(a && a.type);
+      return (
+        "<li><span class=\"de-emoji\">" +
+        em +
+        "</span> <span style=\"font-size:10px;color:#94a3b8;\">" +
+        tp +
+        "</span> &nbsp;<span class=\"de-tk\">" +
+        tk +
+        "</span> <span style=\"font-weight:400;color:#cbd5e1;\">" +
+        rs +
+        "</span></li>"
+      );
+    })
+    .join("");
+}
+
+loadDecisionEngine();
+setInterval(loadDecisionEngine, 5 * 60 * 1000);
 
 </script>
 
