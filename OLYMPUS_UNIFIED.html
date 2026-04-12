@@ -75,6 +75,42 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--ink);min-h
 .tab-panel{display:none;padding:24px 28px;max-width:1440px;margin:0 auto;}
 .tab-panel.active{display:block;}
 
+.liq-current { background: var(--es-paper2); border: 1px solid var(--es-accent); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.liq-current h2 { font-size: 13px; letter-spacing: 2px; color: var(--es-accent); margin-bottom: 8px; font-weight: 800; }
+.liq-number { font-size: 48px; font-weight: 900; color: var(--es-accent); margin: 8px 0; }
+.liq-zone { font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+.liq-components { font-size: 13px; color: var(--es-text3); margin-bottom: 4px; }
+.liq-change { font-size: 13px; color: var(--es-text2); }
+.liq-updated { font-size: 11px; color: var(--es-ink4); margin-top: 6px; }
+.liq-scale { background: var(--es-paper2); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.liq-scale-cap { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; font-size: 9px; color: var(--ink3); margin-bottom: 8px; font-weight: 600; }
+.liq-bar-wrap { position: relative; height: 40px; border-radius: 4px; overflow: visible; margin: 20px 0 36px 0; }
+.liq-bar-danger { position: absolute; left: 0; width: 40%; height: 100%; background: rgba(200,50,50,0.4); border-radius: 4px 0 0 4px; }
+.liq-bar-warning { position: absolute; left: 40%; width: 10%; height: 100%; background: rgba(200,130,50,0.4); }
+.liq-bar-normal { position: absolute; left: 50%; width: 20%; height: 100%; background: rgba(200,180,50,0.4); }
+.liq-bar-abundance { position: absolute; left: 70%; width: 30%; height: 100%; background: rgba(50,180,50,0.4); border-radius: 0 4px 4px 0; }
+.liq-marker { position: absolute; top: -8px; width: 0; height: 0; border-left: 8px solid transparent; border-right: 8px solid transparent; border-top: 16px solid var(--es-accent); transform: translateX(-50%); z-index: 2; }
+.liq-marker-lbl { position: absolute; bottom: calc(100% + 10px); transform: translateX(-50%); font-size: 11px; font-weight: 800; color: var(--es-accent); white-space: nowrap; z-index: 3; }
+.liq-hist-row { position: relative; height: 44px; margin-top: 4px; font-size: 9px; color: var(--es-text3); }
+.liq-hist-pin { position: absolute; transform: translateX(-50%); text-align: center; max-width: 92px; line-height: 1.25; top: 0; }
+.liq-history { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+.liq-history th { background: var(--es-paper3); padding: 8px 12px; font-size: 10px; text-align: left; }
+.liq-history td { padding: 8px 12px; font-size: 11px; border-bottom: 1px solid var(--es-paper3); }
+.liq-history tr.today-row { background: rgba(255,180,0,0.08); font-weight: 700; }
+.liq-history .green { color: #4caf50; }
+.liq-history .yellow { color: #ffc107; }
+.liq-history .orange { color: #ff9800; }
+.liq-history .red { color: #f44336; }
+.liq-forecast { background: var(--es-paper2); border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+.liq-forecast h3 { font-size: 13px; letter-spacing: 1px; color: var(--ink); margin-bottom: 12px; }
+.liq-proj-item { display: grid; grid-template-columns: 100px 1fr 1fr; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--es-paper3); font-size: 11px; }
+.proj-date { font-weight: 700; color: var(--es-accent); }
+.liq-action { background: var(--es-paper2); border-left: 4px solid var(--es-accent); border-radius: 0 8px 8px 0; padding: 20px; }
+.liq-action h3 { color: var(--es-accent); margin-bottom: 12px; font-size: 14px; }
+.liq-s1 { font-size: 13px; color: var(--es-text1); margin-bottom: 8px; padding: 8px; background: rgba(255,180,0,0.05); border-radius: 4px; }
+.liq-s2 { font-size: 13px; color: var(--es-text2); margin-bottom: 8px; }
+.liq-s3 { font-size: 14px; font-weight: 700; color: var(--es-accent); padding: 10px; background: rgba(255,180,0,0.1); border-radius: 4px; }
+
 /* ── SECTION TITLE ── */
 .sec-t{
   font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:var(--ink);
@@ -654,6 +690,7 @@ table.master.matrix-v2 td{padding:12px 8px;vertical-align:middle;}
   <button class="tab-btn active" data-tab="matrix" onclick="showTab('matrix')">MASTER MATRIX</button>
   <button class="tab-btn" data-tab="principles" onclick="showTab('principles')">10 PRINCIPLES</button>
   <button class="tab-btn" data-tab="telegram" onclick="showTab('telegram')">TELEGRAM</button>
+  <button class="tab-btn" data-tab="liq" onclick="showTab('liq')">⚡ §11 LIQUIDITY</button>
 </div>
 
 <!-- ═══════════════════════════════════ -->
@@ -1235,6 +1272,82 @@ MINERVA ACTION CHANGE RULE (permanent):
   </div>
 </div>
 
+<div class="tab-panel" id="tab-liq">
+  <div class="liq-current">
+    <h2>⚡ NET LIQUIDITY — CURRENT STATE</h2>
+    <div class="liq-number" id="liqNet">Loading from FRED...</div>
+    <div class="liq-zone" id="liqZone">—</div>
+    <div class="liq-components" id="liqComponents">Res $—B · TGA $—B · RRP $—B</div>
+    <div class="liq-change" id="liqChange">vs last week: —</div>
+    <div class="liq-updated" id="liqUpdated">Last updated: —</div>
+  </div>
+
+  <div class="liq-scale">
+    <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--ink);margin-bottom:6px;">VISUAL SCALE · $0B → $5,000B</div>
+    <div class="liq-scale-cap">
+      <span>🔴 DANGER · $0–$2,000B</span>
+      <span>🟠 WARNING · $2,000–$2,500B</span>
+      <span>🟡 NORMAL · $2,500–$3,500B</span>
+      <span>🟢 ABUNDANCE · $3,500B+</span>
+    </div>
+    <div class="liq-bar-wrap">
+      <div class="liq-bar-danger"></div>
+      <div class="liq-bar-warning"></div>
+      <div class="liq-bar-normal"></div>
+      <div class="liq-bar-abundance"></div>
+      <div id="liqMarkerLbl" class="liq-marker-lbl">—</div>
+      <div id="liqMarker" class="liq-marker" style="left:2%;"></div>
+    </div>
+    <div class="liq-hist-row" aria-hidden="true">
+      <div class="liq-hist-pin" style="left:4%;">$200B<br>2008 Lehman</div>
+      <div class="liq-hist-pin" style="left:44%;">$2,200B<br>2023 SVB Crisis</div>
+      <div class="liq-hist-pin" style="left:48%;">$2,400B<br>2024 Average</div>
+      <div class="liq-hist-pin" style="left:56%;">$2,800B<br>2025 Peak</div>
+      <div class="liq-hist-pin" style="left:90%;">$4,500B<br>2020 COVID Peak</div>
+    </div>
+  </div>
+
+  <table class="liq-history">
+    <thead><tr><th>Period</th><th>Event</th><th>Net Liq</th><th>Market Impact</th></tr></thead>
+    <tbody>
+      <tr><td>2020 COVID</td><td>Fed QE infinity — $4T printed</td><td class="green">~$4,500B</td><td>S&amp;P +100% in 12 months. Everything rally.</td></tr>
+      <tr><td>2021 Peak</td><td>Maximum liquidity era</td><td class="green">~$4,500B</td><td>Crypto +400%. Meme stocks. NFTs.</td></tr>
+      <tr><td>2022 QT Begins</td><td>Fed drains aggressively</td><td class="yellow">$3,500B → $2,800B</td><td>S&amp;P -20%. Crypto -70%. Growth crash.</td></tr>
+      <tr><td>2023 SVB Crisis</td><td>TGA rebuilt $600B in 3 months</td><td class="red">~$2,200B</td><td>SVB, Signature Bank failures. BTFP rescue.</td></tr>
+      <tr><td>2024 Average</td><td>RRP draining, stable reserves</td><td class="yellow">~$2,400B</td><td>Bull market. AI rally begins.</td></tr>
+      <tr><td>2025 Jan</td><td>TGA drain → reserves +$97B</td><td class="yellow">~$2,800B</td><td>Strong markets. QT ended Dec 2025.</td></tr>
+      <tr class="today-row"><td>TODAY Apr 2026</td><td>April tax season — TGA building</td><td id="liqTodayHist" class="orange">Loading...</td><td>TGA drains post-April 15 → risk-on coming</td></tr>
+      <tr><td>DANGER THRESHOLD</td><td>Reserves below ample range</td><td class="red">&lt; $2,000B</td><td>Repo market stress. Rate spikes. QE forced.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="liq-forecast">
+    <h3>📈 NEXT 2 WEEKS PROJECTION</h3>
+    <div class="liq-proj-item">
+      <span class="proj-date">April 15</span>
+      <span class="proj-event">Tax deadline — TGA peaks, then drains</span>
+      <span class="proj-impact">Expected: +$200-400B liquidity expansion</span>
+    </div>
+    <div class="liq-proj-item">
+      <span class="proj-date">April 15-30</span>
+      <span class="proj-event">TGA normalizes → reserves increase</span>
+      <span class="proj-impact">Net Liq target: $2,500-2,700B → 🟡 NORMAL zone</span>
+    </div>
+    <div class="liq-proj-item">
+      <span class="proj-date">May 2026</span>
+      <span class="proj-event">QT stopped Dec 2025 → RMPs $40B/month</span>
+      <span class="proj-impact">Structural expansion continues → risk-on sustained</span>
+    </div>
+  </div>
+
+  <div class="liq-action">
+    <h3>⚔ SO WHAT TO DO — MINERVA VERDICT</h3>
+    <div class="liq-s1" id="liqS1">Loading...</div>
+    <div class="liq-s2" id="liqS2">—</div>
+    <div class="liq-s3" id="liqS3">—</div>
+  </div>
+</div>
+
 <div class="footer">
   OLYMPUS · TITAN INVESTMENT SYSTEM · GOD / MINERVA · ISLAND MISSION 2031 🔱
 </div>
@@ -1261,6 +1374,7 @@ function showTab(id){
   if(panel) panel.classList.add('active');
   const btn=document.querySelector('.tab-btn[data-tab="'+id+'"]');
   if(btn) btn.classList.add('active');
+  if (id === 'liq' && typeof loadLiqTab === 'function') loadLiqTab();
 }
 
 // ── CALENDAR ──
@@ -1927,6 +2041,72 @@ async function refreshLiq() {
 }
 refreshLiq();
 setInterval(refreshLiq, 300000);
+
+async function loadLiqTab() {
+  try {
+    let r = null;
+    try {
+      r = await fetch("/data/directives.json?t=" + Date.now(), { cache: "no-store" });
+    } catch (_) {}
+    if (!r || !r.ok) {
+      for (let i = 0; i < DIRECTIVES_JSON_URLS.length; i++) {
+        try {
+          r = await fetch(DIRECTIVES_JSON_URLS[i] + "?t=" + Date.now(), { cache: "no-store" });
+          if (r.ok) break;
+        } catch (_) {
+          r = null;
+        }
+      }
+    }
+    if (!r || !r.ok) throw new Error("no directives");
+    const d = await r.json();
+    const liq = d.liquidity || {};
+
+    const net = liq.net_liq_value != null ? Number(liq.net_liq_value) : 0;
+    const netB = Math.round(net);
+    const netEl = document.getElementById("liqNet");
+    const zoneEl = document.getElementById("liqZone");
+    if (netEl) netEl.textContent = "$" + netB.toLocaleString() + "B";
+    if (zoneEl) {
+      zoneEl.textContent = liq.zone || "—";
+      zoneEl.style.color = "";
+      if (net < 2000) zoneEl.style.color = "#f44336";
+      else if (net < 2500) zoneEl.style.color = "#ff9800";
+      else if (net < 3500) zoneEl.style.color = "#ffc107";
+      else zoneEl.style.color = "#4caf50";
+    }
+    const comp = document.getElementById("liqComponents");
+    if (comp) comp.textContent = liq.net_liq_text || "—";
+    const chg = document.getElementById("liqChange");
+    if (chg) chg.textContent = "vs last week: " + (liq.change_text || "—");
+    const upd = document.getElementById("liqUpdated");
+    if (upd) upd.textContent = "Last updated: " + (liq.last_updated || "—");
+    const todayHist = document.getElementById("liqTodayHist");
+    if (todayHist) todayHist.textContent = "$" + netB + "B";
+
+    const pct = Math.min(95, Math.max(2, (net / 5000) * 100));
+    const marker = document.getElementById("liqMarker");
+    const markerLbl = document.getElementById("liqMarkerLbl");
+    if (marker) marker.style.left = pct + "%";
+    if (markerLbl) {
+      markerLbl.style.left = pct + "%";
+      markerLbl.textContent = "$" + netB.toLocaleString() + "B";
+    }
+
+    const s1 = document.getElementById("liqS1");
+    const s2 = document.getElementById("liqS2");
+    const s3 = document.getElementById("liqS3");
+    const txt = (liq.outlook_text || "") + " " + (liq.action_text || "");
+    const parts = txt.split(/\.\s+/).filter(Boolean);
+    if (s1) s1.textContent = parts[0] ? parts[0] + "." : liq.net_liq_text || "—";
+    if (s2) s2.textContent = parts[1] ? parts[1] + "." : liq.outlook_text || "—";
+    if (s3) s3.textContent = parts[2] ? parts[2] + "." : liq.action_text || "—";
+  } catch (e) {
+    console.warn("Liquidity tab load failed", e);
+  }
+}
+loadLiqTab();
+setInterval(loadLiqTab, 300000);
 
 function deEmojiForType(t) {
   const u = String(t || "").toUpperCase();

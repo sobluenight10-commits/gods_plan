@@ -76,11 +76,32 @@ def fetch_fred_liquidity() -> dict:
             - out.get("rrp_prev", 0)
         )
         out["net_liq"] = round(net, 1)
-        out["change"] = round(net - prev, 1)
+        change = round(net - prev, 1)
+        out["change"] = change
         out["direction"] = "EXPANDING ↑" if net > prev else "CONTRACTING ↓"
         out["net_liq_text"] = (
             f"Net Liq ${net:.0f}B · Res ${out['reserves']:.0f}B − TGA ${out['tga']:.0f}B − RRP ${out['rrp']:.0f}B"
         )
+        if net < 2000:
+            zone = "🔴 DANGER — Crisis threshold ($2T floor)"
+        elif net < 2500:
+            zone = "🟠 WARNING — Approaching stress ($2-2.5T)"
+        elif net < 3500:
+            zone = "🟡 NORMAL — Ample reserves ($2.5-3.5T)"
+        else:
+            zone = "🟢 ABUNDANCE — Maximum liquidity ($3.5T+)"
+        if net < 2200:
+            hist_parallel = "2023 SVB banking crisis level"
+        elif net < 2500:
+            hist_parallel = "Mid-2023 post-debt-ceiling drain"
+        elif net < 3000:
+            hist_parallel = "2024 average — stable bull market"
+        elif net < 4000:
+            hist_parallel = "2025 peak — strong conditions"
+        else:
+            hist_parallel = "2020-2021 COVID liquidity peak"
+        last_updated = datetime.now().strftime("%Y-%m-%d %H:%M") + " CET"
+        change_text = f"Δ${change:+.0f}B"
         dp = os.path.join(os.path.dirname(__file__), "data", "directives.json")
         try:
             with open(dp, encoding="utf-8") as f:
@@ -97,6 +118,11 @@ def fetch_fred_liquidity() -> dict:
                 if net > prev
                 else "HOLD dry powder — liquidity contracting, wait for expansion"
             ),
+            "net_liq_value": round(net, 1),
+            "change_text": change_text,
+            "zone": zone,
+            "hist_parallel": hist_parallel,
+            "last_updated": last_updated,
         }
         try:
             os.makedirs(os.path.dirname(dp), exist_ok=True)
