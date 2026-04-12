@@ -1,0 +1,14 @@
+{
+  "signals": [
+    {
+      "ticker": "ASML",
+      "limit": "€1100",
+      "note": "Earnings Apr 16 — limit armed; reflexivity = wait for fill, no chase."
+    },
+    {
+      "ticker": "UEC",
+      "limit": "thesis / stops",
+      "note": "Uranium tape reflexivity — add only on spot + policy confirmation."
+    }
+  ]
+}
