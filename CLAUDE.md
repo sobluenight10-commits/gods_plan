@@ -1,3 +1,12 @@
+## OLYMPUS CONSTITUTION (DO NOT MODIFY WITHOUT GOD APPROVAL)
+- 8 sectors: Intelligence, Energy, Space, Bio, Robotics, Infrastructure, Global Issue Radar, RADAR
+- Track A: established companies, 4/7 Legend Gates required
+- Track B: paradigm companies, P1+P2 mandatory
+- GOD Score Wednesday recalibration
+- Macro Multiplier: Earth Shifter × 1.15
+- GOD's Law: sci-fi becomes reality — buy before world knows it is possible
+- Mission: €100M by 2031
+
 ## TODAY'S BUILD QUEUE — TYPE "execute" TO START
 
 ### TASK 1 — Open Cursor with this instruction:
