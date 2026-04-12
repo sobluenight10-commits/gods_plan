@@ -221,7 +221,10 @@ def _check_news_alerts_impl():
         return
 
     cache = _load_news_alert_cache()
+    sec_cache = _load_sec_cache()
+    critical_map = sec_cache.setdefault("critical_news", {})
     dirty = False
+    sec_dirty = False
     fired: List[str] = []
 
     for ticker in tickers:
@@ -241,7 +244,15 @@ def _check_news_alerts_impl():
             if not kind or not kw:
                 continue
 
+            danger_pdata: dict = {}
             if kind == "danger":
+                dig = _headline_digest(title)
+                danger_pdata = _fetch_price(ticker)
+                bucket = _price_bucket(float(danger_pdata.get("price") or 0))
+                if not _critical_news_should_fire(critical_map, ticker, dig, bucket, None):
+                    _mark_news_headline(cache, ticker, title)
+                    dirty = True
+                    continue
                 msg = (
                     f"🔴 NEWS ALERT — {ticker}\n"
                     f"⚠️ DANGER SIGNAL DETECTED\n"
@@ -260,10 +271,23 @@ def _check_news_alerts_impl():
             _send_thesis_plain(msg)
             _mark_news_headline(cache, ticker, title)
             dirty = True
+            if kind == "danger":
+                pdata = danger_pdata if danger_pdata else _fetch_price(ticker)
+                bucket = _price_bucket(float(pdata.get("price") or 0))
+                _mark_critical_news(
+                    critical_map,
+                    ticker,
+                    _headline_digest(title),
+                    bucket,
+                    None,
+                )
+                sec_dirty = True
             fired.append(f"{ticker} {kind} {kw[:24]}")
 
     if dirty:
         _save_news_alert_cache(cache)
+    if sec_dirty:
+        _save_sec_cache(sec_cache)
     if fired:
         logger.info("check_news_alerts fired: %s", fired)
 
@@ -643,6 +667,57 @@ def run_price_alerts():
         logger.debug("Price alert check: no triggers")
 
 SEC_CACHE = os.path.join("data", "sec_cache.json")
+# Danger-class news (🔴 NEWS ALERT) — per-ticker cooldown in sec_cache.json
+CRITICAL_NEWS_COOLDOWN_SEC = 48 * 3600
+
+
+def _price_bucket(price: float) -> int:
+    if not price or price <= 0:
+        return 0
+    return int(float(price) / 5.0) * 5
+
+
+def _critical_news_should_fire(
+    critical_map: dict,
+    ticker: str,
+    headline_digest: str,
+    price_bucket: int,
+    filing_id: Optional[str] = None,
+) -> bool:
+    """
+    Within 48h of the last critical-class alert for this ticker, suppress unless
+    headline digest, price bucket, or SEC filing id changed (new information).
+    """
+    prev = critical_map.get(ticker)
+    if not prev:
+        return True
+    now = time.time()
+    if now - float(prev.get("ts") or 0) >= CRITICAL_NEWS_COOLDOWN_SEC:
+        return True
+    if prev.get("digest") != headline_digest:
+        return True
+    if int(prev.get("bucket", 0) or 0) != int(price_bucket):
+        return True
+    if filing_id and prev.get("filing_id") != filing_id:
+        return True
+    return False
+
+
+def _mark_critical_news(
+    critical_map: dict,
+    ticker: str,
+    headline_digest: str,
+    price_bucket: int,
+    filing_id: Optional[str] = None,
+):
+    critical_map[ticker] = {
+        "ts": time.time(),
+        "digest": headline_digest,
+        "bucket": int(price_bucket),
+        "filing_id": filing_id or "",
+    }
+
+
 _SEC_FEED = (
     "https://www.sec.gov/cgi-bin/browse-edgar"
     "?action=getcurrent&type=8-K&dateb=&owner=include"
@@ -653,9 +728,16 @@ _SEC_FEED = (
 def _load_sec_cache() -> dict:
     try:
         with open(SEC_CACHE, "r") as f:
-            return json.load(f)
+            d = json.load(f)
     except Exception:
-        return {"seen": []}
+        d = {}
+    if not isinstance(d, dict):
+        d = {}
+    d.setdefault("seen", [])
+    d.setdefault("critical_news", {})
+    if not isinstance(d.get("critical_news"), dict):
+        d["critical_news"] = {}
+    return d
 
 
 def _save_sec_cache(cache: dict):

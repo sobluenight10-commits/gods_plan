@@ -777,7 +777,6 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <div style="font-size:9px;color:var(--es-ink4);font-family:'DM Mono',monospace;padding:6px 16px 0;letter-spacing:0.1em;" id="es-price-status">prices loading...</div>
   <div class="es-inner-nav">
     <button class="es-tab active" onclick="esShowTab('matrix', this)">Master Matrix</button>
-    <button class="es-tab" onclick="esShowTab('portfolio', this)">💼 Portfolio + Watchlist</button>
     <button class="es-tab" onclick="esShowTab('wednesday', this)">📅 Wed Review</button>
     <button class="es-tab" onclick="esShowTab('bubble', this)">Bubble Chart</button>
     <button class="es-tab" onclick="esShowTab('regime', this)">Regime / VIX</button>
@@ -800,6 +799,76 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <!-- Matrix panel -->
   <div id="es-panel-matrix" class="es-panel active">
 
+<!-- ── PORTFOLIO SUMMARY + TR CARDS (single source of truth) ─────────── -->
+<div id="portfolio-summary-bar" data-kiwoom-eur="0" style="display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;padding:10px 14px;margin:0 0 10px;background:linear-gradient(90deg,#f8f7f3,#fff);border:1px solid var(--es-rule);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);">
+  <span style="font-weight:800;letter-spacing:2px;color:var(--es-ink4);">PORTFOLIO SUMMARY</span>
+  <span>TR total <strong id="pf-tr-total" style="color:var(--ink);">—</strong></span>
+  <span style="opacity:0.85;">Kiwoom <strong id="pf-kw-total" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">(set <code>data-kiwoom-eur</code> on this bar)</span></span>
+  <span>Dry powder <strong style="color:var(--bull);">€1,500</strong></span>
+  <span>Combined <strong id="pf-combined-total" style="color:var(--gold);">—</strong></span>
+</div>
+<div class="sec-t" style="margin:0 14px 10px;">TR POSITION CARDS</div>
+<div class="port-grid" style="margin:0 14px 14px;">
+  <div class="port-card" data-eur="1420" style="border-left-color:#cc0022;">
+    <div class="pc-name">TSMC (ADR)</div>
+    <div class="pc-val" style="color:#cc0022;">€1,420</div>
+    <div class="pc-chg dn">-1.18% today</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-87">87</span> CORE</div>
+  </div>
+  <div class="port-card" data-eur="1082" style="border-left-color:#008c35;">
+    <div class="pc-name">Nutrien (NTR)</div>
+    <div class="pc-val" style="color:#008c35;">€1,082</div>
+    <div class="pc-chg up">+2.55% today</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-82">81</span> ⏳ EX-DATE MAR 31</div>
+  </div>
+  <div class="port-card" data-eur="915" style="border-left-color:#0050cc;">
+    <div class="pc-name">Coherent (COHR)</div>
+    <div class="pc-val">€915</div>
+    <div class="pc-chg dn">-0.55%</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-82">77</span></div>
+  </div>
+  <div class="port-card" data-eur="789" style="border-left-color:#cc0022;">
+    <div class="pc-name">Uranium Energy (UEC)</div>
+    <div class="pc-val" style="color:#cc0022;">€789</div>
+    <div class="pc-chg dn">-7.10%</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-low">60</span> HOLD ONLY</div>
+  </div>
+  <div class="port-card" data-eur="591" style="border-left-color:#0050cc;">
+    <div class="pc-name">Xiaomi</div>
+    <div class="pc-val" style="color:#cc0022;">€591</div>
+    <div class="pc-chg dn">-7.73%</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-87">85</span></div>
+  </div>
+  <div class="port-card" data-eur="493" style="border-left-color:#008c35;">
+    <div class="pc-name">Thermo Fisher (TMO)</div>
+    <div class="pc-val">€493</div>
+    <div class="pc-chg dn">-5.62%</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-85">84</span></div>
+  </div>
+  <div class="port-card" data-eur="444" style="border-left-color:#0050cc;">
+    <div class="pc-name">Rocket Lab (RKLB)</div>
+    <div class="pc-val" style="color:#cc0022;">€444</div>
+    <div class="pc-chg dn">-11.16%</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-82">82</span> ✅ Filled @€58</div>
+  </div>
+  <div class="port-card" data-eur="324" style="border-left-color:#008c35;">
+    <div class="pc-name">Planet Labs PBC <span style="font-size:9px;color:var(--es-ink4);">PL</span></div>
+    <div class="pc-val" id="port-pl-val" style="color:#008c35;">—</div>
+    <div class="pc-chg up" id="port-pl-chg">live quote</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-85">84</span> · Entry €28 avg</div>
+  </div>
+  <div class="port-card" data-eur="267" style="border-left-color:#cc0022;">
+    <div class="pc-name">Sprott Uranium</div>
+    <div class="pc-val" style="color:#cc0022;">€267</div>
+    <div class="pc-chg dn">-11.22%</div>
+    <div class="pc-score">GOD Score: <span class="score-pill sp-low">65</span></div>
+  </div>
+</div>
+<div class="card" style="margin:0 14px 12px;background:var(--gold-lt);border:1px solid #f0d090;">
+  <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">⚠️ TR DISPLAY RULE</div>
+  <div style="font-size:12px;color:var(--ink2);">Card totals are <strong>position values in EUR</strong> except <strong>PL</strong>: live line mirrors <code>#price-PL</code> from <code>prices.json</code>.</div>
+</div>
+
 <!-- ── SECTOR HEATMAP — SIGNAL DETECTION ─────────────────────────────── -->
 <div id="sector-heatmap" style="padding:10px 14px 4px;">
   <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--es-ink4);margin-bottom:8px;">SECTOR HEATMAP — SIGNAL DETECTION · <span id="heatmap-refresh-ts">—</span></div>
@@ -816,14 +885,14 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 
   /** GOD portfolio tickers only — blog hits outside this set show as NEW SIGNAL */
   const PORTFOLIO_TICKERS = new Set([
-    "TSM","PLTR","UEC","URNM","COHR","1810.HK","NTR","RKLB",
+    "TSM","PLTR","UEC","URNM","COHR","1810.HK","NTR","RKLB","PL",
     "000660.KS","272210.KS","ARKQ","BOTZ","VRT","IAU","KTOS",
   ]);
 
   const SECTORS = [
     { name:"Intelligence", dot:"#1e3a6e", tickers:["000660.KS","TSM","PLTR","1810.HK","NVDA"] },
     { name:"Energy",       dot:"#1e5c2a", tickers:["UEC","URNM","CCJ","OKLO"] },
-    { name:"Space",        dot:"#4a1a7a", tickers:["RKLB","ASTS"] },
+    { name:"Space",        dot:"#4a1a7a", tickers:["RKLB","PL","ASTS"] },
     { name:"Bio",          dot:"#1a4f4f", tickers:["CRSP","NTLA","BEAM","TMO"] },
     { name:"Robotics",     dot:"#6b2d14", tickers:["272210.KS","KTOS","ARKQ","BOTZ"] },
     { name:"Infrastructure", dot:"#1e3050", tickers:["COHR","VRT","LVMH"] },
@@ -1146,7 +1215,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:58%;background:var(--c3)"></div></div><div class="god-num">58</div></div></td>
-  <td class="r"><span class="pnow" id="price-URNM" data-ticker="URNM">$67.23</span></td>
+  <td class="r"><span class="pnow" id="price-RKLB" data-ticker="RKLB">$68.36</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+30.2%</span><span class="gap-label">to $87.50</span></div></td>
   <td class="r"><span class="fest pdn">$70.50</span></td>
   <td class="r"><span class="fest pup">$73.50</span></td>
@@ -1154,6 +1223,21 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td class="r"><span class="fest pup">$124</span></td>
   <td><span class="sig s-hold">HOLD</span></td>
   <td class="act">Only vertically integrated small-launch co actually launching. Neutron next.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Neutron launch · NASA</span></td>
+</tr>
+
+<tr class="r3">
+  <td><div class="tsym">PL</div><div class="tname">Planet Labs PBC</div></td>
+  <td><span class="badge b-port">Portfolio</span></td>
+  <td><span class="spear-badge">⚔ SPEAR</span></td>
+  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:84%;background:var(--c3)"></div></div><div class="god-num">84</div></div></td>
+  <td class="r"><span class="pnow" id="price-PL" data-ticker="PL">$35.89</span></td>
+  <td class="r"><div class="gap-cell"><span class="gap-up">+14%</span><span class="gap-label">to €32+</span></div></td>
+  <td class="r"><span class="fest pup">$28</span></td>
+  <td class="r"><span class="fest pup">$32</span></td>
+  <td class="r"><span class="fest pup">$40</span></td>
+  <td class="r"><span class="fest pup">$55</span></td>
+  <td><span class="sig s-hold">HOLD</span></td>
+  <td class="act">Earth observation + defense analytics. Apr 27 warrant overhang — size discipline.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Warrant window Apr 27</span></td>
 </tr>
 
 <tr class="r3">
@@ -1246,7 +1330,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:92%;background:var(--c5)"></div></div><div class="god-num">92</div></div></td>
-  <td class="r"><span class="pnow" id="price-RKLB" data-ticker="RKLB">₩136K</span></td>
+  <td class="r"><span class="pnow" id="price-272210.KS" data-ticker="272210.KS">₩136K</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+34.9%</span><span class="gap-label">to ₩183.5K</span></div></td>
   <td class="r"><span class="fest pup">₩158.5K</span></td>
   <td class="r"><span class="fest pup">₩163.5K</span></td>
@@ -1261,7 +1345,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="badge b-port">Portfolio</span></td>
   <td><span class="spear-badge">⚔ SPEAR</span></td>
   <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:80%;background:var(--c5)"></div></div><div class="god-num">80</div></div></td>
-  <td class="r"><span class="pnow" id="price-ASTS" data-ticker="ASTS">$84.62</span></td>
+  <td class="r"><span class="pnow" id="price-KTOS" data-ticker="KTOS">$84.62</span></td>
   <td class="r"><div class="gap-cell"><span class="gap-up">+17.6%</span><span class="gap-label">to $99.50</span></div></td>
   <td class="r"><span class="fest pdn">$87.50</span></td>
   <td class="r"><span class="fest pup">$89.50</span></td>
@@ -1269,21 +1353,6 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td class="r"><span class="fest pup">$130</span></td>
   <td><span class="sig s-hold">HOLD</span></td>
   <td class="act">Drones deployed in live conflict = real revenue. Add at $80. Stop $75.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ DoD contract Q2</span></td>
-</tr>
-
-<tr class="r5" style="opacity:0.5;">
-  <td><div class="tsym" style="text-decoration:line-through;">AVAV</div><div class="tname">AeroVironment</div></td>
-  <td><span class="badge b-exit">Exited</span></td>
-  <td><span class="spear-badge">⚔ SPEAR</span></td>
-  <td class="r"><div class="god-score"><div class="god-bar"><div class="god-fill" style="width:45%;background:var(--c5)"></div></div><div class="god-num">45</div></div></td>
-  <td class="r">—</td>
-  <td class="r">—</td>
-  <td class="r">—</td>
-  <td class="r">—</td>
-  <td class="r">—</td>
-  <td class="r">—</td>
-  <td><span class="sig s-flush">✅ EXITED</span></td>
-  <td class="act" style="color:var(--es-ink4);">EXITED Apr 8 2026. DoD terminated SCAR contract — thesis dead, not earnings miss. Lesson #05: company news overrides macro.</td>
 </tr>
 
 <tr class="r5">
@@ -1481,7 +1550,8 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     "000660.KS": { val: 85000,  lbl: "₩85,000" },
     "272210.KS": { val: 45000,  lbl: "₩45,000" },
     "TSM":       { val: 152,    lbl: "€140" },   // EUR→USD approx
-    "PLTR":      { val: 118,    lbl: "€109" },
+    "PLTR":      { val: 109,    lbl: "€109", vsEur: true },
+    "PL":        { val: 28,     lbl: "€28",  vsEur: true },
     "1810.HK":   { val: 42,     lbl: "HK$42"  },
     "UEC":       { val: 11.9,   lbl: "€11"    },
     "URNM":      { val: 77.8,   lbl: "€72"    },
@@ -1504,10 +1574,17 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   tbody.querySelectorAll("td[colspan='13']").forEach(td => td.setAttribute("colspan", "15"));
 
   // Add entry + vs-now cells to every stock row
+  function rowTicker(symEl) {
+    const c = symEl.cloneNode(true);
+    c.querySelectorAll(".track-pill").forEach(p => p.remove());
+    const t = (c.textContent || "").trim().split(/\s+/)[0];
+    return t || "";
+  }
+
   tbody.querySelectorAll("tr").forEach(tr => {
     const symEl = tr.querySelector(".tsym");
     if (!symEl) return; // category band row already handled above
-    const ticker = symEl.textContent.trim();
+    const ticker = rowTicker(symEl);
     const entry  = ENTRY[ticker];
 
     // Entry price cell
@@ -1535,18 +1612,91 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     }
   });
 
+  const EURUSD_FOR_VS = 1.127; // USD→EUR for TR-held US names vs € entry (live USD from prices.json)
+
+  function firstNumericFromPriceCell(el) {
+    const t = (el && el.textContent) ? el.textContent : "";
+    const m = t.replace(/,/g, "").match(/-?[\d]+(?:\.\d+)?/);
+    return m ? parseFloat(m[0]) : NaN;
+  }
+
+  function syncPlPortCardFromMatrix() {
+    const src = document.getElementById("price-PL");
+    const dst = document.getElementById("port-pl-val");
+    const chg = document.getElementById("port-pl-chg");
+    if (src && dst) {
+      dst.innerHTML = src.innerHTML;
+      if (chg) chg.style.display = "none";
+    }
+  }
+
+  function updatePortfolioSummaryBar() {
+    const bar = document.getElementById("portfolio-summary-bar");
+    const trEl = document.getElementById("pf-tr-total");
+    const kwEl = document.getElementById("pf-kw-total");
+    const combEl = document.getElementById("pf-combined-total");
+    if (!bar || !trEl || !kwEl || !combEl) return;
+    let trSum = 0;
+    document.querySelectorAll("#es-panel-matrix .port-card[data-eur]").forEach(card => {
+      trSum += parseFloat(card.getAttribute("data-eur") || "0") || 0;
+    });
+    const kw = parseFloat(bar.getAttribute("data-kiwoom-eur") || "0") || 0;
+    const dry = 1500;
+    const combined = trSum + kw + dry;
+    const fmt = n => "€" + Math.round(n).toLocaleString("en-IE");
+    trEl.textContent = fmt(trSum);
+    kwEl.textContent = fmt(kw);
+    combEl.textContent = fmt(combined);
+  }
+
   function updateVsNow() {
     document.querySelectorAll(".vs-now-cell").forEach(td => {
-      const entryVal = parseFloat(td.getAttribute("data-entry-val"));
-      if (!entryVal || entryVal === 0) {
-        if (td.getAttribute("data-entry-val") === "0") td.textContent = "Gift";
+      const evRaw = td.getAttribute("data-entry-val");
+      const entryVal = parseFloat(evRaw);
+      const ticker = td.getAttribute("data-ticker");
+      const entryMeta = ENTRY[ticker];
+
+      if (evRaw === "0") {
+        td.textContent = "Gift";
         return;
       }
-      const ticker = td.getAttribute("data-ticker");
-      // Try to read live price from pnow span
+      if (!entryVal || entryVal === 0) return;
+
       const pnow = document.getElementById("price-" + ticker) ||
                    document.querySelector(".pnow[data-ticker='" + ticker + "']");
       if (!pnow) return;
+
+      if (ticker === "PLTR" && entryMeta && entryMeta.vsEur) {
+        const liveUsd = firstNumericFromPriceCell(pnow);
+        if (!liveUsd || isNaN(liveUsd)) return;
+        const eur = liveUsd / EURUSD_FOR_VS;
+        const eEntry = entryVal;
+        const diff = eur - eEntry;
+        const pct = (diff / eEntry) * 100;
+        const col = pct >= 0 ? "var(--bull)" : "var(--bear)";
+        const ps = diff >= 0 ? "+" : "";
+        td.innerHTML =
+          "≈€" + eur.toFixed(0) + " vs <b>€" + eEntry + "</b> (" + ps + "€" + Math.abs(diff).toFixed(0) + ") " +
+          "<span style=\"color:" + col + "\">" + (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%</span>";
+        td.style.color = col;
+        return;
+      }
+
+      if (ticker === "PL" && entryMeta && entryMeta.vsEur) {
+        const liveUsd = firstNumericFromPriceCell(pnow);
+        if (!liveUsd || isNaN(liveUsd)) return;
+        const eur = liveUsd / EURUSD_FOR_VS;
+        const eEntry = entryVal;
+        const diff = eur - eEntry;
+        const pct = (diff / eEntry) * 100;
+        const col = pct >= 0 ? "var(--bull)" : "var(--bear)";
+        td.innerHTML =
+          "≈€" + eur.toFixed(2) + " vs <b>€" + eEntry + "</b> (" + (diff >= 0 ? "+" : "") + "€" + Math.abs(diff).toFixed(2) + ") " +
+          "<span style=\"color:" + col + "\">" + (pct >= 0 ? "+" : "") + pct.toFixed(2) + "%</span>";
+        td.style.color = col;
+        return;
+      }
+
       const raw = pnow.textContent.replace(/[₩$HK€,\s]/g, "").replace(/K$/i, "000").replace(/M$/i, "000000");
       const liveVal = parseFloat(raw);
       if (!liveVal || isNaN(liveVal)) return;
@@ -1555,6 +1705,8 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
       td.textContent = sign + pct.toFixed(1) + "%";
       td.style.color = pct >= 0 ? "var(--bull)" : "var(--bear)";
     });
+    syncPlPortCardFromMatrix();
+    updatePortfolioSummaryBar();
   }
 
   // Run once on load, then watch for price updates
@@ -1566,6 +1718,10 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   document.querySelectorAll(".pnow").forEach(el =>
     observer.observe(el, { characterData: true, childList: true, subtree: true })
   );
+
+  window.updatePortfolioSummaryBar = updatePortfolioSummaryBar;
+  window.syncPlPortCardFromMatrix = syncPlPortCardFromMatrix;
+  window.updateVsNowMatrix = updateVsNow;
 })();
 </script>
 
@@ -1573,107 +1729,6 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 </div>
 
   <!-- Bubble panel -->
-
-  <!-- ═══ PORTFOLIO + WATCHLIST (merged from standalone tabs) ═══ -->
-  <div id="es-panel-portfolio" class="es-panel" style="padding:24px 28px;background:#fff;">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;">
-      <div>
-        <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--ink3);margin-bottom:14px;">TR PORTFOLIO — TOTAL POSITION VALUES</div>
-        
-  <div class="sec-t" style="margin-bottom:18px;">TR PORTFOLIO — TOTAL POSITION VALUES</div>
-  <div class="port-grid">
-    <div class="port-card" style="border-left-color:#cc0022;">
-      <div class="pc-name">TSMC (ADR)</div>
-      <div class="pc-val" style="color:#cc0022;">€1,420</div>
-      <div class="pc-chg dn">-1.18% today</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-87">87</span> CORE</div>
-    </div>
-    <div class="port-card" style="border-left-color:#008c35;">
-      <div class="pc-name">Nutrien (NTR)</div>
-      <div class="pc-val" style="color:#008c35;">€1,082</div>
-      <div class="pc-chg up">+2.55% today</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-82">81</span> ⏳ EX-DATE MAR 31</div>
-    </div>
-    <div class="port-card" style="border-left-color:#0050cc;">
-      <div class="pc-name">Coherent (COHR)</div>
-      <div class="pc-val">€915</div>
-      <div class="pc-chg dn">-0.55%</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-82">77</span></div>
-    </div>
-    <div class="port-card" style="border-left-color:#cc0022;">
-      <div class="pc-name">Uranium Energy (UEC)</div>
-      <div class="pc-val" style="color:#cc0022;">€789</div>
-      <div class="pc-chg dn">-7.10%</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-low">60</span> HOLD ONLY</div>
-    </div>
-    <div class="port-card" style="border-left-color:#0050cc;">
-      <div class="pc-name">Xiaomi</div>
-      <div class="pc-val" style="color:#cc0022;">€591</div>
-      <div class="pc-chg dn">-7.73%</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-87">85</span></div>
-    </div>
-    <div class="port-card" style="border-left-color:#008c35;">
-      <div class="pc-name">Thermo Fisher (TMO)</div>
-      <div class="pc-val">€493</div>
-      <div class="pc-chg dn">-5.62%</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-85">84</span></div>
-    </div>
-    <div class="port-card" style="border-left-color:#0050cc;">
-      <div class="pc-name">Rocket Lab (RKLB)</div>
-      <div class="pc-val" style="color:#cc0022;">€444</div>
-      <div class="pc-chg dn">-11.16%</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-82">82</span> ✅ Filled @€58</div>
-    </div>
-    <div class="port-card" style="border-left-color:#008c35;">
-      <div class="pc-name">Planet Labs (PL)</div>
-      <div class="pc-val" style="color:#008c35;">€324</div>
-      <div class="pc-chg up">+0.43%</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-85">84</span> ✅ Holding</div>
-    </div>
-    <div class="port-card" style="border-left-color:#cc0022;">
-      <div class="pc-name">Sprott Uranium</div>
-      <div class="pc-val" style="color:#cc0022;">€267</div>
-      <div class="pc-chg dn">-11.22%</div>
-      <div class="pc-score">GOD Score: <span class="score-pill sp-low">65</span></div>
-    </div>
-  </div>
-  <div class="card" style="background:var(--gold-lt);border:1px solid #f0d090;">
-    <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--gold);margin-bottom:8px;">⚠️ TR DISPLAY RULE</div>
-    <div style="font-size:13px;color:var(--ink2);">Values shown above are <strong>total position values</strong> — NOT per-share prices. TSMC shows €1,420 = total of all TSMC shares held.</div>
-  </div>
-
-      </div>
-      <div>
-        <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--ink3);margin-bottom:14px;">WATCHLIST — GOD SCORE RANKINGS</div>
-        
-  <div class="sec-t">FULL WATCHLIST — GOD SCORES</div>
-  <div class="card">
-    <table class="score-table">
-      <thead><tr><th>Rank</th><th>Stock</th><th>Score</th><th>Price</th><th>Tier</th><th>Status</th></tr></thead>
-      <tbody>
-        <tr><td>1</td><td>TSMC</td><td style="color:var(--bull);font-weight:700;">87</td><td>€295</td><td><span class="score-pill sp-87">CORE</span></td><td>Add on dips</td></tr>
-        <tr><td>2</td><td>ASML</td><td style="color:var(--bull);font-weight:700;">87</td><td>€1,133</td><td><span class="score-pill sp-87">CORE</span></td><td>Limit €1,100 armed</td></tr>
-        <tr><td>3</td><td>Xiaomi</td><td style="color:var(--bull);font-weight:700;">85</td><td>€3.50/sh</td><td><span class="score-pill sp-85">STRONG</span></td><td>Hold</td></tr>
-        <tr><td>4</td><td>Planet Labs (PL)</td><td style="color:var(--bull);font-weight:700;">84</td><td>€28–30</td><td><span class="score-pill sp-85">STRONG</span></td><td>Holding</td></tr>
-        <tr><td>5</td><td>Thermo Fisher</td><td style="color:var(--bull);font-weight:700;">84</td><td>€441</td><td><span class="score-pill sp-85">STRONG</span></td><td>Hold</td></tr>
-        <tr><td>6</td><td>Applied Materials</td><td style="color:var(--warn);font-weight:700;">83</td><td>€313</td><td><span class="score-pill sp-82">WATCH</span></td><td>Month target</td></tr>
-        <tr><td>7</td><td>RKLB</td><td style="color:var(--warn);font-weight:700;">82</td><td>€52–58</td><td><span class="score-pill sp-82">WATCH</span></td><td>✅ Filled @€58</td></tr>
-        <tr><td>8</td><td>Nutrien (NTR)</td><td style="color:var(--warn);font-weight:700;">81</td><td>€65</td><td><span class="score-pill sp-82">WATCH</span></td><td>⏳ Ex-date Mar 31</td></tr>
-        <tr><td>9</td><td>Cheniere Energy</td><td style="color:var(--warn);font-weight:700;">81</td><td>€250</td><td><span class="score-pill sp-82">WATCH</span></td><td>Iran LNG play</td></tr>
-        <tr><td>10</td><td>Palantir (PLTR)</td><td style="color:var(--warn);font-weight:700;">78</td><td>€135</td><td><span class="score-pill sp-82">WATCH</span></td><td>Running — hold</td></tr>
-        <tr><td>11</td><td>Tesla</td><td style="color:var(--ink3);">65</td><td>€330</td><td><span class="score-pill sp-low">WAIT</span></td><td>Wait €285–300</td></tr>
-        <tr><td>12</td><td>UEC</td><td style="color:var(--bear);">60</td><td>€11.60</td><td><span class="score-pill sp-low">HOLD</span></td><td>No add</td></tr>
-      </tbody>
-    </table>
-  </div>
-
-      </div>
-    </div>
-    <div style="margin-top:16px;padding:10px 14px;background:var(--gold-lt);border:1px solid #f0d090;border-radius:8px;font-size:11px;color:var(--gold);">
-      ⚠️ TR DISPLAY RULE: Values above are <strong>total position values</strong>, NOT per-share prices. TSMC €1,420 = total of all TSMC shares held.
-    </div>
-  </div>
-
 
   <!-- ═══ WEDNESDAY SECTOR REVIEW ═══ -->
   <div id="es-panel-wednesday" class="es-panel" style="padding:24px 28px;background:#fff;">
@@ -1700,7 +1755,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
       <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;border-top:3px solid var(--purple);">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;">07:50</div>
         <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--purple);margin:4px 0 6px;">PORTFOLIO CHECK</div>
-        <div style="font-size:10px;color:var(--ink2);line-height:1.6;">60-day calendar update<br>Dry powder review<br>AVAV exit status<br>GEVO+HUYA exit check</div>
+        <div style="font-size:10px;color:var(--ink2);line-height:1.6;">60-day calendar update<br>Dry powder review<br>Tuition log review<br>GEVO+HUYA exit check</div>
       </div>
       <div style="background:var(--bg);border-radius:8px;padding:12px;text-align:center;border-top:3px solid var(--bull);">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:24px;">08:10</div>
@@ -2336,6 +2391,13 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
         </div>
       </div>
     </div>
+  </div>
+
+  <div class="sec-t" style="margin-top:28px;">ranto28 — LATEST BLOG POST</div>
+  <div class="card" style="padding:16px 18px;margin-top:8px;">
+    <div id="ranto28-title" style="font-weight:800;font-size:15px;color:var(--ink);line-height:1.4;margin-bottom:8px;">Loading Korean title…</div>
+    <div id="ranto28-meta" style="font-size:12px;color:var(--ink3);margin-bottom:10px;line-height:1.45;">—</div>
+    <div><a id="ranto28-link" href="https://blog.naver.com/ranto28" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--blue);word-break:break-all;">https://blog.naver.com/ranto28</a></div>
   </div>
 </div>
 
@@ -3152,6 +3214,9 @@ async function loadLivePrices() {
     }
 
     console.log("Prices loaded: " + updated_count + " tickers @ " + updated);
+    if (typeof window.syncPlPortCardFromMatrix === "function") window.syncPlPortCardFromMatrix();
+    if (typeof window.updatePortfolioSummaryBar === "function") window.updatePortfolioSummaryBar();
+    if (typeof window.updateVsNowMatrix === "function") window.updateVsNowMatrix();
   } catch (e) {
     console.warn("Price load failed:", e.message);
     if (badge) {
@@ -3202,7 +3267,7 @@ window.OLY_fillRadar = function (blogRows) {
   if (!el) return;
   const PORT = new Set([
     "TSM", "PLTR", "UEC", "URNM", "COHR", "1810.HK", "NTR", "RKLB",
-    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IONQ", "IAU", "KTOS",
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IONQ", "IAU", "KTOS", "PL",
   ]);
   const items = (blogRows || []).filter(function (b) {
     return b && b.ticker && !PORT.has(b.ticker);
@@ -3269,12 +3334,88 @@ function injectTrackBadges() {
   });
 }
 
+const RANTO_RSS_PROXY =
+  "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://rss.blog.naver.com/ranto28.xml");
+
+function rantoBlogMetaLine(raw) {
+  if (!raw || typeof raw !== "object") {
+    return "8 · RADAR — GOD relevance: cross-check tickers in Master Matrix + §8 RADAR row";
+  }
+  const bs = raw.by_sector;
+  if (bs && typeof bs === "object") {
+    const keys = Object.keys(bs).filter(function (k) {
+      return Array.isArray(bs[k]) && bs[k].length;
+    });
+    if (keys.length) {
+      return keys.join(" · ") + " · GOD relevance: scored entries sync to heatmap / matrix";
+    }
+  }
+  const tickers = Array.isArray(raw.tickers) ? raw.tickers : [];
+  if (tickers.length) {
+    return (
+      "Blog scan: " +
+      tickers.slice(0, 6).join(", ") +
+      (tickers.length > 6 ? "…" : "") +
+      " — GOD: verify vs portfolio list"
+    );
+  }
+  return "8 · RADAR — align signals with Master Matrix GOD column";
+}
+
+async function loadRanto28BlogCard() {
+  const tEl = document.getElementById("ranto28-title");
+  const mEl = document.getElementById("ranto28-meta");
+  const aEl = document.getElementById("ranto28-link");
+  if (!tEl || !mEl || !aEl) return;
+  try {
+    const xr = await fetch(RANTO_RSS_PROXY + "&t=" + Date.now(), { cache: "no-store" });
+    const xmlText = await xr.text();
+    const doc = new DOMParser().parseFromString(xmlText, "text/xml");
+    if (doc.querySelector("parsererror")) throw new Error("RSS parse error");
+    const item = doc.querySelector("channel > item") || doc.querySelector("item");
+    let title = "";
+    let link = "https://blog.naver.com/ranto28";
+    if (item) {
+      const tit = item.querySelector("title");
+      if (tit) title = (tit.textContent || "").trim();
+      const le = item.querySelector("link");
+      if (le) link = (le.textContent && le.textContent.trim()) || le.getAttribute("href") || link;
+    }
+    tEl.textContent = title || "(제목 없음)";
+    const blogUrls = [
+      "http://5.189.176.185/data/blog_tickers.json",
+      "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/data/blog_tickers.json",
+    ];
+    let blogRaw = null;
+    for (let i = 0; i < blogUrls.length; i++) {
+      try {
+        const br = await fetch(blogUrls[i] + "?t=" + Date.now(), { cache: "no-store" });
+        if (br.ok) {
+          blogRaw = await br.json();
+          break;
+        }
+      } catch (_) {
+        /* next */
+      }
+    }
+    mEl.textContent = rantoBlogMetaLine(blogRaw);
+    aEl.href = link;
+    aEl.textContent = link;
+  } catch (_) {
+    tEl.textContent =
+      "ranto28 RSS unavailable in-browser (CORS/network). Open blog.naver.com/ranto28.";
+    mEl.textContent = "8 · RADAR · GOD relevance: manual pass required";
+  }
+}
+
 function initMonthlyDashboardUpgrade() {
   loadReflexivityPanel();
+  loadRanto28BlogCard();
   updateIPOPanels();
   injectTrackBadges();
   setInterval(updateIPOPanels, 6 * 60 * 60 * 1000);
   setInterval(loadReflexivityPanel, 5 * 60 * 1000);
+  setInterval(loadRanto28BlogCard, 15 * 60 * 1000);
 }
 
 if (document.readyState === "loading") {
