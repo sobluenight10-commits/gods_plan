@@ -135,7 +135,7 @@ def run_briefing(briefing_id: str, description: str = ""):
     elif briefing_id in ("olympus", "olympus_weekly"):
         _run_olympus()
     elif briefing_id in ("master_daily", "us_open", "us_interim", "us_close"):
-        _run_daily_brief(briefing_id)
+        _run_battle_rhythm(briefing_id)
     else:
         _run_battle_rhythm(briefing_id)
 
