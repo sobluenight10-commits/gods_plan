@@ -779,6 +779,115 @@ Structure:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# SOROS REFLEXIVITY ALERT
+# Fires when a THESIS_ALERT_TICKER drops >10% in a session.
+# Classifies the drop as NARRATIVE or FUNDAMENTAL via GPT, then:
+#   NARRATIVE + thesis intact + divergence >7% → entry signal
+#   FUNDAMENTAL → thesis review warning
+# ══════════════════════════════════════════════════════════════════════════════
+
+_REFLEXIVITY_CACHE: dict = {}  # ticker → date string, prevents duplicate fires per day
+
+def analyze_reflexivity(ticker: str, chg: float, price: float) -> None:
+    """
+    Called by price_alert when a ticker drops >10% intraday.
+    chg is negative (e.g. -12.5). price is current price in USD.
+    """
+    from datetime import date
+    today = date.today().isoformat()
+
+    # One analysis per ticker per day
+    if _REFLEXIVITY_CACHE.get(ticker) == today:
+        logger.debug(f"Reflexivity: {ticker} already analysed today, skipping")
+        return
+    _REFLEXIVITY_CACHE[ticker] = today
+
+    logger.info(f"Reflexivity analysis triggered: {ticker} {chg:+.1f}%")
+
+    # ── Fetch headlines via yfinance ──────────────────────────────────────────
+    headlines = []
+    try:
+        import yfinance as yf
+        items = yf.Ticker(ticker).news or []
+        for item in items[:5]:
+            content = item.get("content", {})
+            title = content.get("title", item.get("title", ""))
+            if title:
+                headlines.append(title)
+    except Exception as e:
+        logger.warning(f"Reflexivity news fetch {ticker}: {e}")
+
+    headlines_text = "\n".join(f"- {h}" for h in headlines) if headlines else "No headlines available."
+
+    # ── GPT classification ────────────────────────────────────────────────────
+    prompt = (
+        f"A stock in our portfolio ({ticker}) dropped {abs(chg):.1f}% today. "
+        f"Here are the news headlines:\n{headlines_text}\n\n"
+        "Classify this drop as: NARRATIVE (caused by opinion, tweet, analyst view, macro fear) "
+        "or FUNDAMENTAL (caused by contract loss, earnings miss, fraud, regulatory block).\n"
+        "Then state in one sentence why the company thesis is or is not intact.\n"
+        'Output JSON only: {"classification": "NARRATIVE" or "FUNDAMENTAL", '
+        '"thesis_intact": true or false, "reason": "one sentence"}'
+    )
+
+    raw = _gpt("You are a precise investment analyst. Output only valid JSON.", prompt, tokens=200)
+
+    # ── Parse JSON ────────────────────────────────────────────────────────────
+    try:
+        # Strip markdown fences if present
+        clean = raw.strip().removeprefix("```json").removeprefix("```").removesuffix("```").strip()
+        result = json.loads(clean)
+    except Exception as e:
+        logger.error(f"Reflexivity JSON parse failed for {ticker}: {e} | raw: {raw[:200]}")
+        _send_telegram(f"⚠️ REFLEXIVITY — {ticker} | GPT parse failed | Drop: {chg:+.1f}% | Check manually.")
+        return
+
+    classification  = result.get("classification", "").upper()
+    thesis_intact   = result.get("thesis_intact", False)
+    reason          = result.get("reason", "No reason provided.")
+
+    sep = "━" * 17
+
+    if classification == "NARRATIVE" and thesis_intact:
+        divergence = round(abs(chg) - 3.0, 1)   # subtract rational noise floor
+        if divergence > 7.0:
+            entry_high = round(price * 0.97, 2)
+            entry_low  = round(price * 0.92, 2)
+            limit      = round(price * 0.93, 2)
+            msg = (
+                f"🔱 <b>REFLEXIVITY SIGNAL — {ticker}</b>\n"
+                f"{sep}\n"
+                f"TRIGGER: Narrative drop — not fundamental\n"
+                f"DROP: {chg:+.1f}% | THESIS: ✅ INTACT\n"
+                f"DIVERGENCE: {divergence}% above rational\n"
+                f"{sep}\n"
+                f"💰 <b>SOROS ENTRY ZONE:</b> ${entry_low} — ${entry_high}\n"
+                f"⚔ <b>SET LIMIT:</b> ${limit}\n"
+                f"⏰ WINDOW: Act within 4 hours\n"
+                f"REASON NARRATIVE IS WRONG: {reason}\n"
+                f"{sep}\n"
+                f"This is how GOD beats Buffett. 🏝️"
+            )
+            _send_telegram(msg)
+            logger.info(f"Reflexivity ENTRY SIGNAL sent: {ticker} divergence={divergence}%")
+        else:
+            logger.info(f"Reflexivity: {ticker} narrative drop but divergence {divergence}% ≤7% — no signal")
+
+    elif classification == "FUNDAMENTAL":
+        msg = (
+            f"⚠️ <b>FUNDAMENTAL ALERT — {ticker}</b>\n"
+            f"Drop: {chg:+.1f}% | Classification: FUNDAMENTAL\n"
+            f"Thesis review required | See Lesson 05\n"
+            f"Reason: {reason}"
+        )
+        _send_telegram(msg)
+        logger.info(f"Reflexivity FUNDAMENTAL alert sent: {ticker}")
+
+    else:
+        logger.info(f"Reflexivity: {ticker} narrative but thesis NOT intact — no entry signal")
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # DISPATCHER
 # ══════════════════════════════════════════════════════════════════════════════
 

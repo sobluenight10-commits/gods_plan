@@ -321,6 +321,18 @@ def _send_thesis_plain(message: str):
         logger.error(f"Thesis alert send failed: {e}")
 
 
+def _trigger_reflexivity(ticker: str, chg: float, price: float) -> None:
+    """Fire-and-forget: run Soros reflexivity analysis in a background thread."""
+    import threading
+    def _run():
+        try:
+            from battle_rhythm import analyze_reflexivity
+            analyze_reflexivity(ticker, chg, price)
+        except Exception as e:
+            logger.error(f"Reflexivity analysis failed for {ticker}: {e}")
+    threading.Thread(target=_run, daemon=True).start()
+
+
 def check_thesis_alerts():
     """
     Berlin weekdays 15:30–22:00: scan config.THESIS_ALERT_TICKERS with yfinance;
@@ -413,6 +425,7 @@ def _check_thesis_alerts_impl():
                 _mark_alerted(cache, kw)
                 cache_dirty = True
                 fired.append(f"{ticker} EMERGENCY {chg:+.1f}%")
+                _trigger_reflexivity(ticker, chg, data.get("price", 0))
                 continue
 
             if chg <= tt:
@@ -430,6 +443,7 @@ def _check_thesis_alerts_impl():
                 _mark_alerted(cache, kw)
                 cache_dirty = True
                 fired.append(f"{ticker} THESIS {chg:+.1f}%")
+                _trigger_reflexivity(ticker, chg, data.get("price", 0))
                 continue
 
             # watch tier
