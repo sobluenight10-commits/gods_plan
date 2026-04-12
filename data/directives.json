@@ -1,14 +1,22 @@
 {
-  "last_updated": "2026-04-12 14:00 CET",
-  "dry_powder_eur": 1500,
-  "deploy_target": "OKLO $44 limit + CCJ $100 limit — set in TR before Monday open",
-  "one_command": "Set OKLO limit $44 in Trade Republic today — Soros entry zone active",
+  "last_updated": "2026-04-12 18:00 CET",
+  "one_command": "Set OKLO $44 + CCJ $100 + UEC €11 limits in Trade Republic — deploy full €1,500 post April 15",
   "actions": [
-    {"type": "BUY", "ticker": "OKLO", "reason": "Limit $44 (~€38). Meta 1.2GW signed. 5Y hold. Set in TR now."},
-    {"type": "BUY", "ticker": "CCJ", "reason": "Limit $100. Blue chip uranium anchor. Set in TR now."},
-    {"type": "HOLD", "ticker": "PLTR", "reason": "Entry €109. Burry noise — Army $10B intact. Stop €95."},
-    {"type": "HOLD", "ticker": "UEC", "reason": "Uranium thesis structural. Stop €11. Do not add yet."},
-    {"type": "WATCH", "ticker": "ASML", "reason": "April 16 earnings. Decision: beat=buy market, miss=wait €1,100."},
-    {"type": "DEPLOY", "ticker": "DRY POWDER", "reason": "€1,500 → OKLO $44 + CCJ $100 after April 15 TGA drain ends."}
-  ]
+    {"type": "BUY", "ticker": "OKLO", "reason": "€600 at $44 limit. Meta 1.2GW signed. Sam Altman chairman. NRC 2026. 5Y hold."},
+    {"type": "BUY", "ticker": "CCJ", "reason": "€500 at $100 limit. Largest western uranium producer. Utility contracts. Blue chip anchor."},
+    {"type": "BUY", "ticker": "UEC", "reason": "€400 at €11 limit. Already held. Spot price leverage. Burke Hollow producing."},
+    {"type": "HOLD", "ticker": "PLTR", "reason": "Entry €109. Burry deleted post. Army $10B intact. Stop €95. Do not sell."},
+    {"type": "HOLD", "ticker": "TSM", "reason": "AI foundry monopoly. N2 node ramp. Hold all."},
+    {"type": "WATCH", "ticker": "ASML", "reason": "April 16 earnings. Beat=buy at market. Miss=wait for €1,100."},
+    {"type": "WATCH", "ticker": "SpaceX", "reason": "S-1 filed April 1. June IPO. Prepare capital now."},
+    {"type": "WATCH", "ticker": "Anthropic", "reason": "October 2026 IPO target. $30B ARR. 8/10 Fortune companies. Prepare capital."}
+  ],
+  "deployment_plan": [
+    {"ticker": "OKLO", "amount_eur": 600, "limit": "$44", "reason": "Paradigm max conviction"},
+    {"ticker": "CCJ", "amount_eur": 500, "limit": "$100", "reason": "Blue chip uranium anchor"},
+    {"ticker": "UEC", "amount_eur": 400, "limit": "€11", "reason": "Spot leverage add"}
+  ],
+  "total_deploy_eur": 1500,
+  "dry_powder_after": 0,
+  "deploy_timing": "Post April 15 — TGA drain ends, liquidity returns"
 }

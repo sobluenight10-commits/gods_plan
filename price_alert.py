@@ -72,16 +72,54 @@ def _load_state() -> dict:
 
 def _load_alert_cache() -> dict:
     try:
-        with open(ALERT_CACHE, "r") as f:
-            return json.load(f)
+        with open(ALERT_CACHE, "r", encoding="utf-8") as f:
+            d = json.load(f)
     except Exception:
-        return {"sent": {}}
+        d = {}
+    if not isinstance(d, dict):
+        d = {}
+    d.setdefault("sent", {})
+    d.setdefault("critical_48h", {})
+    if not isinstance(d.get("critical_48h"), dict):
+        d["critical_48h"] = {}
+    return d
 
 
 def _save_alert_cache(cache: dict):
     os.makedirs("data", exist_ok=True)
-    with open(ALERT_CACHE, "w") as f:
+    if "critical_48h" not in cache or not isinstance(cache.get("critical_48h"), dict):
+        cache["critical_48h"] = {}
+    with open(ALERT_CACHE, "w", encoding="utf-8") as f:
         json.dump(cache, f, indent=2)
+
+
+def _critical_reason_hash(reason: str) -> str:
+    norm = (reason or "").strip().lower()
+    return hashlib.sha256(norm.encode("utf-8")).hexdigest()[:20]
+
+
+def _should_skip_critical_dedup(ticker: str, reason_key: str) -> bool:
+    """Same ticker + same reason hash within 48h → skip CRITICAL-class Telegram."""
+    cache = _load_alert_cache()
+    bucket = cache.get("critical_48h") or {}
+    t = (ticker or "").upper()
+    h = _critical_reason_hash(reason_key)
+    prev = (bucket.get(t) or {}).get(h)
+    if prev is None:
+        return False
+    ts = float(prev) if not isinstance(prev, dict) else float(prev.get("ts", 0))
+    return (time.time() - ts) < (48 * 3600)
+
+
+def _record_critical_dedup(ticker: str, reason_key: str) -> None:
+    cache = _load_alert_cache()
+    t = (ticker or "").upper()
+    h = _critical_reason_hash(reason_key)
+    ch = cache.setdefault("critical_48h", {})
+    if t not in ch or not isinstance(ch[t], dict):
+        ch[t] = {}
+    ch[t][h] = time.time()
+    _save_alert_cache(cache)
 
 
 def _already_alerted(cache: dict, key: str) -> bool:
@@ -245,11 +283,17 @@ def _check_news_alerts_impl():
                 continue
 
             danger_pdata: dict = {}
+            crit_reason = ""
             if kind == "danger":
                 dig = _headline_digest(title)
                 danger_pdata = _fetch_price(ticker)
                 bucket = _price_bucket(float(danger_pdata.get("price") or 0))
                 if not _critical_news_should_fire(critical_map, ticker, dig, bucket, None):
+                    _mark_news_headline(cache, ticker, title)
+                    dirty = True
+                    continue
+                crit_reason = f"news_danger:{kw}:{title[:220]}"
+                if _should_skip_critical_dedup(ticker, crit_reason):
                     _mark_news_headline(cache, ticker, title)
                     dirty = True
                     continue
@@ -282,6 +326,8 @@ def _check_news_alerts_impl():
                     None,
                 )
                 sec_dirty = True
+                if crit_reason:
+                    _record_critical_dedup(ticker, crit_reason)
             fired.append(f"{ticker} {kind} {kw[:24]}")
 
     if dirty:
@@ -436,6 +482,9 @@ def _check_thesis_alerts_impl():
             if chg <= te:
                 if _already_alerted(cache, ke):
                     continue
+                crit_reason = f"thesis_emergency:{ticker}:{chg:.2f}"
+                if _should_skip_critical_dedup(ticker, crit_reason):
+                    continue
                 msg = (
                     "🔴 EMERGENCY ALERT\n\n"
                     f"🔴 EMERGENCY — {ticker}\n"
@@ -444,6 +493,7 @@ def _check_thesis_alerts_impl():
                     "IMMEDIATE ACTION REQUIRED. Do not wait."
                 )
                 _send_thesis_plain(msg)
+                _record_critical_dedup(ticker, crit_reason)
                 _mark_alerted(cache, ke)
                 _mark_alerted(cache, kt)
                 _mark_alerted(cache, kw)
@@ -794,6 +844,9 @@ def check_sec_filings():
 
         seen.append(entry_id)
         for ticker in matched:
+            crit_reason = f"sec_8k:{entry_id}:{title[:200]}"
+            if _should_skip_critical_dedup(ticker, crit_reason):
+                continue
             msg = (
                 f"📋 <b>SEC 8-K FILING — {ticker}</b>\n"
                 f"📄 {title}\n"
@@ -803,6 +856,7 @@ def check_sec_filings():
                 f"<b>Review immediately — 8-Ks often move price.</b>"
             )
             _send_alert(msg)
+            _record_critical_dedup(ticker, crit_reason)
             alerts_sent.append(f"SEC 8-K {ticker}")
 
     cache["seen"] = seen[-500:]
