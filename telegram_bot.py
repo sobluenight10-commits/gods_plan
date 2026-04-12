@@ -101,9 +101,14 @@ def send_blog_briefing(briefing: dict):
             signal = post.get("watch_signal", "—")
             signal_emoji = "🟢" if "BUY" in signal else "🟡" if "WATCH" in signal else "🔴"
             paradigm = " 🌍" if post.get("paradigm_shift") else ""
+            post_url = (post.get("url") or post.get("link") or "").strip()
+            if not post_url:
+                post_url = "https://blog.naver.com/ranto28"
+            href = post_url.replace("&", "&amp;")
 
             body += (
                 f"<b>{i}. {post.get('title', 'Untitled')}</b>{paradigm}\n"
+                f"  🔗 <a href=\"{href}\">Read original article</a>\n"
                 f"  {signal_emoji} {signal}\n"
                 f"  💡 {post.get('investment_insight', '—')}\n"
             )

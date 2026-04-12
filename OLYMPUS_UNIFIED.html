@@ -71,8 +71,6 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--ink);min-h
 }
 .tab-btn:hover{color:var(--ink);}
 .tab-btn.active{color:var(--blue);border-bottom-color:var(--blue);}
-.tab-btn.liq-tab.active{color:#7c3aed;border-bottom-color:#7c3aed;}
-
 /* ── TAB PANELS ── */
 .tab-panel{display:none;padding:24px 28px;max-width:1440px;margin:0 auto;}
 .tab-panel.active{display:block;}
@@ -656,7 +654,6 @@ table.master.matrix-v2 td{padding:12px 8px;vertical-align:middle;}
   <button class="tab-btn active" data-tab="matrix" onclick="showTab('matrix')">MASTER MATRIX</button>
   <button class="tab-btn" data-tab="principles" onclick="showTab('principles')">10 PRINCIPLES</button>
   <button class="tab-btn" data-tab="telegram" onclick="showTab('telegram')">TELEGRAM</button>
-  <button class="tab-btn liq-tab" data-tab="liq" onclick="showTab('liq')">⚡ §11 LIQUIDITY</button>
 </div>
 
 <!-- ═══════════════════════════════════ -->
@@ -715,6 +712,24 @@ table.master.matrix-v2 td{padding:12px 8px;vertical-align:middle;}
   <div class="alert-chip">🟠 ASML April 16 — beat=buy, miss=wait</div>
   <div class="alert-chip">🟢 SpaceX IPO June 2026 — prepare capital</div>
   <div class="alert-chip">🟢 Anthropic IPO Oct 2026 — prepare capital</div>
+</div>
+
+<div id="liqBar" style="
+  border-left: 3px solid var(--es-accent);
+  padding: 8px 16px;
+  margin: 4px 0 6px 0;
+  font-size: 11px;
+  line-height: 1.9;
+  background: transparent;
+">
+  <span style="color:var(--es-text3)">⚡ LIQUIDITY: </span>
+  <span id="liqL1" style="color:var(--es-text1)">Fetching from FRED...</span>
+  &nbsp;·&nbsp;
+  <span style="color:var(--es-text3)">📈 OUTLOOK: </span>
+  <span id="liqL2" style="color:var(--es-text1)">—</span>
+  &nbsp;·&nbsp;
+  <span style="color:var(--es-accent); font-weight:700;">⚔ ACTION: </span>
+  <span id="liqL3" style="color:var(--es-accent); font-weight:700;">—</span>
 </div>
 
 <div id="pf-line-compact" class="pf-line-compact">
@@ -1218,42 +1233,6 @@ MINERVA ACTION CHANGE RULE (permanent):
     <div id="ranto28-meta" style="font-size:12px;color:var(--ink3);margin-bottom:10px;line-height:1.45;">—</div>
     <div><a id="ranto28-link" href="https://blog.naver.com/ranto28" target="_blank" rel="noopener noreferrer" style="font-size:12px;color:var(--blue);word-break:break-all;">https://blog.naver.com/ranto28</a></div>
   </div>
-</div>
-
-<div class="tab-panel" id="tab-liq">
-  <h2 style="color:var(--es-accent);font-size:18px;margin-bottom:8px;">⚡ §11-PREDICT LIQUIDITY ENGINE V4</h2>
-  <p style="color:var(--es-text3);font-size:11px;margin-bottom:20px;">Net Liquidity = Fed Reserves − TGA − RRP · FSI Ejection Seat Active</p>
-
-  <div class="liq-inputs-grid">
-    <div class="liq-input-group">
-      <label>Fed Reserves ($B)</label>
-      <input type="number" id="iRes" placeholder="e.g. 3200" style="width:100%;background:var(--es-paper2);border:1px solid var(--es-paper3);color:var(--es-text1);padding:8px;border-radius:4px;font-size:12px;" />
-    </div>
-    <div class="liq-input-group">
-      <label>TGA Balance ($B)</label>
-      <input type="number" id="iTga" placeholder="e.g. 800" style="width:100%;background:var(--es-paper2);border:1px solid var(--es-paper3);color:var(--es-text1);padding:8px;border-radius:4px;font-size:12px;" />
-    </div>
-    <div class="liq-input-group">
-      <label>RRP Balance ($B)</label>
-      <input type="number" id="iRrp" placeholder="e.g. 400" style="width:100%;background:var(--es-paper2);border:1px solid var(--es-paper3);color:var(--es-text1);padding:8px;border-radius:4px;font-size:12px;" />
-    </div>
-    <div class="liq-input-group">
-      <label>OFR FSI (today)</label>
-      <input type="number" id="iFsi" step="0.01" placeholder="e.g. 0.42" style="width:100%;background:var(--es-paper2);border:1px solid var(--es-paper3);color:var(--es-text1);padding:8px;border-radius:4px;font-size:12px;" />
-    </div>
-    <div class="liq-input-group">
-      <label>OFR FSI (5 days ago)</label>
-      <input type="number" id="iFsi5" step="0.01" placeholder="e.g. 0.38" style="width:100%;background:var(--es-paper2);border:1px solid var(--es-paper3);color:var(--es-text1);padding:8px;border-radius:4px;font-size:12px;" />
-    </div>
-    <div class="liq-input-group">
-      <label>Prev Week Net Liq ($B)</label>
-      <input type="number" id="iPrevLiq" placeholder="e.g. 2050" style="width:100%;background:var(--es-paper2);border:1px solid var(--es-paper3);color:var(--es-text1);padding:8px;border-radius:4px;font-size:12px;" />
-    </div>
-  </div>
-
-  <button type="button" onclick="runLiq()" class="liq-run-btn">⚡ RUN LIQUIDITY ANALYSIS</button>
-
-  <div id="liqOutput" style="background:var(--es-paper2);padding:16px;border-radius:6px;min-height:80px;font-size:12px;line-height:1.55;color:var(--es-text1);"></div>
 </div>
 
 <div class="footer">
@@ -1913,6 +1892,41 @@ const DIRECTIVES_JSON_URLS = [
   "http://5.189.176.185/data/directives.json",
   "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/data/directives.json",
 ];
+
+async function refreshLiq() {
+  try {
+    let r = null;
+    try {
+      r = await fetch("/data/directives.json?t=" + Date.now(), { cache: "no-store" });
+    } catch (_) {
+      /* try fallbacks */
+    }
+    if (!r || !r.ok) {
+      for (let i = 0; i < DIRECTIVES_JSON_URLS.length; i++) {
+        try {
+          r = await fetch(DIRECTIVES_JSON_URLS[i] + "?t=" + Date.now(), { cache: "no-store" });
+          if (r.ok) break;
+        } catch (_) {
+          r = null;
+        }
+      }
+    }
+    if (!r || !r.ok) throw new Error("no directives");
+    const d = await r.json();
+    const liq = d.liquidity || {};
+    const l1 = document.getElementById("liqL1");
+    const l2 = document.getElementById("liqL2");
+    const l3 = document.getElementById("liqL3");
+    if (l1) l1.textContent = liq.net_liq_text || "FRED data pending next brief";
+    if (l2) l2.textContent = liq.outlook_text || "—";
+    if (l3) l3.textContent = liq.action_text || "—";
+  } catch (e) {
+    const l1 = document.getElementById("liqL1");
+    if (l1) l1.textContent = "FRED fetch failed — check server";
+  }
+}
+refreshLiq();
+setInterval(refreshLiq, 300000);
 
 function deEmojiForType(t) {
   const u = String(t || "").toUpperCase();
