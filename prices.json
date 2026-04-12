@@ -205,6 +205,18 @@
       "change_pct": 4.05,
       "currency": "USD",
       "yf": "PL"
+    },
+    "CWEN": {
+      "price": 33.05,
+      "change_pct": 0.5,
+      "currency": "USD",
+      "yf": "CWEN"
+    },
+    "UUUU": {
+      "price": 20.5,
+      "change_pct": 1.2,
+      "currency": "USD",
+      "yf": "UUUU"
     }
   }
 }
