@@ -350,8 +350,8 @@ def _check_thesis_alerts_impl():
     if now.weekday() >= 5:
         return
     hour = now.hour + now.minute / 60.0
-    start = float(getattr(config, "THESIS_ALERT_WINDOW_START_HOUR", 15.5))
-    end = float(getattr(config, "THESIS_ALERT_WINDOW_END_HOUR", 22.0))
+    start = float(getattr(config, "THESIS_ALERT_WINDOW_START_HOUR", 0))
+    end = float(getattr(config, "THESIS_ALERT_WINDOW_END_HOUR", 24))
     if hour < start or hour > end:
         return
 
@@ -627,3 +627,92 @@ def run_price_alerts():
         logger.info(f"Price alerts fired: {alerts_sent}")
     else:
         logger.debug("Price alert check: no triggers")
+
+SEC_CACHE = os.path.join("data", "sec_cache.json")
+_SEC_FEED = (
+    "https://www.sec.gov/cgi-bin/browse-edgar"
+    "?action=getcurrent&type=8-K&dateb=&owner=include"
+    "&count=40&search_text=&output=atom"
+)
+
+
+def _load_sec_cache() -> dict:
+    try:
+        with open(SEC_CACHE, "r") as f:
+            return json.load(f)
+    except Exception:
+        return {"seen": []}
+
+
+def _save_sec_cache(cache: dict):
+    os.makedirs("data", exist_ok=True)
+    with open(SEC_CACHE, "w") as f:
+        json.dump(cache, f, indent=2)
+
+
+def check_sec_filings():
+    """Fetch SEC EDGAR 8-K feed every 10 min; alert if a THESIS_ALERT_TICKER filed."""
+    import config
+
+    tickers = [t.upper() for t in (getattr(config, "THESIS_ALERT_TICKERS", None) or [])]
+    if not tickers:
+        return
+
+    try:
+        resp = requests.get(
+            _SEC_FEED,
+            headers={"User-Agent": "Minerva/1.0 titan@gods-plan.io"},
+            timeout=15,
+        )
+        resp.raise_for_status()
+    except Exception as exc:
+        logger.warning(f"SEC feed fetch failed: {exc}")
+        return
+
+    cache = _load_sec_cache()
+    seen: list = cache.setdefault("seen", [])
+    alerts_sent = []
+
+    import xml.etree.ElementTree as ET
+    ns = {"atom": "http://www.w3.org/2005/Atom"}
+    try:
+        root = ET.fromstring(resp.content)
+    except ET.ParseError as exc:
+        logger.warning(f"SEC feed parse error: {exc}")
+        return
+
+    for entry in root.findall("atom:entry", ns):
+        entry_id = (entry.findtext("atom:id", default="", namespaces=ns) or "").strip()
+        title    = (entry.findtext("atom:title", default="", namespaces=ns) or "").strip()
+        updated  = (entry.findtext("atom:updated", default="", namespaces=ns) or "").strip()
+        link_el  = entry.find("atom:link", ns)
+        link     = link_el.get("href", "") if link_el is not None else ""
+
+        if not entry_id or entry_id in seen:
+            continue
+
+        title_upper = title.upper()
+        matched = [t for t in tickers if t in title_upper]
+        if not matched:
+            continue
+
+        seen.append(entry_id)
+        for ticker in matched:
+            msg = (
+                f"📋 <b>SEC 8-K FILING — {ticker}</b>\n"
+                f"📄 {title}\n"
+                f"🕐 {updated}\n"
+                f"━━━━━━━━━━━━━━━━━━━\n"
+                f'<a href="{link}">View filing on EDGAR</a>\n\n'
+                f"<b>Review immediately — 8-Ks often move price.</b>"
+            )
+            _send_alert(msg)
+            alerts_sent.append(f"SEC 8-K {ticker}")
+
+    cache["seen"] = seen[-500:]
+    _save_sec_cache(cache)
+
+    if alerts_sent:
+        logger.info(f"SEC filing alerts fired: {alerts_sent}")
+    else:
+        logger.debug("SEC filing check: no new filings for thesis tickers")

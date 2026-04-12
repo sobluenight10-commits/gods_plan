@@ -238,10 +238,11 @@ def _setup_schedule():
     p_start = getattr(app_config, "NEWS_PULSE_START_HOUR", 7.0)
     p_end = getattr(app_config, "NEWS_PULSE_END_HOUR", 23.5)
 
-    from price_alert import check_news_alerts, check_thesis_alerts
+    from price_alert import check_news_alerts, check_thesis_alerts, check_sec_filings
 
     schedule.every(5).minutes.do(check_thesis_alerts)
     schedule.every(15).minutes.do(check_news_alerts)
+    schedule.every(10).minutes.do(check_sec_filings)
 
     logger.info(
         "Registered %s daily + %s weekly + news pulse every %s min "
