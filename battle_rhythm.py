@@ -557,9 +557,9 @@ End with: ⚡ TOP ACTION: [single highest-conviction action today]""",
 GOD'S CURRENT HOLDINGS (use ONLY these — never invent tickers):
 TR: TSM, PLTR, UEC, URNM, COHR, 1810.HK (Xiaomi), NTR, LVMH (locked)
 Kiwoom: 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU
-Dry powder: €2200 TR, $0 Kiwoom
-Active limits: ASML @ €1100
-NO OTHER POSITIONS EXIST. This is a hard rule — if you reference ANY ticker not in the list above, the output is invalid. Never invent positions. Never assume positions. Only use: TSM, PLTR, UEC, URNM, COHR, 1810.HK, NTR, 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU, ASML.
+Dry powder: €1500 TR
+Active limits: UEC €11, OKLO $60, CCJ $100
+NO OTHER POSITIONS EXIST. This is a hard rule — if you reference ANY ticker not in the list above, the output is invalid. Never invent positions. Never assume positions. Only use: TSM, PLTR, UEC, URNM, COHR, 1810.HK, NTR, 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU.
 
 PORTFOLIO STATUS (use these facts — do not contradict them):
 - Overall portfolio: STABLE — no stop losses triggered today
@@ -606,7 +606,24 @@ Rules:
 - Use regime, VIX, deploy %, Composite Score directly from LIVE header.
 - Liquidity signal and € amount must come from the provided state/dry powder (do not invent).
 - If an item is missing, write \"UNKNOWN\" but still give a concrete directive based on risk control.
-{monday_add}""",
+{monday_add}
+
+After the REGIME DASHBOARD, output this final section:
+
+🎯 DECISION ENGINE — WHAT TO DO RIGHT NOW
+🔴 SELL NOW: [ticker if stop hit or thesis broken] — [one line reason]
+🟠 REVIEW: [ticker if -8% or news alert] — [one line reason]
+🟡 WATCH: [ticker approaching limit or catalyst] — [one line reason]
+🟢 BUY NOW: [ticker + exact EUR price] — [one line reason]
+💤 HOLD: [list of tickers] — thesis intact
+💰 DEPLOY: €[amount] → [ticker] when [specific condition]
+
+Rules for DECISION ENGINE:
+- Use ONLY tickers from GOD holdings: TSM, PLTR, UEC, URNM, COHR, 1810.HK, NTR, RKLB, PL, TMO, LVMH, 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, IONQ, IAU
+- Dry powder: €1500 TR
+- Active limits: UEC €11, OKLO $60, CCJ $100
+- If no action needed for a category, omit that line entirely
+- End the DECISION ENGINE with ONE line: ⚔ THE ONE THING GOD MUST DO TODAY: [single most important action]""",
         f"""{state_context}MACRO:
 {ctx['key_moves']}
 EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100 | VIX: {ctx['vix']}

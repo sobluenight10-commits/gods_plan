@@ -740,6 +740,110 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 
   <!-- Matrix panel -->
   <div id="es-panel-matrix" class="es-panel active">
+
+<!-- ── SECTOR HEATMAP — SIGNAL DETECTION ─────────────────────────────── -->
+<div id="sector-heatmap" style="padding:10px 14px 4px;">
+  <div style="font-size:9px;font-weight:800;letter-spacing:2px;color:var(--es-ink4);margin-bottom:8px;">SECTOR HEATMAP — SIGNAL DETECTION · <span id="heatmap-refresh-ts">—</span></div>
+  <div id="heatmap-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px;"></div>
+</div>
+
+<script>
+(function(){
+  const SECTORS = [
+    { name:"Intelligence", dot:"#1e3a6e", tickers:["TSM","PLTR","IONQ","1810.HK","000660.KS"] },
+    { name:"Energy",       dot:"#1e5c2a", tickers:["UEC","URNM","NTR"] },
+    { name:"Space",        dot:"#4a1a7a", tickers:["RKLB","PL"] },
+    { name:"Bio",          dot:"#1a4f4f", tickers:["TMO"] },
+    { name:"Robotics",     dot:"#6b2d14", tickers:["ARKQ","BOTZ","272210.KS"] },
+    { name:"Infrastructure", dot:"#1e3050", tickers:["COHR","VRT","LVMH"] },
+  ];
+
+  function signalLabel(avg){
+    if(avg >= 1.0)  return {text:"BULLISH",  color:"var(--bull)"};
+    if(avg <= -1.0) return {text:"BEARISH",  color:"var(--bear)"};
+    return               {text:"NEUTRAL",  color:"var(--ink3)"};
+  }
+
+  function renderHeatmap(prices, blogTickers, portfolio){
+    const cards = document.getElementById("heatmap-cards");
+    if(!cards) return;
+    cards.innerHTML = "";
+
+    // Build 6 sector cards
+    SECTORS.forEach(sec => {
+      const data = sec.tickers
+        .map(t => ({ t, chg: (prices[t]||{}).change_pct ?? null }))
+        .filter(x => x.chg !== null);
+
+      let bestTicker="-", bestChg=null, worstTicker="-", worstChg=null, avg=0;
+      if(data.length){
+        data.forEach(x=>{ avg+=x.chg; });
+        avg = avg/data.length;
+        const sorted = [...data].sort((a,b)=>b.chg-a.chg);
+        bestTicker  = sorted[0].t;  bestChg  = sorted[0].chg;
+        worstTicker = sorted[sorted.length-1].t; worstChg = sorted[sorted.length-1].chg;
+      }
+      const sig = signalLabel(avg);
+
+      const card = document.createElement("div");
+      card.style.cssText = "background:var(--white);border:1px solid var(--border);border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;";
+      card.innerHTML =
+        `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+           <span style="width:8px;height:8px;border-radius:50%;background:${sec.dot};flex-shrink:0;"></span>
+           <span style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--es-ink2);text-transform:uppercase;">${sec.name}</span>
+         </div>
+         <div style="font-size:10px;color:var(--bull);margin-bottom:2px;">▲ ${bestTicker} ${bestChg!==null?bestChg.toFixed(1)+'%':'—'}</div>
+         <div style="font-size:10px;color:var(--bear);margin-bottom:5px;">▼ ${worstTicker} ${worstChg!==null?worstChg.toFixed(1)+'%':'—'}</div>
+         <div style="font-size:9px;font-weight:700;letter-spacing:1px;color:${sig.color};">SECTOR: ${sig.text}</div>`;
+      cards.appendChild(card);
+    });
+
+    // RADAR card — blog tickers not in portfolio
+    const portfolioSet = new Set(Object.keys(prices));
+    const radarItems = (blogTickers||[]).filter(b => !portfolioSet.has(b.ticker));
+
+    const radarCard = document.createElement("div");
+    radarCard.style.cssText = "background:var(--radar-bg);border:1px solid #e8c9a0;border-radius:6px;padding:8px 10px;font-family:'DM Mono',monospace;";
+    let radarInner =
+      `<div style="display:flex;align-items:center;gap:6px;margin-bottom:5px;">
+         <span style="width:8px;height:8px;border-radius:50%;background:var(--c-radar);flex-shrink:0;"></span>
+         <span style="font-size:9px;font-weight:800;letter-spacing:1px;color:var(--radar);text-transform:uppercase;">RADAR</span>
+       </div>`;
+    if(radarItems.length){
+      radarItems.slice(0,4).forEach(b=>{
+        radarInner += `<div style="font-size:9px;color:var(--radar);margin-bottom:3px;">
+          <span style="font-weight:700;">${b.ticker}</span>
+          <span style="color:var(--warn);margin-left:4px;">NEW SIGNAL</span>
+          <span style="color:var(--es-ink4);margin-left:4px;">${b.date||""}</span>
+        </div>`;
+      });
+    } else {
+      radarInner += `<div style="font-size:9px;color:var(--es-ink4);">No new signals</div>`;
+    }
+    radarCard.innerHTML = radarInner;
+    cards.appendChild(radarCard);
+
+    document.getElementById("heatmap-refresh-ts").textContent =
+      "updated " + new Date().toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
+  }
+
+  function loadHeatmap(){
+    let prices = {}, blogTickers = [];
+    Promise.all([
+      fetch("http://5.189.176.185/data/prices.json").then(r=>r.json()).catch(()=>({})),
+      fetch("http://5.189.176.185/data/blog_tickers.json").then(r=>r.json()).catch(()=>[])
+    ]).then(([p, b]) => {
+      renderHeatmap(p, b, p);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function(){
+    loadHeatmap();
+    setInterval(loadHeatmap, 5 * 60 * 1000);
+  });
+})();
+</script>
+
 <div class="tbl-scroll">
 <table class="master">
 <thead><tr>
