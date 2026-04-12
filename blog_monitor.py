@@ -2,7 +2,7 @@
 Blog Monitor — Background thread that polls ranto28 RSS on a fixed interval.
 When a new post is detected, sends an immediate Telegram alert + GPT analysis.
 """
-import json
+import json as _jbl
 import logging
 import os
 import time
@@ -15,67 +15,58 @@ from config import NAVER_RSS_URL, BLOG_FETCH_INTERVAL_MINUTES
 logger = logging.getLogger("titan_k.blog_monitor")
 
 CHECK_INTERVAL = max(60, int(BLOG_FETCH_INTERVAL_MINUTES) * 60)  # seconds; min 1 min
-_seen_urls: set = set()
 _started = False
 
-_SEEN_PATH = os.path.join(os.path.dirname(__file__), "data", "seen_blog_urls.json")
+_SEEN_CACHE = os.path.join(os.path.dirname(__file__), "data", "seen_blog_urls.json")
 
 
-def _normalize_url(url: str) -> str:
+def _norm_url(url: str) -> str:
     if not url or not isinstance(url, str):
         return ""
-    url = url.replace("m.blog.naver.com", "blog.naver.com")
-    url = url.split("?")[0].split("#")[0].rstrip("/")
-    return url
+    u = url.replace("m.blog.naver.com", "blog.naver.com")
+    u = u.split("?")[0].split("#")[0].rstrip("/")
+    return u
 
 
-def _load_seen_urls() -> None:
-    """Merge persisted URLs into _seen_urls (normalized)."""
-    global _seen_urls
-    if not os.path.isfile(_SEEN_PATH):
-        return
+def _load_seen() -> set:
     try:
-        with open(_SEEN_PATH, encoding="utf-8") as f:
-            raw = json.load(f)
-        if isinstance(raw, list):
-            for u in raw:
-                if isinstance(u, str):
-                    nu = _normalize_url(u)
-                    if nu:
-                        _seen_urls.add(nu)
-        logger.info("Loaded %s seen blog URLs from disk", len(_seen_urls))
-    except Exception as e:
-        logger.warning("Could not load seen_blog_urls.json: %s", e)
+        with open(_SEEN_CACHE, encoding="utf-8") as f:
+            data = _jbl.load(f)
+        if isinstance(data, list):
+            return {_norm_url(u) for u in data if isinstance(u, str) and _norm_url(u)}
+    except Exception:
+        pass
+    return set()
 
 
-def _save_seen_urls() -> None:
-    """Persist _seen_urls after changes."""
+def _save_seen(s: set) -> None:
     try:
-        os.makedirs(os.path.dirname(_SEEN_PATH), exist_ok=True)
-        tmp = _SEEN_PATH + ".tmp"
+        os.makedirs(os.path.dirname(_SEEN_CACHE), exist_ok=True)
+        tmp = _SEEN_CACHE + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(sorted(_seen_urls), f, ensure_ascii=False, indent=2)
-        os.replace(tmp, _SEEN_PATH)
-    except Exception as e:
-        logger.error("Could not save seen_blog_urls.json: %s", e)
+            _jbl.dump(sorted(s), f, ensure_ascii=False, indent=2)
+        os.replace(tmp, _SEEN_CACHE)
+    except Exception:
+        pass
+
+
+_seen_urls: set = _load_seen()
 
 
 def _check_for_new_posts():
     """Poll RSS and return list of posts not seen before."""
     global _seen_urls
     new_posts = []
-    changed = False
     try:
         feed = feedparser.parse(NAVER_RSS_URL)
         for entry in feed.entries[:10]:
-            raw = entry.get("link", "")
-            url = _normalize_url(raw)
+            url = _norm_url(entry.get("link", ""))
             if not url:
                 continue
             if url in _seen_urls:
                 continue
             _seen_urls.add(url)
-            changed = True
+            _save_seen(_seen_urls)
 
             pub_date = None
             if hasattr(entry, "published_parsed") and entry.published_parsed:
@@ -88,25 +79,22 @@ def _check_for_new_posts():
             })
     except Exception as e:
         logger.error(f"RSS check failed: {e}")
-    if changed:
-        _save_seen_urls()
     return new_posts
 
 
 def _seed_seen():
-    """On first run (no persisted seen set), mark current RSS posts as seen so we don't spam."""
+    """On first run (empty seen set), mark current RSS posts as seen so we don't spam."""
     global _seen_urls
-    _load_seen_urls()
     if _seen_urls:
         logger.info("Blog monitor resumed with %s URLs on disk — no RSS re-seed", len(_seen_urls))
         return
     try:
         feed = feedparser.parse(NAVER_RSS_URL)
         for entry in feed.entries[:20]:
-            url = _normalize_url(entry.get("link", ""))
+            url = _norm_url(entry.get("link", ""))
             if url:
                 _seen_urls.add(url)
-        _save_seen_urls()
+                _save_seen(_seen_urls)
         logger.info("Blog monitor first seed: %s existing posts marked seen", len(_seen_urls))
     except Exception as e:
         logger.error(f"Seed failed: {e}")
@@ -155,7 +143,7 @@ Content: {post_content[:2000]}"""
         if raw.startswith("```"):
             raw = re.sub(r"^```(?:json)?\s*", "", raw, count=1)
             raw = re.sub(r"\s*```\s*$", "", raw)
-        stocks = json.loads(raw)
+        stocks = _jbl.loads(raw)
 
         if not isinstance(stocks, list) or not stocks:
             return
@@ -175,7 +163,7 @@ Content: {post_content[:2000]}"""
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
         try:
             with open(cache_path, "r", encoding="utf-8") as f:
-                existing = json.load(f)
+                existing = _jbl.load(f)
         except Exception:
             existing = {"tickers": [], "by_sector": {}, "history": []}
 
@@ -208,7 +196,7 @@ Content: {post_content[:2000]}"""
             })
 
             with open(cache_path, "w", encoding="utf-8") as f:
-                json.dump(existing, f, ensure_ascii=False, indent=2)
+                _jbl.dump(existing, f, ensure_ascii=False, indent=2)
 
             by_sector = {}
             for s in new_stocks:

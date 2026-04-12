@@ -127,7 +127,7 @@ async def cmd_macro(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 def _sync_macro() -> str:
     from battle_rhythm import generate_briefing
-    return generate_briefing("morning_macro")
+    return generate_briefing("morning_macro", force=True)
 
 
 async def cmd_olympus(update: Update, context: ContextTypes.DEFAULT_TYPE):

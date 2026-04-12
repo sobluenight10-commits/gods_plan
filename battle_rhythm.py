@@ -14,8 +14,8 @@ Saturday 08:00  olympus_weekly
 import logging
 import os
 import json
-from datetime import datetime
-from typing import Dict
+from datetime import datetime, timedelta, timezone
+from typing import Dict, List, Optional
 
 import requests
 from openai import OpenAI
@@ -27,6 +27,124 @@ from market_data import (
     get_vix_regime,
     fetch_fx_rate,
 )
+
+
+def fetch_fred_liquidity() -> dict:
+    """Fetch TGA/RRP/Reserves from FRED. Auto-updates directives.json liquidity section."""
+    fred_key = os.getenv("FRED_API_KEY", "0bc0ed228f83cb0853a6fa1f35b970d3")
+    series = {"reserves": "WRESBAL", "tga": "WTREGEN", "rrp": "RRPONTSYD"}
+    out: dict = {}
+    for k, sid in series.items():
+        try:
+            r = requests.get(
+                "https://api.stlouisfed.org/fred/series/observations",
+                params={
+                    "series_id": sid,
+                    "api_key": fred_key,
+                    "file_type": "json",
+                    "sort_order": "desc",
+                    "limit": 2,
+                },
+                timeout=10,
+            )
+            obs = r.json().get("observations") or []
+            if len(obs) < 2:
+                continue
+            v0, v1 = obs[0].get("value"), obs[1].get("value")
+
+            def _fv(x):
+                if x is None or x == ".":
+                    return None
+                try:
+                    return float(x)
+                except (TypeError, ValueError):
+                    return None
+
+            fv0, fv1 = _fv(v0), _fv(v1)
+            if fv0 is not None:
+                out[k] = fv0
+            if fv1 is not None:
+                out[f"{k}_prev"] = fv1
+        except Exception:
+            out[k] = None
+
+    if all(out.get(k) is not None for k in ("reserves", "tga", "rrp")):
+        net = out["reserves"] - out["tga"] - out["rrp"]
+        prev = (
+            out.get("reserves_prev", 0)
+            - out.get("tga_prev", 0)
+            - out.get("rrp_prev", 0)
+        )
+        out["net_liq"] = round(net, 1)
+        out["change"] = round(net - prev, 1)
+        out["direction"] = "EXPANDING ↑" if net > prev else "CONTRACTING ↓"
+        out["net_liq_text"] = (
+            f"Net Liq ${net:.0f}B · Res ${out['reserves']:.0f}B − TGA ${out['tga']:.0f}B − RRP ${out['rrp']:.0f}B"
+        )
+        dp = os.path.join(os.path.dirname(__file__), "data", "directives.json")
+        try:
+            with open(dp, encoding="utf-8") as f:
+                d = json.load(f)
+        except Exception:
+            d = {}
+        d["liquidity"] = {
+            "net_liq_text": (
+                f"Net Liq ${net:.0f}B · Res ${out['reserves']:.0f}B − TGA ${out['tga']:.0f}B − RRP ${out['rrp']:.0f}B"
+            ),
+            "outlook_text": f"{out['direction']} · Δ${out['change']:+.0f}B vs prev week",
+            "action_text": (
+                "DEPLOY dry powder — liquidity expanding, risk-on confirmed"
+                if net > prev
+                else "HOLD dry powder — liquidity contracting, wait for expansion"
+            ),
+        }
+        try:
+            os.makedirs(os.path.dirname(dp), exist_ok=True)
+            with open(dp, "w", encoding="utf-8") as f:
+                json.dump(d, f, indent=2, ensure_ascii=False)
+        except Exception as e:
+            logger.warning("fetch_fred_liquidity: could not write directives.json: %s", e)
+    return out
+
+
+def fetch_portfolio_news() -> List[dict]:
+    """Fetch last ~20H news for GOD's holdings via NewsAPI."""
+    news_key = os.getenv("NEWS_API_KEY", "b579e246dfca4a4095c1f4a64f0d5572")
+    keywords = [
+        "Palantir",
+        "TSMC",
+        "uranium",
+        "Rocket Lab",
+        "Oklo",
+        "ASML",
+        "Coherent",
+        "Xiaomi",
+        "Hanwha",
+    ]
+    query = " OR ".join(f'"{k}"' for k in keywords[:5])
+    try:
+        now = datetime.now(timezone.utc)
+        r = requests.get(
+            "https://newsapi.org/v2/everything",
+            params={
+                "q": query,
+                "apiKey": news_key,
+                "language": "en",
+                "sortBy": "publishedAt",
+                "pageSize": 5,
+                "from": (now - timedelta(hours=20)).strftime("%Y-%m-%dT%H:%M:%S"),
+            },
+            timeout=10,
+        )
+        data = r.json()
+        return [
+            {"title": a["title"], "source": a["source"]["name"]}
+            for a in data.get("articles", [])[:3]
+            if a.get("title") and "[Removed]" not in a.get("title", "")
+        ]
+    except Exception as e:
+        logger.debug("fetch_portfolio_news: %s", e)
+        return []
 
 
 STATE_FILE = os.path.join(os.path.dirname(__file__), "state.json")
@@ -414,17 +532,34 @@ If nothing clears Gate 0: reply exactly SKIP""",
 # ══════════════════════════════════════════════════════════════════════════════
 
 def generate_master_daily() -> str:
+    liq = fetch_fred_liquidity()
+    if liq.get("net_liq") is not None:
+        liq_context = (
+            f"LIQUIDITY: {liq.get('net_liq_text', 'FRED unavailable')} · {liq.get('direction', '')}"
+        )
+    else:
+        liq_context = "LIQUIDITY: FRED unavailable"
+
+    news = fetch_portfolio_news()
+    news_context = (
+        "\n".join(f"- {n['title']} ({n['source']})" for n in news)
+        if news
+        else "No recent news"
+    )
+
     ctx = _fetch_live_context()
     state = _load_state()
     state_context = _format_state_context(state)
     now = _berlin_now()
     weekday = now.strftime("%A")
-    is_monday = weekday == "Monday" 
+    is_monday = weekday == "Monday"
 
     # ── Blog ──────────────────────────────────────────────────────────────────
     blog_raw = _fetch_blog()
     blog_gpt = _gpt(
-        SYSTEM_PERSONA + """
+        SYSTEM_PERSONA
+        + f"\n{liq_context}\nNEWS (24h):\n{news_context}\n"
+        + """
 IMPORTANT: Always respond in ENGLISH.
 You are Minerva, investment analyst for GOD's OLYMPUS system targeting €100M by 2031.
 Analyze this Korean financial blog post and return exactly this format:
@@ -465,7 +600,9 @@ Rules:
                            if s.get("signal") in ("HOLD","CORE","NEVER_SELL","HOLD_NO_ADD")]
             # Hard filter: any SELL below conviction 8 on a HOLD ticker is suppressed in post-processing
             catalyst_verdicts = _gpt(
-                SYSTEM_PERSONA + f"""
+                SYSTEM_PERSONA
+                + f"\n{liq_context}\nNEWS (24h):\n{news_context}\n"
+                + f"""
 \nHARD STATE CONSTRAINTS — violations are not permitted:
 1. These tickers are on EXIT flags — never recommend BUY: {", ".join(exit_tickers)}
 2. These tickers have standing HOLD status in state.json — you may NOT output SELL
@@ -509,7 +646,9 @@ End with: ⚡ TOP ACTION: [single highest-conviction action today]""",
     monday_add = "\n📅 WEEK AHEAD\n• [2 key events this week with dates and GOD action]" if is_monday else ""
 
     analysis = _gpt(
-        SYSTEM_PERSONA + f"""
+        SYSTEM_PERSONA
+        + f"\n{liq_context}\nNEWS (24h):\n{news_context}\n"
+        + f"""
 GOD'S CURRENT HOLDINGS (use ONLY these — never invent tickers):
 TR: TSM, PLTR, UEC, URNM, COHR, 1810.HK (Xiaomi), NTR, LVMH (locked)
 Kiwoom: 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, FCX, IAU
@@ -847,9 +986,9 @@ def analyze_reflexivity(ticker: str, chg: float, price: float) -> None:
 # DISPATCHER
 # ══════════════════════════════════════════════════════════════════════════════
 
-def generate_briefing(briefing_id: str) -> str:
+def generate_briefing(briefing_id: str, force: bool = False) -> Optional[str]:
     logger.info(f"Generating: {briefing_id}")
-    if briefing_id != "olympus_weekly" and not _is_weekday():
+    if not force and briefing_id != "olympus_weekly" and not _is_weekday():
         logger.info(f"Skipping {briefing_id} — weekend")
         return None
     if briefing_id in ("master_daily", "morning_macro"):
