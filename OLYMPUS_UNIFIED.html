@@ -411,6 +411,29 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--ink);min-h
 .alert-lbl{font-family:'Syne',sans-serif;font-weight:700;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#c06000;flex-shrink:0;}
 .alert-chip{font-size:10px;color:var(--es-ink2);padding:2px 9px;background:white;border:1px solid #e8d090;flex-shrink:0;}
 
+/* ── REFLEXIVITY + IPO (monthly upgrade) ── */
+.reflex-wrap{background:var(--es-paper2);border-bottom:1px solid var(--es-rule);padding:10px 40px;display:grid;grid-template-columns:1.2fr 0.8fr;gap:12px;align-items:stretch;}
+@media(max-width:960px){.reflex-wrap{grid-template-columns:1fr;}}
+.reflex-panel{border:1px solid var(--es-rule);background:var(--white);padding:10px 12px;border-radius:6px;}
+.reflex-h{font-family:'Syne',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:var(--es-ink4);margin-bottom:8px;}
+.reflex-line{font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);padding:5px 0;border-bottom:1px solid var(--es-paper3);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;}
+.reflex-line:last-child{border-bottom:none;}
+.reflex-tk{font-weight:700;color:var(--es-ink);}
+.reflex-lim{color:var(--buy);font-weight:700;}
+.ipo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.ipo-tile{border:1px solid var(--es-rule);background:var(--es-paper);padding:8px 10px;border-radius:6px;text-align:center;}
+.ipo-name{font-family:'Syne',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--es-ink3);}
+.ipo-d{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--es-ink);line-height:1;}
+.ipo-sub{font-size:9px;color:var(--es-ink4);margin-top:4px;}
+.es-eight-wrap{padding:8px 40px 10px;background:var(--es-paper);border-bottom:1px solid var(--es-rule);}
+.es-eight-h{font-family:'Syne',sans-serif;font-weight:800;font-size:8px;letter-spacing:0.2em;color:var(--es-ink4);margin-bottom:6px;}
+.es-eight-row{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+.es-eight-pill{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;border:1px solid var(--es-rule);background:var(--white);font-family:'DM Mono',monospace;font-size:9px;color:var(--es-ink2);border-radius:999px;}
+.es-eight-num{font-weight:800;color:var(--es-ink);font-size:8px;width:14px;height:14px;border-radius:50%;background:var(--es-paper3);display:inline-flex;align-items:center;justify-content:center;}
+.track-pill{display:inline-flex;align-items:center;justify-content:center;margin-left:5px;padding:0 4px;height:14px;border-radius:3px;font-family:'Syne',sans-serif;font-weight:800;font-size:7px;letter-spacing:0.06em;vertical-align:middle;border:1px solid var(--es-rule);}
+.track-a{background:var(--es-paper3);color:var(--es-ink2);}
+.track-b{background:#f0e8ff;color:#4a1a7a;border-color:#d8c8f0;}
+
 /* ── NAV ── */
 .nav{border-bottom:1px solid var(--es-rule);padding:0 40px;display:flex;gap:0;}
 .tab{padding:10px 18px;font-family:'Syne',sans-serif;font-weight:600;font-size:10px;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;color:var(--es-ink4);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.12s;white-space:nowrap;}
@@ -725,6 +748,29 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <div class="alert-chip">IAU +128% · Exit on next gold strength — redeploy</div>
 </div>
 
+<!-- REFLEXIVITY + PRE-IPO COUNTDOWN (CLAUDE.md monthly upgrade) -->
+<div class="reflex-wrap">
+  <div class="reflex-panel">
+    <div class="reflex-h">↺ Reflexivity signals — limits armed</div>
+    <div id="reflexivity-list"><div class="reflex-line" style="border:none;color:var(--es-ink4);">Loading…</div></div>
+  </div>
+  <div class="reflex-panel">
+    <div class="reflex-h">Pre-IPO countdown</div>
+    <div class="ipo-grid">
+      <div class="ipo-tile">
+        <div class="ipo-name">SpaceX · Jun 2026</div>
+        <div class="ipo-d" id="ipo-days-spacex">—</div>
+        <div class="ipo-sub">days · target window</div>
+      </div>
+      <div class="ipo-tile">
+        <div class="ipo-name">Anthropic · Oct 2026</div>
+        <div class="ipo-d" id="ipo-days-anthropic">—</div>
+        <div class="ipo-sub">days · target window</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- NAV -->
 
   <!-- Inner sub-navigation -->
@@ -736,6 +782,19 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     <button class="es-tab" onclick="esShowTab('bubble', this)">Bubble Chart</button>
     <button class="es-tab" onclick="esShowTab('regime', this)">Regime / VIX</button>
     <button class="es-tab" onclick="esShowTab('principles', this)">10 Principles</button>
+  </div>
+  <div class="es-eight-wrap">
+    <div class="es-eight-h">8 Earth Shifter sectors — layout</div>
+    <div class="es-eight-row" aria-label="Eight sectors">
+      <span class="es-eight-pill"><span class="es-eight-num">1</span><span style="color:var(--c1)">●</span> Intelligence</span>
+      <span class="es-eight-pill"><span class="es-eight-num">2</span><span style="color:var(--c2)">●</span> Energy</span>
+      <span class="es-eight-pill"><span class="es-eight-num">3</span><span style="color:var(--c3)">●</span> Space</span>
+      <span class="es-eight-pill"><span class="es-eight-num">4</span><span style="color:var(--c4)">●</span> Bio</span>
+      <span class="es-eight-pill"><span class="es-eight-num">5</span><span style="color:var(--c5)">●</span> Robotics</span>
+      <span class="es-eight-pill"><span class="es-eight-num">6</span><span style="color:var(--c6)">●</span> Infrastructure</span>
+      <span class="es-eight-pill"><span class="es-eight-num">7</span><span style="color:var(--c-radar)">●</span> Global Issue Radar</span>
+      <span class="es-eight-pill"><span class="es-eight-num">8</span><span style="color:var(--radar)">●</span> RADAR</span>
+    </div>
   </div>
 
   <!-- Matrix panel -->
@@ -763,11 +822,12 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 
   const SECTORS = [
     { name:"Intelligence", dot:"#1e3a6e", tickers:["000660.KS","TSM","PLTR","1810.HK","IONQ","NVDA"] },
-    { name:"Energy",       dot:"#1e5c2a", tickers:["UEC","URNM","NTR","CCJ","OKLO"] },
+    { name:"Energy",       dot:"#1e5c2a", tickers:["UEC","URNM","CCJ","OKLO"] },
     { name:"Space",        dot:"#4a1a7a", tickers:["RKLB","ASTS"] },
     { name:"Bio",          dot:"#1a4f4f", tickers:["CRSP","NTLA","BEAM","TMO"] },
     { name:"Robotics",     dot:"#6b2d14", tickers:["272210.KS","KTOS","ARKQ","BOTZ"] },
     { name:"Infrastructure", dot:"#1e3050", tickers:["COHR","VRT","LVMH"] },
+    { name:"Global Issue Radar", dot:"#7a3500", tickers:["NTR"] },
   ];
 
   function signalLabel(avg){
@@ -915,6 +975,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     }catch(_){ /* ignore */ }
     const blogRows = normalizeBlog(blogRaw || {});
     renderHeatmap(pricesMap, blogRows);
+    if(typeof window.OLY_fillRadar === "function") window.OLY_fillRadar(blogRows);
   }
 
   document.addEventListener("DOMContentLoaded", function(){
@@ -1349,6 +1410,10 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <td><span class="sig s-watch">WATCH</span></td>
   <td class="act">NEW — ranto28 signal today. Wolsong tritium + H2 steelmaking. Research needed.<span style="display:block;font-size:9px;color:var(--es-ink4);margin-top:3px;">⏱ Wolsong · H2 steel</span></td>
 </tr>
+
+<!-- ══ RADAR (sector 8 · ranto28) ══ -->
+<tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#fffdfb;border-top:1px solid #e8c9a0;"><div class="cdot" style="background:var(--radar)"></div><div class="cname" style="color:var(--radar)">8 · RADAR</div><div class="cdesc">Blog-detected names not in portfolio · syncs with heatmap (5 min)</div></div></td></tr>
+<tr class="rr"><td colspan="13" id="radar-matrix-compact" style="padding:10px 40px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);background:var(--radar-bg);">Loading blog signals…</td></tr>
 
 <!-- ══ LOCKED ══ -->
 <tr><td colspan="13" style="padding:0"><div class="cat-band" style="background:#f4f4f8"><div class="cdot" style="background:var(--locked)"></div><div class="cname" style="color:var(--locked)">Locked Position</div><div class="cdesc">TR promotional gift — cannot sell for 1 year</div></div></td></tr>
@@ -3029,6 +3094,117 @@ calcTotal();
 {
   const el = document.getElementById("dashDate");
   if (el) el.textContent = new Date().toISOString().split("T")[0];
+}
+
+// ══════════════════════════════════════════════════════════════════
+// MONTHLY DASHBOARD UPGRADE (CLAUDE.md — reflexivity, IPO, Track A/B, RADAR row)
+// ══════════════════════════════════════════════════════════════════
+const REFLEXIVITY_JSON_URLS = [
+  "http://5.189.176.185/data/reflexivity.json",
+  "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/data/reflexivity.json",
+];
+
+async function fetchJsonFirstOkDash(urls) {
+  for (const u of urls) {
+    try {
+      const r = await fetch(u + "?t=" + Date.now(), { cache: "no-store" });
+      if (r.ok) return await r.json();
+    } catch (_) { /* try next */ }
+  }
+  return null;
+}
+
+function olyEsc(s) {
+  return String(s || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/"/g, "&quot;");
+}
+
+window.OLY_fillRadar = function (blogRows) {
+  const el = document.getElementById("radar-matrix-compact");
+  if (!el) return;
+  const PORT = new Set([
+    "TSM", "PLTR", "UEC", "URNM", "COHR", "1810.HK", "NTR", "RKLB",
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IONQ", "IAU", "KTOS",
+  ]);
+  const items = (blogRows || []).filter(function (b) {
+    return b && b.ticker && !PORT.has(b.ticker);
+  });
+  if (!items.length) {
+    el.innerHTML = "<span style=\"color:var(--es-ink4);\">No blog tickers outside portfolio — radar clear.</span>";
+    return;
+  }
+  el.innerHTML = items.slice(0, 8).map(function (b) {
+    return "<span style=\"display:inline-block;margin:3px 8px 3px 0;padding:4px 8px;border:1px solid var(--es-rule);border-radius:4px;background:var(--white);\">"
+      + "<b>" + olyEsc(b.ticker) + "</b> <span style=\"color:var(--warn);\">NEW SIGNAL</span> "
+      + "<span style=\"color:var(--es-ink4);\">" + olyEsc(b.date || "") + "</span></span>";
+  }).join(" ");
+};
+
+async function loadReflexivityPanel() {
+  const wrap = document.getElementById("reflexivity-list");
+  if (!wrap) return;
+  const raw = await fetchJsonFirstOkDash(REFLEXIVITY_JSON_URLS);
+  const signals = raw && Array.isArray(raw.signals) ? raw.signals : null;
+  const fallback = [
+    { ticker: "ASML", limit: "€1100", note: "Limit armed — reflexivity = wait for mispricing, do not chase." },
+    { ticker: "UEC", limit: "thesis stops", note: "Uranium reflexivity — size only after spot confirms." },
+  ];
+  const list = signals && signals.length ? signals : fallback;
+  wrap.innerHTML = list.map(function (s) {
+    return "<div class=\"reflex-line\"><span><span class=\"reflex-tk\">" + olyEsc(s.ticker) + "</span> "
+      + "<span class=\"reflex-lim\">" + olyEsc(s.limit) + "</span></span>"
+      + "<span style=\"color:var(--es-ink4);max-width:58%;\">" + olyEsc(s.note) + "</span></div>";
+  }).join("");
+}
+
+function daysUntilUtcMidnight(ymd) {
+  const t = new Date(ymd + "T00:00:00Z").getTime();
+  return Math.max(0, Math.ceil((t - Date.now()) / 86400000));
+}
+
+function updateIPOPanels() {
+  const sx = document.getElementById("ipo-days-spacex");
+  const an = document.getElementById("ipo-days-anthropic");
+  if (sx) sx.textContent = String(daysUntilUtcMidnight("2026-06-01"));
+  if (an) an.textContent = String(daysUntilUtcMidnight("2026-10-01"));
+}
+
+const TRACK_B_TICKERS = new Set([
+  "PLTR", "IONQ", "1810.HK", "UEC", "NVDA", "CCJ", "OKLO", "RKLB", "ASTS",
+  "CRSP", "NTLA", "BEAM", "KTOS", "AMAT",
+]);
+
+function injectTrackBadges() {
+  document.querySelectorAll("table.master tbody tr").forEach(function (tr) {
+    const sym = tr.querySelector(".tsym");
+    if (!sym || sym.querySelector(".track-pill")) return;
+    const raw = (sym.textContent || "").trim();
+    const first = (raw.split(/\s+/)[0] || "");
+    let isB = TRACK_B_TICKERS.has(first);
+    if (raw.indexOf("Figure") >= 0 || raw.indexOf("xAI") >= 0) isB = true;
+    if (raw.indexOf("POSCO") >= 0) isB = true;
+    const pill = document.createElement("span");
+    pill.className = "track-pill " + (isB ? "track-b" : "track-a");
+    pill.textContent = isB ? "B" : "A";
+    pill.title = isB ? "Track B — paradigm / inflection" : "Track A — established quality";
+    sym.appendChild(pill);
+  });
+}
+
+function initMonthlyDashboardUpgrade() {
+  loadReflexivityPanel();
+  updateIPOPanels();
+  injectTrackBadges();
+  setInterval(updateIPOPanels, 6 * 60 * 60 * 1000);
+  setInterval(loadReflexivityPanel, 5 * 60 * 1000);
+}
+
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initMonthlyDashboardUpgrade);
+} else {
+  initMonthlyDashboardUpgrade();
 }
 
 // ══════════════════════════════════════════════════════════════════
