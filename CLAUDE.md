@@ -81,3 +81,13 @@ Save file when done."
 ### TASK 3 — git add, commit, push, deploy to server, restart minerva
 
 ### TASK 4 — Report to GOD when complete
+
+### TASK — GITHUB ACTIONS SETUP (Sunday)
+Create .github/workflows/wednesday_recalibration.yml that:
+1. Triggers every Wednesday at 05:00 UTC (07:00 Berlin)
+2. Checks out the gods_plan repo
+3. Runs python3 scripts/wednesday_recalibration.py
+4. Commits and pushes any score changes
+5. Sends Telegram confirmation to GOD
+
+This removes laptop dependency from Wednesday recalibration entirely.
