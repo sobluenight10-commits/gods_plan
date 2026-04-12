@@ -199,7 +199,6 @@ PORTFOLIO: Dict[str, List[Dict]] = {
     ],
     "Kiwoom US": [
         {"ticker": "KTOS", "name": "Kratos Defense", "score": 9, "action": "HOLD + ADD $80", "thesis": "Hypersonics / C5ISR"},
-        {"ticker": "IONQ", "name": "IonQ", "score": 7, "action": "LIMIT $25", "thesis": "Quantum compute optionality"},
     ],
 }
 
@@ -217,6 +216,7 @@ WATCHLIST: List[Dict] = [
     {"ticker": "CRSP", "name": "CRISPR Therapeutics", "score": 8, "entry": "$44 limit", "target_usd": None},
     {"ticker": "NTLA", "name": "Intellia", "score": 6, "entry": "$10 limit", "target_usd": None},
     {"ticker": "IAU", "name": "iShares Gold ETF", "score": 10, "entry": "Any dip", "target_usd": None},
+    {"ticker": "IONQ", "name": "IonQ", "score": 7, "entry": "$25 limit", "target_usd": None},
 ]
 
 # Company names for NewsAPI query when ticker is not in PORTFOLIO (see get_company_name_for_ticker)
