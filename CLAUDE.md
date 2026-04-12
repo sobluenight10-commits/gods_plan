@@ -7,6 +7,16 @@
 - GOD's Law: sci-fi becomes reality — buy before world knows it is possible
 - Mission: €100M by 2031
 
+## ACTION CHANGE VERIFICATION (MANDATORY)
+
+Before changing any stock action in `OLYMPUS_UNIFIED.html`:
+
+1. Has **this** company's specific contract, revenue, or thesis changed? If **no**, do not change the action.
+2. Is there a verified SEC filing or specific, attributable news? If **no**, do not change the action.
+3. Sector sentiment alone **never** justifies an action change.
+4. **KTOS example:** Another defense name exiting (e.g. AVAV) is not a KTOS thesis break — different companies, different contracts.
+5. **UEC example:** A live limit at €11 is **ARMED**, not HOLD and not ADD — the system waits for the fill; GOD does not second-guess the order.
+
 ## CURSOR STANDING RESPONSIBILITIES
 
 ### EVERY SUNDAY
