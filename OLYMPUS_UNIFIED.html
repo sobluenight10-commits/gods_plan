@@ -636,6 +636,47 @@ table.master.matrix-v2 td{padding:12px 8px;vertical-align:middle;}
 .mx-nm{font-size:10px;color:var(--es-ink4);max-width:140px;white-space:normal;line-height:1.25;}
 .sec-badge{display:inline-block;padding:2px 6px;border-radius:3px;font-size:9px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#fff;}
 .mx-godwrap{display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+.god-cell{position:relative;cursor:help;}
+.god-tooltip{
+  display:none;
+  position:absolute;
+  top:100%;
+  right:0;
+  margin-top:4px;
+  background:var(--es-paper3);
+  border:1px solid var(--es-accent);
+  border-radius:6px;
+  padding:8px 12px;
+  width:220px;
+  font-size:10px;
+  z-index:100;
+  line-height:1.6;
+  text-align:left;
+  box-shadow:var(--sh);
+}
+.god-cell:hover .god-tooltip{display:block;}
+td.mx-soros-gap.soros-cell{position:relative;cursor:help;}
+.soros-tooltip{
+  display:none;
+  position:absolute;
+  top:100%;
+  left:0;
+  margin-top:4px;
+  background:var(--es-paper3);
+  border:1px solid var(--es-accent);
+  border-radius:6px;
+  padding:8px 12px;
+  width:240px;
+  font-size:10px;
+  z-index:100;
+  line-height:1.55;
+  text-align:left;
+  box-shadow:var(--sh);
+}
+td.mx-soros-gap.soros-cell:hover .soros-tooltip{display:block;}
+.mx-today.mx-drop-sector{background:rgba(249,115,22,0.12)!important;}
+.mx-today.mx-drop-co{background:rgba(220,38,38,0.15)!important;}
+.mx-today.mx-drop-warn{background:rgba(234,88,12,0.12)!important;}
 .mx-godbar{width:40px;height:4px;background:var(--es-paper3);border-radius:2px;overflow:hidden;}
 .mx-godfill{height:100%;border-radius:2px;}
 .mx-en{font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);white-space:normal;max-width:200px;line-height:1.35;}
@@ -943,6 +984,59 @@ MINERVA ACTION CHANGE RULE (permanent):
         const pct = ((live - en) / en) * 100;
         vsEl.innerHTML = fmtVsTodayPct(pct);
       }
+    });
+    const BENCH_MAP = {
+      "000660.KS": ["QQQ"],
+      TSM: ["QQQ"],
+      PLTR: ["QQQ"],
+      "1810.HK": ["QQQ"],
+      NVDA: ["QQQ"],
+      UEC: ["XLE", "URA"],
+      URNM: ["XLE", "URA"],
+      CWEN: ["XLE"],
+      UUUU: ["XLE", "URA"],
+      CCJ: ["XLE", "URA"],
+      OKLO: ["XLE", "URA"],
+      PL: ["ARKX"],
+      RKLB: ["ARKX"],
+      ASTS: ["ARKX"],
+      TMO: ["XBI"],
+      "272210.KS": ["BOTZ"],
+      KTOS: ["BOTZ"],
+      ARKQ: ["BOTZ"],
+      BOTZ: ["BOTZ"],
+      VRT: ["IGV"],
+      COHR: ["IGV"],
+      NTR: ["DJP"],
+      FCX: ["DJP"],
+      IAU: ["DJP"],
+      "MC.PA": ["QQQ"],
+    };
+    document.querySelectorAll("tr.mx-row[data-ticker]").forEach(function (tr) {
+      const tk = tr.getAttribute("data-ticker");
+      const mode = tr.getAttribute("data-entry-mode");
+      if (!tk || mode === "watch" || mode === "gift" || mode === "tbc" || mode === "ipo") return;
+      const bench = (window.__OLY_INTEL && window.__OLY_INTEL.sector_bench) || {};
+      const chgSess = window.__OLY_CHG && window.__OLY_CHG[tk];
+      const tdToday = tr.querySelector("td.mx-today");
+      if (!tdToday) return;
+      tdToday.classList.remove("mx-drop-sector", "mx-drop-co", "mx-drop-warn");
+      if (typeof chgSess !== "number" || chgSess > -5) return;
+      const syms = BENCH_MAP[tk] || ["QQQ"];
+      let sd = 0,
+        n = 0;
+      for (let i = 0; i < syms.length; i++) {
+        if (bench[syms[i]] != null) {
+          sd += Number(bench[syms[i]]);
+          n++;
+        }
+      }
+      const sectorDrop = n ? sd / n : 0;
+      const co = chgSess - sectorDrop;
+      if (Math.abs(co) < 3) tdToday.classList.add("mx-drop-sector");
+      else if (co < -5) tdToday.classList.add("mx-drop-co");
+      else if (co < -3) tdToday.classList.add("mx-drop-warn");
+      else tdToday.classList.add("mx-drop-sector");
     });
   }
 
@@ -2127,6 +2221,64 @@ function deEsc(s) {
     .replace(/"/g, "&quot;");
 }
 
+function enhanceMatrixMinervaIntel() {
+  const d = window.__OLY_INTEL;
+  if (!d) return;
+  const god = d.god_scores || {};
+  const sor = d.soros_classified || {};
+  document.querySelectorAll("tr.mx-row[data-ticker]").forEach(function (tr) {
+    const tk = tr.getAttribute("data-ticker");
+    if (!tk) return;
+    const godWrap = tr.querySelector(".mx-godwrap");
+    if (godWrap) {
+      const td = godWrap.closest("td.r");
+      if (td && !td.querySelector(".god-tooltip")) {
+        td.classList.add("god-cell");
+        const tip = document.createElement("div");
+        tip.className = "god-tooltip";
+        const g = god[tk];
+        if (g && typeof g === "object") {
+          const sc = g.score != null ? g.score : "";
+          tip.innerHTML =
+            "Score <b>" +
+            deEsc(String(sc)) +
+            "</b><br>" +
+            deEsc(String(g.diff_from_avg || "—")) +
+            "<br><b>" +
+            deEsc(String(g.verdict || "")) +
+            "</b>";
+        } else {
+          tip.textContent = "Peer context loads after 07:00 Berlin brief.";
+        }
+        td.appendChild(tip);
+      }
+    }
+    const sx = tr.querySelector("td.mx-soros-gap");
+    if (sx && sx.textContent.trim() && sx.textContent.trim() !== "—") {
+      if (!sx.querySelector(".soros-tooltip")) {
+        sx.classList.add("soros-cell");
+        const tip = document.createElement("div");
+        tip.className = "soros-tooltip";
+        const srow = sor[tk];
+        if (srow && typeof srow === "object") {
+          tip.innerHTML =
+            "<b>Cause:</b> " +
+            deEsc(srow.cause) +
+            "<br><b>Reality:</b> " +
+            deEsc(srow.reality) +
+            "<br><b>Parallel:</b> " +
+            deEsc(srow.historical_parallel) +
+            "<br><b>Action:</b> " +
+            deEsc(srow.action);
+        } else {
+          tip.textContent = "Cause map pending — watch morning brief.";
+        }
+        sx.appendChild(tip);
+      }
+    }
+  });
+}
+
 async function loadDecisionEngine() {
   const outsideEl = document.getElementById("soros-outside-portfolio");
   const cmdEl = document.getElementById("soros-one-command");
@@ -2233,6 +2385,14 @@ async function loadDecisionEngine() {
   const pill = document.getElementById("hdr-regime-pill");
   if (pill != null && data.regime != null && data.deploy_pct != null) {
     pill.textContent = "\u26A0 " + data.regime + " \u2014 DEPLOY " + data.deploy_pct + "%";
+  }
+
+  window.__OLY_INTEL = data;
+  if (typeof enhanceMatrixMinervaIntel === "function") {
+    enhanceMatrixMinervaIntel();
+  }
+  if (typeof window.updateMatrixV2Rows === "function") {
+    window.updateMatrixV2Rows();
   }
 }
 

@@ -15,6 +15,80 @@ from config import NAVER_RSS_URL, BLOG_FETCH_INTERVAL_MINUTES
 logger = logging.getLogger("titan_k.blog_monitor")
 
 CHECK_INTERVAL = max(60, int(BLOG_FETCH_INTERVAL_MINUTES) * 60)  # seconds; min 1 min
+
+THEME_MAP = {
+    "이란": ("Middle East Conflict", ["KTOS", "272210.KS", "NTR"], ["LMT", "XOM", "FLNG"]),
+    "전쟁": ("War Premium", ["KTOS", "272210.KS"], ["LMT", "RTX", "NOC"]),
+    "LNG": ("LNG Shortage", ["NTR"], ["FLNG", "GLNG", "KSOE"]),
+    "가스": ("Gas/Energy", ["NTR", "UEC"], ["FLNG", "LNG"]),
+    "원자력": ("Nuclear Renaissance", ["UEC", "URNM", "OKLO", "UUUU"], ["CCJ", "NXE"]),
+    "우라늄": ("Uranium", ["UEC", "URNM", "UUUU"], ["CCJ", "OKLO"]),
+    "반도체": ("Semiconductor Cycle", ["TSM", "COHR", "AMAT"], ["ASML", "AMAT"]),
+    "구리": ("Copper/EV Demand", ["FCX"], ["COPX", "SCCO"]),
+    "방산": ("Defense Spending", ["KTOS", "272210.KS"], ["LMT", "RTX"]),
+    "AI": ("AI Infrastructure", ["TSM", "PLTR", "NVDA", "VRT"], ["SMCI", "DELL"]),
+    "파키스탄": ("Pakistan Development", [], ["USSM"]),
+    "중동": ("Middle East", ["KTOS", "NTR"], ["XOM", "LMT"]),
+    "인플레이션": ("Inflation Hedge", ["NTR", "IAU", "FCX"], ["GLD", "PDBC"]),
+}
+
+
+def classify_blog_theme(content: str, direct_tickers: list) -> dict:
+    """
+    Blog signal = direct tickers + macro theme inference.
+    Returns full intelligence package.
+    """
+    import re
+
+    detected_themes = []
+    portfolio_confirmed = set()
+    new_watchlist = set()
+    content_lower = (content or "").lower()
+
+    for keyword, (theme, confirms, watchlist) in THEME_MAP.items():
+        if keyword == "AI":
+            if not re.search(r"\bAI\b", content or "", re.I):
+                continue
+        elif keyword.lower() not in content_lower:
+            continue
+        detected_themes.append(theme)
+        portfolio_confirmed.update(confirms)
+        new_watchlist.update(watchlist)
+
+    PORTFOLIO = {
+        "TSM",
+        "PLTR",
+        "UEC",
+        "URNM",
+        "COHR",
+        "1810.HK",
+        "NTR",
+        "RKLB",
+        "PL",
+        "TMO",
+        "KTOS",
+        "272210.KS",
+        "ARKQ",
+        "BOTZ",
+        "VRT",
+        "FCX",
+        "IAU",
+        "CWEN",
+        "UUUU",
+    }
+    new_watchlist -= PORTFOLIO
+    new_watchlist -= set(direct_tickers or [])
+
+    return {
+        "direct_tickers": list(direct_tickers or []),
+        "themes": detected_themes,
+        "portfolio_confirmed": list(portfolio_confirmed),
+        "new_watchlist": list(new_watchlist),
+        "action_summary": (
+            f"Confirms: {', '.join(portfolio_confirmed) or 'none'} · "
+            f"New watch: {', '.join(new_watchlist) or 'none'}"
+        ),
+    }
 _started = False
 
 _SEEN_CACHE = os.path.join(os.path.dirname(__file__), "data", "seen_blog_urls.json")
@@ -216,6 +290,11 @@ Content: {post_content[:2000]}"""
                 icon = sector_icons.get(sec, "📌")
                 msg += f"{icon} {sec}: {', '.join(labels)}\n"
             msg += f"\nTotal blog watchlist: {len(existing['tickers'])} stocks"
+            direct = [s["ticker"] for s in new_stocks]
+            bt3 = classify_blog_theme(post_content[:4000], direct)
+            msg += f"\n\n🌍 THEME: {', '.join(bt3['themes']) or '—'}"
+            msg += f"\n✅ CONFIRMS: {', '.join(bt3['portfolio_confirmed']) or 'none'}"
+            msg += f"\n🔍 NEW WATCH: {', '.join(bt3['new_watchlist']) or 'none'}"
             _send_thesis_plain(msg)
 
     except Exception as e:
@@ -224,6 +303,7 @@ Content: {post_content[:2000]}"""
 
 def _send_alert(post: dict):
     """Send Telegram alert for a new blog post, with optional GPT summary."""
+    import re
     from html import escape
 
     from analyzer import client
@@ -269,13 +349,44 @@ Content: {content[:1500]}
                 max_tokens=800,
             )
             gpt_text = (response.choices[0].message.content or "").strip()
+            tickers_gpt = []
+            mstk = re.search(r"🎯 STOCKS:\s*([^\n]+)", gpt_text)
+            if mstk:
+                raw_t = (mstk.group(1) or "").strip()
+                if raw_t.upper() != "NONE":
+                    tickers_gpt = [
+                        x.strip()
+                        for x in re.split(r"[,，]", raw_t)
+                        if x.strip()
+                    ]
             if gpt_text:
                 lines.append(escape(gpt_text))
             else:
                 lines.append("⚠️ GPT returned empty — check manually")
+            bt = classify_blog_theme(
+                (content or "") + "\n" + title + "\n" + (gpt_text or ""),
+                tickers_gpt,
+            )
+            if bt.get("themes") or bt.get("portfolio_confirmed") or bt.get("new_watchlist"):
+                lines.append("")
+                lines.append(
+                    f"🌍 <b>THEME:</b> {escape(', '.join(bt['themes']) or 'none')}"
+                )
+                lines.append(
+                    f"✅ <b>CONFIRMS IN PORTFOLIO:</b> "
+                    f"{escape(', '.join(bt['portfolio_confirmed']) or 'none')}"
+                )
+                lines.append(
+                    f"🔍 <b>NEW WATCHLIST CANDIDATES:</b> "
+                    f"{escape(', '.join(bt['new_watchlist']) or 'none')}"
+                )
             _extract_and_register_tickers(content, post.get("title", "") or title)
         else:
             lines.append("⚠️ Could not fetch content — check manually")
+            bt2 = classify_blog_theme(title, [])
+            if bt2.get("themes"):
+                lines.append("")
+                lines.append(f"🌍 <b>THEME:</b> {escape(', '.join(bt2['themes']))}")
     except Exception as e:
         logger.error(f"Alert analysis error: {e}")
         lines.append("⚠️ Analysis skipped")

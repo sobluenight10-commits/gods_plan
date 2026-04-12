@@ -156,7 +156,18 @@ def _run_blog():
             send_telegram("🔱 📭 No new ranto28 posts in 3 days.")
             return
 
-        analyses = [r for p in posts if not (r := analyze_post(p)).get("error")]
+        from blog_monitor import classify_blog_theme
+
+        analyses = []
+        for p in posts:
+            r = analyze_post(p)
+            if r.get("error"):
+                continue
+            direct = [c.get("ticker") for c in r.get("companies", []) if c.get("ticker")]
+            txt = (p.get("content", "") or "") + "\n" + (p.get("title", "") or "") + "\n" + (r.get("title") or "")
+            r["blog_theme"] = classify_blog_theme(txt, direct)
+            analyses.append(r)
+
         summary = generate_blog_summary(analyses) if analyses else "Analysis failed."
         send_blog_briefing({
             "timestamp": _berlin_now().strftime("%Y-%m-%d %H:%M"),

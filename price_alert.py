@@ -338,6 +338,27 @@ def _check_news_alerts_impl():
         logger.info("check_news_alerts fired: %s", fired)
 
 
+def _telegram_price_drop_classification(ticker: str, chg: float) -> str:
+    """Sector vs company decomposition for -8%+ style alerts (live ETF bench)."""
+    try:
+        from battle_rhythm import classify_price_drop, sector_drop_for_ticker
+        from market_data import fetch_stock_prices
+
+        keys = ["QQQ", "XLE", "URA", "ARKX", "XBI", "BOTZ", "IGV", "DJP"]
+        raw = fetch_stock_prices(keys)
+        bench = {k: float(raw.get(k, {}).get("change_pct", 0)) for k in keys}
+        sec_drop = sector_drop_for_ticker(ticker, bench)
+        cls = classify_price_drop(ticker, float(chg), sec_drop, False, [])
+        return (
+            f"\n\n📊 DROP DECOMPOSITION\n{cls['classification']}\n{cls['action']}\n"
+            f"Total: {cls['total_drop']} · Sector proxy: {cls['sector_drop']} · "
+            f"Co-specific: {cls['company_specific']}"
+        )
+    except Exception as e:
+        logger.debug("price drop classify: %s", e)
+        return ""
+
+
 def _fetch_price(ticker: str) -> dict:
     """Fetch current price and daily change for a single ticker."""
     try:
@@ -491,7 +512,7 @@ def _check_thesis_alerts_impl():
                     f"Drop: {chg:+.1f}% today\n"
                     "CRISIS LEVEL DROP. Thesis likely broken.\n"
                     "IMMEDIATE ACTION REQUIRED. Do not wait."
-                )
+                ) + _telegram_price_drop_classification(ticker, chg)
                 _send_thesis_plain(msg)
                 _record_critical_dedup(ticker, crit_reason)
                 _mark_alerted(cache, ke)
@@ -511,7 +532,7 @@ def _check_thesis_alerts_impl():
                     f"Drop: {chg:+.1f}% today\n"
                     "Significant session drop. Lesson #05 applies.\n"
                     "ACTION: Check company news NOW before macro."
-                )
+                ) + _telegram_price_drop_classification(ticker, chg)
                 _send_thesis_plain(msg)
                 _mark_alerted(cache, kt)
                 _mark_alerted(cache, kw)
@@ -529,7 +550,7 @@ def _check_thesis_alerts_impl():
                 f"Drop: {chg:+.1f}% today\n"
                 "Elevated move. Check company news.\n"
                 "Is this macro noise or thesis risk?"
-            )
+            ) + _telegram_price_drop_classification(ticker, chg)
             _send_thesis_plain(msg)
             _mark_alerted(cache, kw)
             cache_dirty = True
@@ -649,7 +670,7 @@ def run_price_alerts():
                 f"<b>Has the core thesis changed?</b>\n"
                 f"Kill criteria: {kill}\n\n"
                 f"⚡ Reply: HOLD / SELL / UPDATE STATE"
-            )
+            ) + _telegram_price_drop_classification(ticker, chg).replace("&", "&amp;")
             _send_alert(msg)
             _mark_alerted(cache, f"drop_{ticker}")
             alerts_sent.append(f"DROP {ticker} {chg:+.1f}%")

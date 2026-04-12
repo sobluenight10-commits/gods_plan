@@ -196,7 +196,18 @@ def _sync_blog() -> str:
     if not posts:
         return "no_posts"
 
-    analyses = [r for p in posts if not (r := analyze_post(p)).get("error")]
+    from blog_monitor import classify_blog_theme
+
+    analyses = []
+    for p in posts:
+        r = analyze_post(p)
+        if r.get("error"):
+            continue
+        direct = [c.get("ticker") for c in r.get("companies", []) if c.get("ticker")]
+        txt = (p.get("content", "") or "") + "\n" + (p.get("title", "") or "") + "\n" + (r.get("title") or "")
+        r["blog_theme"] = classify_blog_theme(txt, direct)
+        analyses.append(r)
+
     if not analyses:
         return "GPT analysis failed for all posts"
 

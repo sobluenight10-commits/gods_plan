@@ -80,6 +80,8 @@ def send_telegram(text: str, parse_mode: str = ParseMode.HTML):
 
 def send_blog_briefing(briefing: dict):
     """Format and send the blog analysis briefing."""
+    from html import escape as html_escape
+
     from config import TITAN_SYSTEM_URL
 
     posts = briefing.get("posts", [])
@@ -112,6 +114,17 @@ def send_blog_briefing(briefing: dict):
                 f"  {signal_emoji} {signal}\n"
                 f"  💡 {post.get('investment_insight', '—')}\n"
             )
+
+            bt = post.get("blog_theme")
+            if isinstance(bt, dict):
+                th = ", ".join(bt.get("themes") or []) or "none"
+                cf = ", ".join(bt.get("portfolio_confirmed") or []) or "none"
+                nw = ", ".join(bt.get("new_watchlist") or []) or "none"
+                body += (
+                    f"  🌍 <b>THEME:</b> {html_escape(th)}\n"
+                    f"  ✅ <b>CONFIRMS IN PORTFOLIO:</b> {html_escape(cf)}\n"
+                    f"  🔍 <b>NEW WATCHLIST CANDIDATES:</b> {html_escape(nw)}\n"
+                )
 
             companies = post.get("companies", [])
             if companies:

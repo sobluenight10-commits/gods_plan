@@ -137,6 +137,320 @@ def fetch_fred_liquidity() -> dict:
     return out
 
 
+def _directives_json_path() -> str:
+    return os.path.join(os.path.dirname(__file__), "data", "directives.json")
+
+
+PORTFOLIO_SCORES = [
+    ("000660.KS", 95, "Intelligence"),
+    ("TSM", 90, "Intelligence"),
+    ("PLTR", 72, "Intelligence"),
+    ("1810.HK", 68, "Intelligence"),
+    ("UEC", 78, "Energy"),
+    ("URNM", 74, "Energy"),
+    ("CWEN", 55, "Energy"),
+    ("UUUU", 72, "Energy"),
+    ("PL", 84, "Space"),
+    ("RKLB", 58, "Space"),
+    ("TMO", 68, "Bio"),
+    ("272210.KS", 92, "Robotics"),
+    ("KTOS", 80, "Robotics"),
+    ("ARKQ", 62, "Robotics"),
+    ("BOTZ", 60, "Robotics"),
+    ("VRT", 84, "Infrastructure"),
+    ("COHR", 76, "Infrastructure"),
+    ("NTR", 72, "Global Issue"),
+    ("FCX", 45, "Global Issue"),
+]
+
+
+def build_god_score_context(ticker: str, score: float, sector: str) -> dict:
+    """
+    GOD Score is meaningless alone.
+    Must show: score vs sector average, vs top peer, vs own history.
+    Returns context dict for dashboard and Telegram.
+    """
+    SECTOR_PEERS = {
+        "Intelligence": {"avg": 81, "top": ("NVDA", 96), "bottom": ("1810.HK", 68)},
+        "Energy": {"avg": 74, "top": ("CCJ", 82), "bottom": ("CWEN", 55)},
+        "Space": {"avg": 70, "top": ("PL", 84), "bottom": ("RKLB", 58)},
+        "Bio": {"avg": 60, "top": ("BEAM", 70), "bottom": ("CRSP", 48)},
+        "Robotics": {"avg": 75, "top": ("272210.KS", 92), "bottom": ("BOTZ", 60)},
+        "Infrastructure": {"avg": 81, "top": ("ASML", 87), "bottom": ("CWEN", 55)},
+        "Global Issue": {"avg": 58, "top": ("NTR", 72), "bottom": ("FCX", 45)},
+    }
+    peers = SECTOR_PEERS.get(
+        sector, {"avg": 70, "top": ("—", 0), "bottom": ("—", 0)}
+    )
+    sector_avg = peers["avg"]
+    top_name, top_score = peers["top"]
+    diff_from_avg = score - sector_avg
+    diff_from_top = score - top_score
+
+    if score >= 90:
+        verdict = "ELITE — top conviction, full size position justified"
+    elif score >= 80:
+        verdict = "HIGH — strong conviction, core position"
+    elif score >= 70:
+        verdict = "SOLID — hold, monitor for upgrade catalysts"
+    elif score >= 55:
+        verdict = "WEAK — thesis needs verification before adding"
+    else:
+        verdict = "EXIT CANDIDATE — thesis likely broken"
+
+    return {
+        "score": score,
+        "sector_avg": sector_avg,
+        "diff_from_avg": f"{diff_from_avg:+.0f} vs sector avg ({sector_avg})",
+        "diff_from_top": f"{diff_from_top:+.0f} vs sector best {top_name} ({top_score})",
+        "verdict": verdict,
+        "sector": sector,
+    }
+
+
+def classify_soros_gap(
+    ticker: str,
+    gap_pct: float,
+    cause: str,
+    thesis_intact: bool,
+    drop_from_high: float,
+) -> dict:
+    """
+    Soros Gap is meaningless without cause classification.
+    Cause types: NARRATIVE (buy signal) vs FUNDAMENTAL (exit signal)
+    """
+    HISTORICAL_PARALLELS = {
+        "PLTR": {
+            "cause": "Michael Burry deleted bearish post — pure narrative",
+            "reality": "US Army $10B contract intact · NATO expansion ongoing",
+            "parallel": "NVDA -30% in 2022 on AI capex fear → +600% recovery",
+            "cause_type": "NARRATIVE",
+        },
+        "1810.HK": {
+            "cause": "US-China tariff escalation fear — macro narrative",
+            "reality": "EV + AI smartphone sales growing · China domestic demand intact",
+            "parallel": "BABA 2021-2022 regulatory fear → recovered 60% in 6 months",
+            "cause_type": "NARRATIVE",
+        },
+        "UEC": {
+            "cause": "Uranium spot price tape weakness — sector rotation",
+            "reality": "Nuclear structural demand 2025-2035 unchanged · US Energy Dominance policy",
+            "parallel": "CCJ 2020 COVID drop -50% → +400% in 24 months",
+            "cause_type": "NARRATIVE",
+        },
+        "FCX": {
+            "cause": "Iran ceasefire optimism + copper production accident",
+            "reality": "EV demand doubles copper need by 2040 · AI data centers = copper intensive",
+            "parallel": "FCX 2020 COVID -50% → +200% in 18 months on same thesis",
+            "cause_type": "NARRATIVE",
+        },
+        "OKLO": {
+            "cause": "SMR technology skepticism + regulatory timeline uncertainty",
+            "reality": "Meta 1.2GW contract SIGNED · Sam Altman chairman · NRC license 2026",
+            "parallel": "TSLA 2019 production doubt → 10x in 24 months",
+            "cause_type": "NARRATIVE",
+        },
+        "NVDA": {
+            "cause": "AI capex slowdown fear + tariff uncertainty",
+            "reality": "GPU monopoly intact · $500B Stargate committed · no viable competitor",
+            "parallel": "NVDA 2022 -65% on crypto/AI fear → +800% by 2024",
+            "cause_type": "NARRATIVE",
+        },
+        "KTOS": {
+            "cause": "Defense sector rotation + AVAV contract cancellation fear bleed",
+            "reality": "Kratos drones in active deployment · DoD contract Q2 intact · different thesis",
+            "parallel": "LMT 2013 sequestration fear -20% → +300% over 5 years",
+            "cause_type": "NARRATIVE",
+        },
+    }
+
+    info = HISTORICAL_PARALLELS.get(
+        ticker,
+        {
+            "cause": cause or "Unknown — research required",
+            "reality": "Verify thesis before acting",
+            "parallel": "No parallel identified",
+            "cause_type": "UNKNOWN",
+        },
+    )
+
+    cause_type = info["cause_type"]
+
+    if cause_type == "NARRATIVE" and thesis_intact:
+        action = "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact"
+        urgency = "HIGH"
+    elif cause_type == "FUNDAMENTAL":
+        action = "THESIS REVIEW REQUIRED — may be company death not narrative"
+        urgency = "CRITICAL"
+    else:
+        action = "MONITOR — classify cause before acting"
+        urgency = "MEDIUM"
+
+    return {
+        "ticker": ticker,
+        "gap_pct": gap_pct,
+        "cause": info["cause"],
+        "reality": info["reality"],
+        "historical_parallel": info["parallel"],
+        "cause_type": cause_type,
+        "thesis_intact": thesis_intact,
+        "action": action,
+        "urgency": urgency,
+    }
+
+
+PORTFOLIO_SOROS_SIGNALS = [
+    ("PLTR", 59.0, "", True, 0),
+    ("1810.HK", 41.0, "", True, 0),
+    ("UEC", 38.0, "", True, 0),
+    ("FCX", 32.0, "", True, 0),
+    ("OKLO", 60.0, "", True, 0),
+    ("NVDA", 45.0, "", True, 0),
+    ("KTOS", 13.74, "", True, 0),
+]
+
+
+def classify_price_drop(
+    ticker: str,
+    drop_pct: float,
+    sector_drop_pct: float,
+    sec_8k_filed: bool,
+    thesis_events: list,
+) -> dict:
+    """
+    Every price drop must be decomposed:
+    Company-specific drop = total drop - sector drop
+    If company-specific < 3% → SECTOR FEAR not COMPANY DEATH
+    """
+    company_specific = drop_pct - sector_drop_pct
+
+    if abs(company_specific) < 3.0:
+        classification = "SECTOR FEAR"
+        action = "HOLD or ADD — company not the issue"
+        color = "🟡"
+    elif company_specific < -5.0 and sec_8k_filed:
+        classification = "COMPANY EVENT — SEC filing detected"
+        action = "THESIS REVIEW REQUIRED — check 8-K immediately"
+        color = "🔴"
+    elif company_specific < -5.0 and thesis_events:
+        classification = "COMPANY EVENT — thesis event detected"
+        action = f"REVIEW: {'; '.join(thesis_events[:2])}"
+        color = "🔴"
+    elif company_specific < -3.0:
+        classification = "PARTIAL COMPANY ISSUE"
+        action = "MONITOR — no SEC filing but company-specific selling"
+        color = "🟠"
+    else:
+        classification = "SECTOR FEAR"
+        action = "HOLD — sector rotation not company problem"
+        color = "🟡"
+
+    return {
+        "ticker": ticker,
+        "total_drop": f"{drop_pct:+.2f}%",
+        "sector_drop": f"{sector_drop_pct:+.2f}%",
+        "company_specific": f"{company_specific:+.2f}%",
+        "classification": f"{color} {classification}",
+        "sec_8k_filed": sec_8k_filed,
+        "action": action,
+    }
+
+
+TICKER_SECTOR_BENCH: Dict[str, List[str]] = {
+    "000660.KS": ["QQQ"],
+    "TSM": ["QQQ"],
+    "PLTR": ["QQQ"],
+    "1810.HK": ["QQQ"],
+    "NVDA": ["QQQ"],
+    "UEC": ["XLE", "URA"],
+    "URNM": ["XLE", "URA"],
+    "CWEN": ["XLE"],
+    "UUUU": ["XLE", "URA"],
+    "CCJ": ["XLE", "URA"],
+    "OKLO": ["XLE", "URA"],
+    "PL": ["ARKX"],
+    "RKLB": ["ARKX"],
+    "ASTS": ["ARKX"],
+    "TMO": ["XBI"],
+    "272210.KS": ["BOTZ"],
+    "KTOS": ["BOTZ"],
+    "ARKQ": ["BOTZ"],
+    "BOTZ": ["BOTZ"],
+    "VRT": ["IGV"],
+    "COHR": ["IGV"],
+    "NTR": ["DJP"],
+    "FCX": ["DJP"],
+    "IAU": ["DJP"],
+    "MC.PA": ["QQQ"],
+}
+
+
+def sector_drop_for_ticker(ticker: str, sector_bench: Dict) -> float:
+    """Average same-day % change of sector ETF proxies (from directives sector_bench)."""
+    syms = TICKER_SECTOR_BENCH.get(ticker, ["QQQ"])
+    vals = []
+    for s in syms:
+        v = sector_bench.get(s)
+        if isinstance(v, (int, float)):
+            vals.append(float(v))
+    return sum(vals) / len(vals) if vals else 0.0
+
+
+def merge_master_intel_to_directives() -> None:
+    """Write god_scores, soros_classified, sector_bench into directives.json (preserve other keys)."""
+    from market_data import fetch_stock_prices
+
+    dp = _directives_json_path()
+    try:
+        with open(dp, encoding="utf-8") as f:
+            d = json.load(f)
+    except Exception:
+        d = {}
+
+    bench_syms = ["QQQ", "XLE", "URA", "ARKX", "XBI", "BOTZ", "IGV", "DJP"]
+    br = fetch_stock_prices(bench_syms)
+    sector_bench = {
+        k: round(float(br.get(k, {}).get("change_pct", 0)), 2) for k in bench_syms
+    }
+
+    god_scores = {
+        tk: build_god_score_context(tk, float(sc), sec)
+        for tk, sc, sec in PORTFOLIO_SCORES
+    }
+    soros_classified = {
+        tk: classify_soros_gap(tk, float(gap), "", intact, float(dh))
+        for tk, gap, _, intact, dh in PORTFOLIO_SOROS_SIGNALS
+    }
+
+    d["god_scores"] = god_scores
+    d["soros_classified"] = soros_classified
+    d["sector_bench"] = sector_bench
+    try:
+        os.makedirs(os.path.dirname(dp), exist_ok=True)
+        with open(dp, "w", encoding="utf-8") as f:
+            json.dump(d, f, indent=2, ensure_ascii=False)
+    except Exception as e:
+        logger.warning("merge_master_intel_to_directives: %s", e)
+
+
+def _format_soros_classified_for_prompt(soros: Dict) -> str:
+    lines = []
+    for tk, row in soros.items():
+        if not isinstance(row, dict):
+            continue
+        lines.append(
+            f"- {tk}: gap {row.get('gap_pct')}% · {row.get('cause_type')} · "
+            f"{row.get('action', '')[:80]}"
+        )
+    return "\n".join(lines) if lines else "None"
+
+
+DECISION_MATRIX_SYSTEM_PROMPT = """You are Minerva, GOD's investment intelligence engine.
+GOD's mission: €100M by 2031. 47% CAGR required. Island in Thailand.
+Every word you write must earn its place. No filler. No generic phrases.
+Format output EXACTLY as shown. No deviations."""
+
+
 def fetch_portfolio_news() -> List[dict]:
     """Fetch last ~20H news for GOD's holdings via NewsAPI."""
     news_key = os.getenv("NEWS_API_KEY", "b579e246dfca4a4095c1f4a64f0d5572")
@@ -578,6 +892,17 @@ def generate_master_daily() -> str:
     )
 
     ctx = _fetch_live_context()
+    merge_master_intel_to_directives()
+    try:
+        with open(_directives_json_path(), encoding="utf-8") as f:
+            _dj = json.load(f)
+        _lz = (_dj.get("liquidity") or {}).get("zone")
+        _hp = (_dj.get("liquidity") or {}).get("hist_parallel")
+        if _lz:
+            liq_context = f"{liq_context} | {_lz} | hist: {_hp or '—'}"
+    except Exception:
+        pass
+
     state = _load_state()
     state_context = _format_state_context(state)
     now = _berlin_now()
@@ -672,98 +997,70 @@ End with: ⚡ TOP ACTION: [single highest-conviction action today]""",
             impact = "Tailwind 🟢" if (chg > 0) == (corr == "+") else "Headwind 🔴"
             macro_lines.append(f"  {ind} {chg:+.1f}% → <b>{ticker}</b> {impact}")
 
-    # ── Main GPT analysis ──────────────────────────────────────────────────────
-    monday_add = "\n📅 WEEK AHEAD\n• [2 key events this week with dates and GOD action]" if is_monday else ""
+    # ── Main GPT — decision matrix morning brief ─────────────────────────────
+    monday_add = (
+        "\n📅 WEEK AHEAD: include 2 dated events + GOD action in PORTFOLIO SIGNALS if Monday.\n"
+        if is_monday
+        else ""
+    )
+    soros_ctx_str = _format_soros_classified_for_prompt(
+        {
+            tk: classify_soros_gap(tk, g, "", intact, dh)
+            for tk, g, _, intact, dh in PORTFOLIO_SOROS_SIGNALS
+        }
+    )
+    today_str = f"{now.strftime('%Y-%m-%d %H:%M')} Berlin"
+    portfolio_prices_context = ctx["portfolio_text"]
+    vix_level = ctx["vix"]
+    vix_regime = ctx["regime"]
 
-    analysis = _gpt(
-        SYSTEM_PERSONA
-        + f"\n{liq_context}\nNEWS (24h):\n{news_context}\n"
-        + f"""
-GOD'S CURRENT HOLDINGS (use ONLY these — never invent tickers):
-TR: TSM, PLTR, UEC, URNM, COHR, 1810.HK (Xiaomi), NTR, LVMH (locked)
-Kiwoom: 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, FCX, IAU
-Dry powder: €1500 TR
-Active limits: UEC €11, OKLO $44, CCJ $100
-NO OTHER POSITIONS EXIST. This is a hard rule — if you reference ANY ticker not in the list above, the output is invalid. Never invent positions. Never assume positions. Only use: TSM, PLTR, UEC, URNM, COHR, 1810.HK, NTR, RKLB, PL, TMO, LVMH, 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, FCX, IAU.
+    user_matrix = f"""{monday_add}
+LIQUIDITY: {liq_context}
+VIX: {vix_level} ({vix_regime})
+DATE: {today_str} Berlin
 
-PORTFOLIO STATUS (use these facts — do not contradict them):
-- Overall portfolio: STABLE — no stop losses triggered today
-- Antifragility status: NEUTRAL — no hedges needed, no Black Swan exposure
-- Arbitrage signal: ASML earnings Apr 16 = mispricing opportunity — GOD Score 87, limit set at €1100
-- Active execution: ASML limit €1100 armed — let it work, no new orders today
-- KTOS: defense drone contractor, strong thesis, no recent negative news
-- Regime: FEAR ZONE VIX 21 = deploy 50% rule active but TGA drain → wait until Apr 15
-- Dry powder rule: €2200 reserved for ASML limit fill only
+PORTFOLIO POSITIONS:
+{portfolio_prices_context}
 
-Replace the entire P1–P5 structure with this new structure and fill it using LIVE data.
-Every line must be concrete and GOD-specific — no generic statements.
-Reference actual tickers, actual amounts, and actual levels from the live data provided.
+SOROS SIGNALS:
+{soros_ctx_str}
 
-Output exactly this structure (Telegram-friendly, one line per header + one line explanation):
+NEWS (24H):
+{news_context}
 
-⚡ REGIME DASHBOARD — ACTION STANCE
+BLOG SIGNALS:
+{blog_gpt}
 
-Macro Regime: [regime name] → [one action directive]
-[one sentence explaining why]
+Write the morning brief in EXACTLY this format:
 
-Liquidity: [signal] (€[amount]) → [one action directive]
-[one sentence on capital deployment rule]
+⚡ LIQUIDITY: [one line — number, zone, historical parallel]
+📊 VIX: [number · regime · what it means for deployment]
 
-Antifragility: [status] → [one action directive]
-[one sentence on hedge/exposure stance]
+PORTFOLIO SIGNALS:
+[For each position with a signal write:]
+[✅/⚠️/🔱/❌] TICKER: [price change] — [one sentence: sector vs company, action]
 
-Arbitrage: [opportunity identified] → [one action directive]
-[one sentence on timing]
+NEWS THAT MATTERS:
+[Only include news that changes an action. Max 3 items.]
+- TICKER: [headline] → [action change if any]
 
-Execution: [active orders summary] → [one action directive]
-[one sentence — respect signals, let orders work]
+ONE COMMAND:
+[Single most important action GOD must take TODAY. Be specific. Include price and size.]
 
-Alerts: [active alerts] → [one action directive]
-[one sentence on attention level]
+Do not write anything outside this format.
 
-Impact: [today's primary risk type] → [one action directive]
-[one sentence on what drives today's risk]
-
-Watch: [max 3 specific tickers or levels] → [one action directive]
-[one sentence — ignore everything else]
-
-Rules:
-- Use regime, VIX, deploy %, Composite Score directly from LIVE header.
-- Liquidity signal and € amount must come from the provided state/dry powder (do not invent).
-- If an item is missing, write \"UNKNOWN\" but still give a concrete directive based on risk control.
-{monday_add}
-
-After the REGIME DASHBOARD, output this final section:
-
-🎯 DECISION ENGINE — WHAT TO DO RIGHT NOW
-🔴 SELL NOW: [ticker if stop hit or thesis broken] — [one line reason]
-🟠 REVIEW: [ticker if -8% or news alert] — [one line reason]
-🟡 WATCH: [ticker approaching limit or catalyst] — [one line reason]
-🟢 BUY NOW: [ticker + exact EUR price] — [one line reason]
-💤 HOLD: [list of tickers] — thesis intact
-💰 DEPLOY: €[amount] → [ticker] when [specific condition]
-
-Rules for DECISION ENGINE:
-- Use ONLY tickers from GOD holdings: TSM, PLTR, UEC, URNM, COHR, 1810.HK, NTR, RKLB, PL, TMO, LVMH, 000660.KS, 272210.KS, ARKQ, BOTZ, VRT, FCX, IAU
-- Dry powder: €1500 TR
-- Active limits: UEC €11, OKLO $44, CCJ $100
-- If no action needed for a category, omit that line entirely
-- End the DECISION ENGINE with ONE line: ⚔ ONE COMMAND: [single most important action today]""",
-        f"""{state_context}MACRO:
+Context (binding, do not contradict):
+{state_context}
+MACRO moves:
 {ctx['key_moves']}
-EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100 | VIX: {ctx['vix']}
-Regime: {ctx['regime']} | Deploy: {ctx['deploy_pct']}%
-
-PORTFOLIO:
-{ctx['portfolio_text']}
-
+EUR/USD: {ctx['fx_rate']} | Composite: {ctx['composite']}/100
 WATCHLIST TOP:
 {ctx['watchlist_text'][:600]}
-
 EARNINGS TODAY: {', '.join(e['ticker'] for e in ctx['earnings_today']) or 'None'}
-WEEKDAY: {weekday}""",
-        tokens=700,
-    )
+WEEKDAY: {weekday}
+"""
+
+    analysis = _gpt(DECISION_MATRIX_SYSTEM_PROMPT, user_matrix, tokens=900)
 
     # ── Assemble ONE message ───────────────────────────────────────────────────
     regime_emoji = {"CALM":"🟢","NORMAL":"🔵","FEAR":"🟡","CRISIS":"🔴"}.get(ctx["regime"],"⚪")
