@@ -332,29 +332,44 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--ink);min-h
 .masthead-right{text-align:right;}
 .meta-line{font-size:10px;color:var(--es-ink4);margin-bottom:2px;}
 
-/* ── DRY POWDER ── */
-.dp-bar{background:var(--es-paper2);border-bottom:1px solid var(--es-rule);padding:10px 40px;display:flex;align-items:center;gap:32px;flex-wrap:wrap;}
-.dp-label{font-family:'Syne',sans-serif;font-weight:700;font-size:9px;letter-spacing:0.18em;text-transform:uppercase;color:var(--es-ink3);white-space:nowrap;}
-.dp-broker{display:flex;align-items:center;gap:8px;}
-.dp-broker-name{font-size:10px;font-weight:500;letter-spacing:0.1em;text-transform:uppercase;min-width:110px;color:var(--es-ink2);}
-.dp-input{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;border:none;border-bottom:1.5px solid var(--es-ink);background:transparent;width:110px;padding:2px 4px;outline:none;color:var(--es-ink);text-align:right;}
-.dp-input:focus{border-bottom-color:var(--c1);}
-.dp-curr{font-size:10px;color:var(--es-ink3);}
-.dp-sep{width:1px;height:20px;background:var(--es-rule);}
-.dp-total{margin-left:auto;font-size:11px;color:var(--es-ink3);}
-.dp-total strong{font-family:'Playfair Display',serif;font-size:18px;color:var(--es-ink);}
-
-/* ── DECISION ENGINE (live directives.json) ── */
-.decision-engine-wrap{padding:0 40px 16px;background:var(--es-paper);border-bottom:1px solid var(--es-rule);}
-.decision-engine-card{
-  background:linear-gradient(165deg,#0c1016 0%,#151d2a 55%,#1a2433 100%);
-  border:2px solid var(--gold);
-  border-radius:12px;
-  padding:20px 24px;
-  box-shadow:0 12px 40px rgba(0,0,0,0.25);
+/* ── DECISION ENGINE (live directives.json) — hero strip below global nav ── */
+.decision-engine-hero-wrap{
+  width:100%;
+  padding:20px 40px 22px;
+  background:#070a0e;
+  border-bottom:2px solid rgba(212,175,55,0.45);
+  box-sizing:border-box;
 }
-.de-h{font-family:'Syne',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:12px;opacity:0.9;}
-.de-command{font-size:clamp(16px,2.1vw,22px);font-weight:800;color:var(--gold);line-height:1.35;margin-bottom:10px;font-family:'Syne',sans-serif;}
+.decision-engine-card{
+  background:linear-gradient(165deg,#05080c 0%,#0f141c 45%,#121a26 100%);
+  border:3px solid #d4af37;
+  border-radius:14px;
+  padding:28px 32px 26px;
+  box-shadow:0 16px 48px rgba(0,0,0,0.45),inset 0 1px 0 rgba(212,175,55,0.12);
+  max-width:100%;
+}
+.de-h{font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.28em;text-transform:uppercase;color:#e8c547;margin-bottom:14px;opacity:0.95;}
+.de-command{
+  font-size:clamp(20px,2.6vw,30px);
+  font-weight:800;
+  color:#f4e4a8;
+  line-height:1.25;
+  margin-bottom:14px;
+  font-family:'Syne',sans-serif;
+  letter-spacing:-0.02em;
+  text-shadow:0 1px 2px rgba(0,0,0,0.5);
+}
+.de-deploy{
+  font-size:clamp(14px,1.35vw,17px);
+  font-weight:600;
+  color:#cbd5e1;
+  line-height:1.45;
+  margin-bottom:14px;
+  font-family:'Syne',sans-serif;
+  padding:12px 0 0;
+  border-top:1px solid rgba(212,175,55,0.25);
+}
+.de-deploy strong{color:#fde68a;font-weight:800;}
 .de-updated{font-size:10px;color:#94a3b8;margin-bottom:16px;font-family:'DM Mono',monospace;}
 .de-actions{list-style:none;margin:0;padding:0;}
 .de-actions li{font-size:13px;color:#e8e4dc;line-height:1.55;margin-bottom:12px;padding:8px 0 8px 14px;border-left:3px solid rgba(212,175,55,0.4);}
@@ -632,6 +647,17 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <button class="tab-btn"          onclick="showTab('telegram')">📱 TELEGRAM</button>
 </div>
 
+<!-- DECISION ENGINE — first surface after header + nav (directives.json) -->
+<div class="decision-engine-hero-wrap" id="decision-engine-anchor">
+  <div class="decision-engine-card">
+    <div class="de-h">🎯 DECISION ENGINE</div>
+    <div id="de-one-command" class="de-command">⏳ Awaiting next brief — 07:00 Berlin</div>
+    <div id="de-deploy" class="de-deploy" style="display:none;"></div>
+    <div id="de-updated" class="de-updated"></div>
+    <ul id="de-actions" class="de-actions"></ul>
+  </div>
+</div>
+
 <!-- ═══════════════════════════════════ -->
 <!-- TAB: ISLAND MISSION                -->
 <!-- ═══════════════════════════════════ -->
@@ -700,26 +726,6 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   </div>
 </header>
 
-<!-- DRY POWDER -->
-<div class="dp-bar">
-  <div class="dp-label">💰 Dry Powder</div>
-  <div class="dp-broker"><div class="dp-broker-name">Trade Republic</div><input class="dp-input" id="dp-tr" type="text" value="2200" oninput="calcTotal()"><div class="dp-curr">EUR</div></div>
-  <div class="dp-sep"></div>
-  <div class="dp-broker"><div class="dp-broker-name">Kiwoom</div><input class="dp-input" id="dp-kw" type="text" value="0" oninput="calcTotal()"><div class="dp-curr">USD</div></div>
-  <div class="dp-sep"></div>
-  <div class="dp-total">Total (EUR eq.) &nbsp;<strong id="dp-total">—</strong></div>
-</div>
-
-<!-- DECISION ENGINE — live directives.json (first surface after liquidity bar) -->
-<div class="decision-engine-wrap">
-  <div class="decision-engine-card">
-    <div class="de-h">🎯 DECISION ENGINE</div>
-    <div id="de-one-command" class="de-command">⏳ Awaiting next brief — 07:00 Berlin</div>
-    <div id="de-updated" class="de-updated"></div>
-    <ul id="de-actions" class="de-actions"></ul>
-  </div>
-</div>
-
 <!-- ALERTS -->
 <div class="alert-bar">
   <div class="alert-lbl">⚑ Alerts</div>
@@ -783,81 +789,13 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   <!-- Matrix panel -->
   <div id="es-panel-matrix" class="es-panel active">
 
-<!-- ── PORTFOLIO SUMMARY + TR CARDS (single source of truth) ─────────── -->
-<div id="portfolio-summary-bar" data-kiwoom-eur="0" style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:10px 14px;margin:0 0 10px;background:linear-gradient(90deg,#f8f7f3,#fff);border:1px solid var(--es-rule);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);">
+<!-- ── PORTFOLIO SUMMARY (TR total from data-tr-total-eur; cards removed) ─────────── -->
+<div id="portfolio-summary-bar" data-kiwoom-eur="0" data-tr-total-eur="7067" style="display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;padding:10px 14px;margin:0 0 10px;background:linear-gradient(90deg,#f8f7f3,#fff);border:1px solid var(--es-rule);border-radius:8px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);">
   <span style="font-weight:800;letter-spacing:2px;color:var(--es-ink4);">PORTFOLIO SUMMARY</span>
   <span>TR Total <strong id="pf-tr-total" style="color:var(--ink);">—</strong></span>
   <span>Kiwoom Total <strong id="pf-kw-total" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">(<code>data-kiwoom-eur</code>)</span></span>
-  <span>Dry Powder (TR) <strong style="color:var(--bull);">€1,500</strong></span>
   <span>Grand Total EUR <strong id="pf-grand-total" style="color:var(--gold);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">TR+Kiwoom</span></span>
   <span>Goal Gap <strong id="pf-goal-gap" style="color:var(--ink);">—</strong> <span style="font-size:9px;color:var(--es-ink4);">€100M − Grand</span></span>
-</div>
-<div class="sec-t" style="margin:0 14px 10px;">TR POSITION CARDS</div>
-<div class="port-grid" style="margin:0 14px 14px;">
-  <div class="port-card" data-eur="1420" style="border-left-color:#cc0022;">
-    <div class="pc-name">TSMC (ADR)</div>
-    <div class="pc-val" style="color:#cc0022;">€1,420</div>
-    <div class="pc-chg dn">-1.18% today</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-87">87</span> CORE</div>
-  </div>
-  <div class="port-card" data-eur="1082" style="border-left-color:#008c35;">
-    <div class="pc-name">Nutrien (NTR)</div>
-    <div class="pc-val" style="color:#008c35;">€1,082</div>
-    <div class="pc-chg up">+2.55% today</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-82">81</span> ⏳ EX-DATE MAR 31</div>
-  </div>
-  <div class="port-card" data-eur="915" style="border-left-color:#0050cc;">
-    <div class="pc-name">Coherent (COHR)</div>
-    <div class="pc-val">€915</div>
-    <div class="pc-chg dn">-0.55%</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-82">77</span></div>
-  </div>
-  <div class="port-card" data-eur="789" style="border-left-color:#cc0022;">
-    <div class="pc-name">Uranium Energy (UEC)</div>
-    <div class="pc-val" style="color:#cc0022;">€789</div>
-    <div class="pc-chg dn">-7.10%</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-low">60</span> HOLD ONLY</div>
-  </div>
-  <div class="port-card" data-eur="591" style="border-left-color:#0050cc;">
-    <div class="pc-name">Xiaomi</div>
-    <div class="pc-val" style="color:#cc0022;">€591</div>
-    <div class="pc-chg dn">-7.73%</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-87">85</span></div>
-  </div>
-  <div class="port-card" data-eur="493" style="border-left-color:#008c35;">
-    <div class="pc-name">Thermo Fisher (TMO)</div>
-    <div class="pc-val">€493</div>
-    <div class="pc-chg dn">-5.62%</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-85">84</span></div>
-  </div>
-  <div class="port-card" data-eur="444" style="border-left-color:#0050cc;">
-    <div class="pc-name">Rocket Lab (RKLB)</div>
-    <div class="pc-val" style="color:#cc0022;">€444</div>
-    <div class="pc-chg dn">-11.16%</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-82">82</span> ✅ Filled @€58</div>
-  </div>
-  <div class="port-card" data-eur="324" style="border-left-color:#008c35;">
-    <div class="pc-name">Planet Labs PBC <span style="font-size:9px;color:var(--es-ink4);">PL</span></div>
-    <div class="pc-val" id="port-pl-val" style="color:#008c35;">—</div>
-    <div class="pc-chg up" id="port-pl-chg">live quote</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-85">84</span> · Entry €28 avg</div>
-  </div>
-  <div class="port-card" data-eur="267" style="border-left-color:#cc0022;">
-    <div class="pc-name">Sprott Uranium</div>
-    <div class="pc-val" style="color:#cc0022;">€267</div>
-    <div class="pc-chg dn">-11.22%</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-low">65</span></div>
-  </div>
-  <div class="port-card" data-eur="742" style="border-left-color:#0050cc;">
-    <div class="pc-name">Palantir (PLTR)</div>
-    <div class="pc-val" id="port-pltr-val" style="color:#008c35;">€742</div>
-    <div class="pc-chg up">vs entry €109</div>
-    <div class="pc-score">GOD Score: <span class="score-pill sp-82">78</span> · TR book</div>
-  </div>
-</div>
-<div class="card" style="margin:0 14px 12px;background:var(--gold-lt);border:1px solid #f0d090;">
-  <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--gold);margin-bottom:6px;">⚠️ TR DISPLAY RULE</div>
-  <div style="font-size:12px;color:var(--ink2);">Card totals are <strong>position values in EUR</strong> except <strong>PL</strong>: live line mirrors <code>#price-PL</code> from <code>prices.json</code>.</div>
 </div>
 
 <!-- ── SECTOR HEATMAP — SIGNAL DETECTION ─────────────────────────────── -->
@@ -1589,13 +1527,7 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
   }
 
   function syncPlPortCardFromMatrix() {
-    const src = document.getElementById("price-PL");
-    const dst = document.getElementById("port-pl-val");
-    const chg = document.getElementById("port-pl-chg");
-    if (src && dst) {
-      dst.innerHTML = src.innerHTML;
-      if (chg) chg.style.display = "none";
-    }
+    /* TR position cards removed — noop kept for live price loader hooks */
   }
 
   function updatePortfolioSummaryBar() {
@@ -1605,10 +1537,15 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
     const grandEl = document.getElementById("pf-grand-total");
     const gapEl = document.getElementById("pf-goal-gap");
     if (!bar || !trEl || !kwEl || !grandEl || !gapEl) return;
+    const cards = document.querySelectorAll("#es-panel-matrix .port-card[data-eur]");
     let trSum = 0;
-    document.querySelectorAll("#es-panel-matrix .port-card[data-eur]").forEach(card => {
-      trSum += parseFloat(card.getAttribute("data-eur") || "0") || 0;
-    });
+    if (cards.length) {
+      cards.forEach(card => {
+        trSum += parseFloat(card.getAttribute("data-eur") || "0") || 0;
+      });
+    } else {
+      trSum = parseFloat(bar.getAttribute("data-tr-total-eur") || "0") || 0;
+    }
     const kw = parseFloat(bar.getAttribute("data-kiwoom-eur") || "0") || 0;
     const grand = trSum + kw;
     const goalGap = 100000000 - grand;
@@ -2640,18 +2577,6 @@ function esShowTabOLD(id){
   event.target.classList.add('active');
   if(id==='bubble') drawBubble();
 }
-function dpRead(id){
-  const el=document.getElementById(id);
-  if(!el) return 0;
-  const raw = el.tagName && el.tagName.toLowerCase()==='input' ? el.value : (el.textContent||'');
-  return parseFloat(String(raw).replace(/[,\s\u00a0]/g,''))||0;
-}
-function calcTotal(){
-  const tr=dpRead('dp-tr');
-  const kw=dpRead('dp-kw');
-  const t=tr+(kw/1.09);
-  document.getElementById('dp-total').textContent=t>0?'€'+t.toFixed(0):'—';
-}
 function drawBubble(){
   const canvas=document.getElementById('bubbleCanvas');
   if(!canvas)return;
@@ -3018,107 +2943,6 @@ function esShowTabOLD(id){
   event.target.classList.add('active');
   if(id==='bubble') drawBubble();
 }
-function calcTotal(){
-  const tr=dpRead('dp-tr');
-  const kw=dpRead('dp-kw');
-  const t=tr+(kw/1.09);
-  document.getElementById('dp-total').textContent=t>0?'€'+t.toFixed(0):'—';
-}
-function drawBubble(){
-  const canvas=document.getElementById('bubbleCanvas');
-  if(!canvas)return;
-  const dpr=window.devicePixelRatio||1;
-  const W=canvas.parentElement.offsetWidth;
-  const H=520;
-  canvas.style.width=W+'px';canvas.style.height=H+'px';
-  canvas.width=W*dpr;canvas.height=H*dpr;
-  const ctx=canvas.getContext('2d');
-  ctx.scale(dpr,dpr);
-  const P={l:50,r:30,t:30,b:40};
-  const CW=W-P.l-P.r,CH=H-P.t-P.b;
-  const C={c1:'#1e3a6e',c2:'#1e5c2a',c3:'#4a1a7a',c4:'#1a4f4f',c5:'#6b2d14',c6:'#1e3050',cr:'#7a3500'};
-
-  // [label, risk, upside, god, color, type, signal]
-  // type: S=spear, D=shield, E=exit
-  const stocks=[
-    ['000660',2,7,95,C.c1,'S','LEGEND'],['TSM',3,7,90,C.c1,'D','HOLD'],
-    ['NVDA',4,9,96,C.c1,'S','BUY'],['PLTR',4,6,72,C.c1,'S','HOLD'],
-    ['Xiaomi',6,8,68,C.c1,'S','HOLD'],
-    ['UEC',6,9,78,C.c2,'S','HOLD'],['URNM',5,8,74,C.c2,'D','HOLD'],
-    ['CCJ',4,7,82,C.c2,'S','BUY'],['OKLO',8,9,70,C.c2,'S','BUY'],
-    ['RKLB',7,7,58,C.c3,'S','HOLD'],['ASTS',9,9,72,C.c3,'S','BUY'],
-    ['xAI',8,10,88,C.c3,'S','IPO'],
-    ['CRSP',6,3,48,C.c4,'S','CAUTION'],['NTLA',7,8,55,C.c4,'S','WATCH'],
-    ['BEAM',8,8,70,C.c4,'S','BUY'],
-    ['272210',3,7,92,C.c5,'S','LEGEND'],['KTOS',5,6,80,C.c5,'S','HOLD'],
-    ['ARKQ',5,6,62,C.c5,'S','HOLD'],
-    ['BOTZ',5,6,60,C.c5,'S','HOLD'],
-    ['COHR',5,7,76,C.c6,'D','HOLD'],['VRT',4,8,84,C.c6,'D','HOLD'],
-    ['TMO',4,6,68,C.c4,'D','HOLD'],['AMAT',4,7,79,C.c6,'D','BUY'],
-    ['NTR',4,7,72,C.cr,'D','STRIKE'],
-    ['FCX',5,2,45,C.c6,'D','HOLD'],['IAU',3,2,30,C.cr,'E','EXIT'],
-  ];
-
-  // Grid lines
-  ctx.strokeStyle='#e8e5db';ctx.lineWidth=1;
-  for(let i=0;i<=4;i++){
-    const y=P.t+(CH/4)*i;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(P.l+CW,y);ctx.stroke();
-    const x=P.l+(CW/4)*i;ctx.beginPath();ctx.moveTo(x,P.t);ctx.lineTo(x,P.t+CH);ctx.stroke();
-  }
-  // Y axis labels
-  ctx.fillStyle='#8a8a8a';ctx.font='10px DM Mono';ctx.textAlign='right';
-  ['0%','+25%','+50%','+75%','+100%+'].forEach((l,i)=>{ctx.fillText(l,P.l-6,P.t+CH-(CH/4)*i+4);});
-
-  // Quadrant shading
-  ctx.fillStyle='rgba(26,92,53,0.03)';
-  ctx.fillRect(P.l,P.t,CW/2,CH/2); // low risk, high upside — ideal zone
-
-  stocks.forEach(([label,risk,upside,god,color,type,signal])=>{
-    const x=P.l+(risk/10)*CW;
-    const y=P.t+CH-(upside/10)*CH;
-    const r=5+(god/100)*16;
-
-    // Shadow
-    ctx.beginPath();ctx.arc(x+1,y+1,r,0,Math.PI*2);ctx.fillStyle='rgba(0,0,0,0.05)';ctx.fill();
-
-    // Fill
-    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
-    ctx.fillStyle=type==='E'?'#f5f5f5':color+'bb';ctx.fill();
-    ctx.strokeStyle=type==='E'?'#ccc':color;ctx.lineWidth=type==='E'?1:1.5;ctx.stroke();
-
-    // Glow for BUY/LEGEND/IPO/STRIKE
-    if(['BUY','LEGEND','IPO','STRIKE'].includes(signal)){
-      ctx.beginPath();ctx.arc(x,y,r+4,0,Math.PI*2);
-      ctx.strokeStyle=color+'44';ctx.lineWidth=2;ctx.stroke();
-    }
-
-    // EXIT cross
-    if(type==='E'){
-      ctx.strokeStyle='#cc0000';ctx.lineWidth=1.5;
-      ctx.beginPath();ctx.moveTo(x-r*0.5,y-r*0.5);ctx.lineTo(x+r*0.5,y+r*0.5);ctx.stroke();
-      ctx.beginPath();ctx.moveTo(x+r*0.5,y-r*0.5);ctx.lineTo(x-r*0.5,y+r*0.5);ctx.stroke();
-    }
-
-    // GOD score inside
-    ctx.fillStyle=type==='E'?'#aaa':'rgba(255,255,255,0.92)';
-    ctx.font=`bold ${Math.max(7,r*0.55)}px DM Mono`;ctx.textAlign='center';
-    ctx.fillText(god,x,y+r*0.22);
-
-    // Type icon
-    if(type==='S'&&r>10){ctx.font=`${Math.max(8,r*0.45)}px serif`;ctx.fillText('⚔',x,y-r*0.2);}
-    if(type==='D'&&r>10){ctx.font=`${Math.max(8,r*0.45)}px serif`;ctx.fillText('🛡',x,y-r*0.2);}
-
-    // Ticker label
-    ctx.fillStyle='#0d0d0d';
-    ctx.font='bold 9px Syne,sans-serif';ctx.textAlign='center';
-    ctx.fillText(label,x,y+r+13);
-  });
-}
-window.addEventListener('load',()=>{setTimeout(()=>{if(document.getElementById('panel-bubble').classList.contains('active'))drawBubble();},300);});
-window.addEventListener('resize',()=>{if(document.getElementById('panel-bubble').classList.contains('active'))drawBubble();});
-
-// ── AUTO RUN ──
-runLiq();
 
 // ══════════════════════════════════════════════════════════════════
 // LIVE PRICE LOADER — reads prices.json pushed by Minerva server
@@ -3197,7 +3021,6 @@ async function loadLivePrices() {
 // Load on page open + refresh every 5 minutes
 loadLivePrices();
 setInterval(loadLivePrices, 5 * 60 * 1000);
-calcTotal();
 
 // Dashboard date (local)
 {
@@ -3423,6 +3246,7 @@ async function loadDecisionEngine() {
   const cmdEl = document.getElementById("de-one-command");
   const updEl = document.getElementById("de-updated");
   const listEl = document.getElementById("de-actions");
+  const deployEl = document.getElementById("de-deploy");
   const lastUp = document.getElementById("lastUpdate");
   if (!cmdEl || !updEl || !listEl) return;
 
@@ -3443,12 +3267,34 @@ async function loadDecisionEngine() {
     cmdEl.textContent = "\u23F3 Awaiting next brief — 07:00 Berlin";
     updEl.textContent = "";
     listEl.innerHTML = "";
+    if (deployEl) {
+      deployEl.style.display = "none";
+      deployEl.innerHTML = "";
+    }
     if (lastUp) lastUp.textContent = "2026-04-12";
     return;
   }
 
   const oc = data.one_command != null ? String(data.one_command) : "";
   cmdEl.textContent = oc ? "\u2694 ONE COMMAND: " + oc : "\u2694 ONE COMMAND: \u2014";
+
+  if (deployEl) {
+    const dpRaw = data.dry_powder_eur;
+    const dpNum = dpRaw != null && dpRaw !== "" ? Number(dpRaw) : NaN;
+    const tgt = data.deploy_target != null ? String(data.deploy_target).trim() : "";
+    if (tgt || (!Number.isNaN(dpNum) && dpNum > 0)) {
+      deployEl.style.display = "block";
+      const euroPart =
+        !Number.isNaN(dpNum) && dpNum > 0
+          ? "\uD83D\uDCB0 DEPLOY: \u20AC" + Math.round(dpNum).toLocaleString("en-IE") + " TR dry powder \u2192 "
+          : "\uD83D\uDCB0 DEPLOY: ";
+      deployEl.innerHTML =
+        euroPart + (tgt ? "<strong>" + deEsc(tgt) + "</strong>" : "<strong>\u2014</strong>");
+    } else {
+      deployEl.style.display = "none";
+      deployEl.innerHTML = "";
+    }
+  }
   const lu = data.last_updated != null ? String(data.last_updated) : "";
   updEl.textContent = lu ? "Last updated: " + lu : "";
   if (lastUp) lastUp.textContent = lu || "2026-04-12";
