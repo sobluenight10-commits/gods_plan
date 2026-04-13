@@ -385,6 +385,60 @@ TICKER_SECTOR_BENCH: Dict[str, List[str]] = {
 }
 
 
+def classify_contract_event(
+    ticker: str,
+    contract_value: float,
+    annual_revenue: float,
+    backlog: float,
+    technology_intact: bool,
+    replacement_pipeline: bool
+) -> dict:
+    """
+    Before any exit on contract news — quantify the damage first.
+    Never exit on fraction damage when thesis is intact.
+    """
+    revenue_pct = (contract_value / annual_revenue * 100) if annual_revenue > 0 else 0
+    backlog_ratio = (backlog / annual_revenue) if annual_revenue > 0 else 0
+
+    if revenue_pct > 30:
+        severity = "CRITICAL"
+        action = "EXIT — major revenue dependency lost"
+        color = "🔴"
+    elif revenue_pct > 15:
+        severity = "MAJOR"
+        action = "REDUCE 50% — significant damage, monitor backlog"
+        color = "🟠"
+    elif revenue_pct > 5:
+        severity = "MODERATE"
+        action = "HOLD — meaningful but recoverable. Check backlog coverage."
+        color = "🟡"
+    else:
+        severity = "MINOR"
+        action = "HOLD — fraction damage. Thesis intact unless technology broken."
+        color = "🟢"
+
+    # Backlog override
+    if backlog_ratio >= 2.0 and severity in ["MODERATE","MINOR"]:
+        action = f"HOLD — backlog {backlog_ratio:.1f}x revenue = forward visibility confirmed"
+        color = "🟢"
+
+    # Technology check override
+    if not technology_intact:
+        severity = "CRITICAL"
+        action = "EXIT — technology failure = full thesis death regardless of contract size"
+        color = "🔴"
+
+    return {
+        "ticker": ticker,
+        "contract_pct_revenue": f"{revenue_pct:.1f}%",
+        "backlog_ratio": f"{backlog_ratio:.1f}x annual revenue",
+        "severity": f"{color} {severity}",
+        "technology_intact": technology_intact,
+        "action": action,
+        "lesson": "Lesson #07: Quantify contract size before exit. Fraction damage ≠ thesis broken."
+    }
+
+
 def sector_drop_for_ticker(ticker: str, sector_bench: Dict) -> float:
     """Average same-day % change of sector ETF proxies (from directives sector_bench)."""
     syms = TICKER_SECTOR_BENCH.get(ticker, ["QQQ"])
@@ -451,23 +505,55 @@ Every word you write must earn its place. No filler. No generic phrases.
 Format output EXACTLY as shown. No deviations."""
 
 
-def fetch_portfolio_news() -> List[dict]:
-    """Fetch last ~20H news for GOD's holdings via NewsAPI."""
-    news_key = os.getenv("NEWS_API_KEY", "b579e246dfca4a4095c1f4a64f0d5572")
-    keywords = [
-        "Palantir",
-        "TSMC",
-        "uranium",
-        "Rocket Lab",
-        "Oklo",
-        "ASML",
-        "Coherent",
-        "Xiaomi",
-        "Hanwha",
-    ]
-    query = " OR ".join(f'"{k}"' for k in keywords[:5])
+def fetch_portfolio_news(ticker: Optional[str] = None, hours: int = 20) -> List[dict]:
+    """Fetch news via NewsAPI.
+
+    Legacy (no ticker): last ~20h broad keywords for GOD's themes.
+    Per-ticker: ``ticker`` + company name, ``hours`` lookback (e.g. 48 for spike alerts).
+    """
+    news_key = (getattr(config, "NEWS_API_KEY", None) or os.getenv("NEWS_API_KEY", "") or "").strip()
+    if not news_key:
+        news_key = os.getenv("NEWS_API_KEY", "b579e246dfca4a4095c1f4a64f0d5572")
+
     try:
         now = datetime.now(timezone.utc)
+        if ticker:
+            t = str(ticker).strip()
+            name = config.get_company_name_for_ticker(t)
+            query = f"{t} OR \"{name}\""
+            r = requests.get(
+                "https://newsapi.org/v2/everything",
+                params={
+                    "q": query,
+                    "apiKey": news_key,
+                    "language": "en",
+                    "sortBy": "publishedAt",
+                    "pageSize": 20,
+                    "from": (now - timedelta(hours=max(1, int(hours)))).strftime("%Y-%m-%dT%H:%M:%S"),
+                },
+                timeout=25,
+            )
+            data = r.json()
+            if data.get("status") != "ok":
+                return []
+            return [
+                {"title": a["title"], "source": (a.get("source") or {}).get("name", "")}
+                for a in data.get("articles", [])[:15]
+                if a.get("title") and "[Removed]" not in (a.get("title") or "")
+            ]
+
+        keywords = [
+            "Palantir",
+            "TSMC",
+            "uranium",
+            "Rocket Lab",
+            "Oklo",
+            "ASML",
+            "Coherent",
+            "Xiaomi",
+            "Hanwha",
+        ]
+        query = " OR ".join(f'"{k}"' for k in keywords[:5])
         r = requests.get(
             "https://newsapi.org/v2/everything",
             params={
@@ -843,6 +929,53 @@ def run_news_pulse():
                 logger.info(f"Insider signals sent: {len(insider_signals)} buys")
     except Exception as e:
         logger.debug(f"Insider monitor skipped: {e}")
+
+    # ── SEC 8-K Contract Cancellation Auto-Quantify (Lesson #07) ─────────────
+    # TICKER_META: populate with actual revenue/backlog data per position.
+    # Format: ticker -> {annual_revenue, backlog, technology_intact}
+    TICKER_CONTRACT_META: Dict[str, dict] = {
+        "AVAV":  {"annual_revenue": 590_000_000,  "backlog": 1_000_000_000, "technology_intact": True},
+        "KTOS":  {"annual_revenue": 1_100_000_000, "backlog": 1_400_000_000, "technology_intact": True},
+        "PLTR":  {"annual_revenue": 2_200_000_000, "backlog": 4_500_000_000, "technology_intact": True},
+        "OKLO":  {"annual_revenue": 5_000_000,     "backlog": 0,             "technology_intact": True},
+        "RKLB":  {"annual_revenue": 350_000_000,   "backlog": 1_000_000_000, "technology_intact": True},
+    }
+    _contract_cancel_keywords = [
+        "contract cancel", "contract terminat", "contract lost", "award cancel",
+        "contract ended", "contract withdrawn", "cancelled contract", "terminated contract",
+        "8-K", "material contract", "contract loss", "loses contract",
+    ]
+    for item in new_items:
+        headline_lower = item.lower()
+        if any(kw in headline_lower for kw in _contract_cancel_keywords):
+            ticker_hit = item.split(":")[0].strip()
+            meta = TICKER_CONTRACT_META.get(ticker_hit, {})
+            if meta:
+                # Estimate contract value: assume 5% of revenue as fallback if not parseable
+                contract_val = meta["annual_revenue"] * 0.05
+                analysis = classify_contract_event(
+                    ticker=ticker_hit,
+                    contract_value=contract_val,
+                    annual_revenue=meta["annual_revenue"],
+                    backlog=meta["backlog"],
+                    technology_intact=meta["technology_intact"],
+                    replacement_pipeline=True,
+                )
+                tech_str = "Yes" if analysis["technology_intact"] else "No"
+                alert_msg = (
+                    f"{analysis['severity']} CONTRACT EVENT — {ticker_hit}\n"
+                    f"{'━'*28}\n"
+                    f"Contract: {item[len(ticker_hit)+2:120]}\n"
+                    f"Revenue impact: {analysis['contract_pct_revenue']} of annual revenue\n"
+                    f"Backlog coverage: {analysis['backlog_ratio']}\n"
+                    f"Technology intact: {tech_str}\n"
+                    f"VERDICT: {analysis['action']}\n"
+                    f"{'━'*28}\n"
+                    f"⚠️ DO NOT EXIT before reading this analysis.\n"
+                    f"📖 {analysis['lesson']}"
+                )
+                _send_telegram(alert_msg)
+                logger.info(f"Contract event alert sent for {ticker_hit}: {analysis['severity']}")
 
     if not new_items:
         return

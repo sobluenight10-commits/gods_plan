@@ -375,6 +375,152 @@ def _fetch_price(ticker: str) -> dict:
     return {}
 
 
+def _volume_vs_avg_pct(ticker: str) -> Tuple[float, str]:
+    """Today's volume vs prior ~30 session average; returns (pct_of_avg, short tag)."""
+    try:
+        import yfinance as yf
+
+        hist = yf.Ticker(ticker).history(period="45d")
+        if hist is None or hist.empty or "Volume" not in hist.columns:
+            return 100.0, "NORMAL"
+        vols = hist["Volume"].dropna()
+        if len(vols) < 3:
+            return 100.0, "NORMAL"
+        today_v = float(vols.iloc[-1])
+        prior = vols.iloc[:-1]
+        if len(prior) >= 30:
+            avg_v = float(prior.iloc[-30:].mean())
+        else:
+            avg_v = float(prior.mean()) if len(prior) else 0.0
+        if avg_v <= 0:
+            return 100.0, "NORMAL"
+        pct = (today_v / avg_v) * 100.0
+        if pct < 50:
+            tag = "LOW — retail only"
+        elif pct <= 100:
+            tag = "NORMAL"
+        elif pct <= 150:
+            tag = "elevated vol"
+        else:
+            tag = "HIGH VOL — institutional"
+        return pct, tag
+    except Exception as e:
+        logger.debug("volume vs avg %s: %s", ticker, e)
+        return 100.0, "NORMAL"
+
+
+def _headlines_digest_block(articles: List[dict]) -> str:
+    lines = []
+    for a in (articles or [])[:12]:
+        title = (a.get("title") or "").strip()
+        if not title or "[Removed]" in title:
+            continue
+        src = (a.get("source") or "").strip()
+        lines.append(f"- [{src}] {title}")
+    if not lines:
+        return "(No headlines in window — treat as UNKNOWN.)"
+    return "\n".join(lines)
+
+
+def _next_catalyst_for_ticker(ticker: str) -> str:
+    """Best-effort next catalyst from state.json calendar (ticker match or next global)."""
+    tk = (ticker or "").strip().upper().replace(".", "")
+    state = _load_state()
+    today = datetime.now().strftime("%Y-%m-%d")
+    cal = [c for c in (state.get("calendar") or []) if isinstance(c, dict)]
+    cal.sort(key=lambda c: c.get("date") or "")
+    fallback = ""
+    for c in cal:
+        d = c.get("date") or ""
+        if d < today:
+            continue
+        ev = f"{c.get('event', '')} {c.get('action', '')}".upper().replace(".", "")
+        blob = f"{d} · {c.get('event', '')}"
+        if tk and tk in ev:
+            return blob.strip()
+        if not fallback:
+            fallback = blob.strip()
+    return fallback if fallback else "—"
+
+
+def _parse_gpt_three_lines(raw: str) -> Tuple[str, str, str]:
+    raw = (raw or "").strip()
+    lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
+
+    def _strip_num_prefix(s: str) -> str:
+        u = s.upper()
+        for pref in ("LINE 1:", "LINE 2:", "LINE 3:"):
+            if u.startswith(pref):
+                return s[len(pref) :].strip()
+        return s
+
+    out: List[str] = []
+    for i in range(3):
+        if i < len(lines):
+            out.append(_strip_num_prefix(lines[i]))
+        else:
+            out.append("")
+    defaults = (
+        "CAUSE: UNKNOWN — no reliable read on drivers in-window.",
+        "THESIS: REVIEW NEEDED — confirm vs OLYMPUS / company facts.",
+        "ACTION: HOLD · DO NOT CHASE",
+    )
+    for i in range(3):
+        if not out[i]:
+            out[i] = defaults[i]
+    return out[0], out[1], out[2]
+
+
+def _gpt_intraday_move_brief(ticker: str, pct: float, headlines: str) -> Tuple[str, str, str]:
+    from battle_rhythm import _gpt
+
+    system = "You are MINERVA, a cold-blooded investment analyst."
+    user = f"""Ticker: {ticker}
+Move: {pct:+.1f}% today
+Recent headlines (48h):
+{headlines}
+
+Answer in exactly 3 lines:
+LINE 1: CAUSE: [NEWS-DRIVEN / MACRO / UNKNOWN] — one sentence max
+LINE 2: THESIS: [INTACT / WOUNDED / REVIEW NEEDED] — one sentence max
+LINE 3: ACTION: [one of: HOLD · DO NOT CHASE · ENTRY WATCH $XX · EXIT REVIEW]
+
+No other text."""
+    raw = _gpt(system, user, tokens=350)
+    return _parse_gpt_three_lines(raw)
+
+
+def _build_minerva_move_alert_text(
+    ticker: str,
+    pct: float,
+    banner: str,
+    direction: str,
+) -> str:
+    """
+    banner: first line e.g. '🟡 SPIKE ALERT — TSM'
+    direction: 'spike' | 'drop' (move word Rise vs Drop)
+    """
+    from battle_rhythm import fetch_portfolio_news
+
+    articles = fetch_portfolio_news(ticker=ticker, hours=48)
+    headlines = _headlines_digest_block(articles)
+    line1, line2, line3 = _gpt_intraday_move_brief(ticker, pct, headlines)
+    vol_pct, vol_tag = _volume_vs_avg_pct(ticker)
+    next_cat = _next_catalyst_for_ticker(ticker)
+    move_word = "Rise" if direction == "spike" else "Drop"
+    body = (
+        f"{banner}\n"
+        f"{move_word}: {pct:+.1f}% · Vol: {vol_pct:.0f}% of avg ({vol_tag})\n\n"
+        f"{line1}\n"
+        f"{line2}\n"
+        f"{line3}\n\n"
+        f"─────────────────\n"
+        f"Next catalyst: {next_cat}\n"
+        f"Do NOT chase. Minerva brief at 16:30."
+    )
+    return body
+
+
 def _send_alert(message: str):
     """Send immediately to Telegram."""
     import config
@@ -506,12 +652,8 @@ def _check_thesis_alerts_impl():
                 crit_reason = f"thesis_emergency:{ticker}:{chg:.2f}"
                 if _should_skip_critical_dedup(ticker, crit_reason):
                     continue
-                msg = (
-                    "🔴 EMERGENCY ALERT\n\n"
-                    f"🔴 EMERGENCY — {ticker}\n"
-                    f"Drop: {chg:+.1f}% today\n"
-                    "CRISIS LEVEL DROP. Thesis likely broken.\n"
-                    "IMMEDIATE ACTION REQUIRED. Do not wait."
+                msg = _build_minerva_move_alert_text(
+                    ticker, chg, f"🔴 DROP ALERT — {ticker}", "drop"
                 ) + _telegram_price_drop_classification(ticker, chg)
                 _send_thesis_plain(msg)
                 _record_critical_dedup(ticker, crit_reason)
@@ -526,12 +668,8 @@ def _check_thesis_alerts_impl():
             if chg <= tt:
                 if _already_alerted(cache, kt) or _already_alerted(cache, ke):
                     continue
-                msg = (
-                    "🟠 THESIS ALERT\n\n"
-                    f"🟠 THESIS ALERT — {ticker}\n"
-                    f"Drop: {chg:+.1f}% today\n"
-                    "Significant session drop. Lesson #05 applies.\n"
-                    "ACTION: Check company news NOW before macro."
+                msg = _build_minerva_move_alert_text(
+                    ticker, chg, f"🟠 DROP ALERT — {ticker}", "drop"
                 ) + _telegram_price_drop_classification(ticker, chg)
                 _send_thesis_plain(msg)
                 _mark_alerted(cache, kt)
@@ -544,12 +682,8 @@ def _check_thesis_alerts_impl():
             # watch tier
             if _already_alerted(cache, kw) or _already_alerted(cache, kt) or _already_alerted(cache, ke):
                 continue
-            msg = (
-                "🟡 WATCH ALERT\n\n"
-                f"🟡 POSITION ALERT — {ticker}\n"
-                f"Drop: {chg:+.1f}% today\n"
-                "Elevated move. Check company news.\n"
-                "Is this macro noise or thesis risk?"
+            msg = _build_minerva_move_alert_text(
+                ticker, chg, f"🟡 DROP ALERT — {ticker}", "drop"
             ) + _telegram_price_drop_classification(ticker, chg)
             _send_thesis_plain(msg)
             _mark_alerted(cache, kw)
@@ -562,13 +696,8 @@ def _check_thesis_alerts_impl():
             if chg >= ub:
                 if _already_alerted(cache, sb):
                     continue
-                msg = (
-                    "🔴 BREAKOUT ALERT\n\n"
-                    f"🔴 BREAKOUT — {ticker}\n"
-                    f"Rise: {chg:+.1f}% today\n"
-                    "MAJOR MOVE. Structural catalyst likely.\n"
-                    "ACTION: Read news before any decision.\n"
-                    "Do not chase. Let price come back to you."
+                msg = _build_minerva_move_alert_text(
+                    ticker, chg, f"🔴 SPIKE ALERT — {ticker}", "spike"
                 )
                 _send_thesis_plain(msg)
                 _mark_alerted(cache, sb)
@@ -581,12 +710,8 @@ def _check_thesis_alerts_impl():
             if chg >= um:
                 if _already_alerted(cache, sumo) or _already_alerted(cache, sb):
                     continue
-                msg = (
-                    "🟠 MOMENTUM ALERT\n\n"
-                    f"🟠 MOMENTUM ALERT — {ticker}\n"
-                    f"Rise: {chg:+.1f}% today\n"
-                    "Significant spike. Check catalyst now.\n"
-                    "Is this a new entry opportunity or a trap?"
+                msg = _build_minerva_move_alert_text(
+                    ticker, chg, f"🟠 SPIKE ALERT — {ticker}", "spike"
                 )
                 _send_thesis_plain(msg)
                 _mark_alerted(cache, sumo)
@@ -597,13 +722,8 @@ def _check_thesis_alerts_impl():
 
             if _already_alerted(cache, suw) or _already_alerted(cache, sumo) or _already_alerted(cache, sb):
                 continue
-            msg = (
-                "🟡 SPIKE WATCH\n\n"
-                f"🟡 SPIKE ALERT — {ticker}\n"
-                f"Rise: {chg:+.1f}% today\n"
-                "Elevated move. Is this news-driven or macro?\n"
-                "Institutions may already be positioned.\n"
-                "Do NOT chase. Wait for Minerva brief."
+            msg = _build_minerva_move_alert_text(
+                ticker, chg, f"🟡 SPIKE ALERT — {ticker}", "spike"
             )
             _send_thesis_plain(msg)
             _mark_alerted(cache, suw)
