@@ -144,22 +144,44 @@ function gemRow(ticker) {{
 function injectGemIntoTables() {{
   document.querySelectorAll('[data-ticker]').forEach(el => {{
     const ticker = el.getAttribute('data-ticker');
+    if (!ticker) return;
     const d = GEM_DATA[ticker];
     if(!d) return;
-    let gemEl = el.querySelector('.gem-metrics');
-    if(!gemEl) {{
-      gemEl = document.createElement('div');
-      gemEl.className = 'gem-metrics';
-      gemEl.style.cssText = 'margin-top:4px;font-size:11px;display:flex;gap:6px;flex-wrap:wrap;align-items:center';
-      el.appendChild(gemEl);
-    }}
-    gemEl.innerHTML =
+    const htmlBits =
       gemBadge(d.grade) +
       ' <span style="color:#888">1y:</span><span style="color:'+gemColor(d.u1y)+'">'+gemFmt(d.u1y)+'</span>' +
       ' <span style="color:#888">5y:</span><span style="color:'+gemColor(d.u5y)+'">'+gemFmt(d.u5y)+'</span>' +
       ' <span style="color:#888">P&L:</span><span style="color:'+gemColor(d.unreal)+'">'+gemFmt(d.unreal)+'</span>' +
       ' <span style="color:#888">vs1y:</span><span style="color:'+gemColor(d.cur_vs_1y)+'">'+gemFmt(d.cur_vs_1y)+'</span>' +
       ' <span style="color:#888">MoS:</span><span style="color:'+gemColor(d.mos)+'">'+gemFmt(d.mos)+'</span>';
+    const mainRow = el.closest('tr');
+    if (!mainRow) {{
+      let gemEl = el.querySelector('.gem-metrics');
+      if(!gemEl) {{
+        gemEl = document.createElement('div');
+        gemEl.className = 'gem-metrics';
+        gemEl.style.cssText = 'margin-top:4px;font-size:11px;display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+        el.appendChild(gemEl);
+      }}
+      gemEl.innerHTML = htmlBits;
+      return;
+    }}
+    if (mainRow.nextElementSibling && mainRow.nextElementSibling.classList &&
+        mainRow.nextElementSibling.classList.contains('gem-sub-row')) return;
+    const ncol = mainRow.children.length;
+    if (!ncol) return;
+    const sub = document.createElement('tr');
+    sub.className = 'gem-sub-row';
+    const td = document.createElement('td');
+    td.colSpan = ncol;
+    td.style.cssText = 'padding:6px 12px;background:#f8f9fa;font-size:11px;border-bottom:1px solid #e8e8e8;';
+    const inner = document.createElement('div');
+    inner.className = 'gem-metrics';
+    inner.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;align-items:center';
+    inner.innerHTML = htmlBits;
+    td.appendChild(inner);
+    sub.appendChild(td);
+    mainRow.insertAdjacentElement('afterend', sub);
   }});
 }}
 
