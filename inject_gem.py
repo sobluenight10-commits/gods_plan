@@ -71,11 +71,18 @@ def build_gem_data_js(gem, source_file):
 
     return '\n'.join(lines)
 
+MARK_BEGIN = "// OLYMPUS_GEM_DATA_BEGIN"
+MARK_END = "// OLYMPUS_GEM_DATA_END"
+
+
 def inject(html_content, new_js):
-    pattern = r'(<!-- GEM_INJECT_START -->\n<script>\n).*?(</script>)'
-    replacement = r'\1' + new_js + r'\n\2'
-    new_html = re.sub(pattern, replacement, html_content, flags=re.DOTALL)
-    return new_html
+    """Replace ONLY the GEM_DATA + _GEM_META block between line markers — never the rest of the <script>."""
+    pattern = r"(" + re.escape(MARK_BEGIN) + r"\r?\n).*?(\r?\n" + re.escape(MARK_END) + r")"
+    if not re.search(pattern, html_content, flags=re.DOTALL):
+        raise RuntimeError(
+            f"{MARK_BEGIN} / {MARK_END} not found in HTML — refusing to overwrite (would delete dashboard JS)."
+        )
+    return re.sub(pattern, r"\1" + new_js + r"\2", html_content, count=1, flags=re.DOTALL)
 
 def main():
     gem, source = get_latest_gem()
