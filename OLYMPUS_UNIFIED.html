@@ -3006,6 +3006,7 @@ function computePrecisionTiers(rows) {
 function populateGradeSummary() {
   var body = document.getElementById('grade-summary-body');
   if (!body) return;
+  try {
   var gradeRank = {S:0,"A+":1,A:2,"B+":3,B:4,"C+":5,C:6,D:7,F:8};
   var rows = [];
   Object.keys(GEM_DATA).forEach(function(tk) {
@@ -3053,6 +3054,10 @@ function populateGradeSummary() {
       '</tr>';
   });
   body.innerHTML = html;
+  } catch (err) {
+    console.error('populateGradeSummary', err);
+    body.innerHTML = '<tr><td colspan="6" style="padding:6px;color:#a32d2d;font-size:11px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
+  }
 }
 
 function riskCellColor(score) {
@@ -3067,11 +3072,16 @@ function riskLevelBadge(level) {
   return '<span style="background:'+c.bg+';color:'+c.fg+';padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700">'+level+'</span>';
 }
 function loadRiskHeatmap() {
-  fetch('/data/skill_results/risk_latest.json?t=' + Date.now())
-    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+  var riskUrl = '/data/skill_results/risk_latest.json?t=' + Date.now();
+  fetch(riskUrl)
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(data) {
       var tbody = document.getElementById('risk-heatmap-rows');
-      if (!tbody || !data.results) return;
+      if (!tbody) return;
+      if (!data.results) {
+        tbody.innerHTML = '<tr><td colspan="12" style="padding:6px;color:#999">No risk results in file</td></tr>';
+        return;
+      }
       var dims = ['revenue_concentration','profitability_trend','balance_sheet_leverage',
                   'cash_runway','revenue_volatility','valuation_cushion',
                   'liquidity_risk','sector_cyclicality','catalyst_dependency'];
@@ -3095,17 +3105,27 @@ function loadRiskHeatmap() {
     })
     .catch(function(e) {
       console.warn('Risk heatmap load failed:', e.message);
+      var tbody = document.getElementById('risk-heatmap-rows');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="12" style="padding:6px;color:#a32d2d;font-size:11px">Risk data failed to load (' + (e.message || e) + '). Check /data/skill_results/risk_latest.json on server.</td></tr>';
+      }
     });
 }
 loadRiskHeatmap();
 setInterval(loadRiskHeatmap, 5 * 60 * 1000);
 
-document.addEventListener('DOMContentLoaded', function() {
+/* Script block is after </body>: DOMContentLoaded may have already fired — use readyState + immediate boot */
+function bootGemDashboard() {
   setTimeout(injectGemIntoTables, 300);
   setTimeout(syncEvalWithGem, 350);
   setTimeout(updateGemGradeBar, 400);
   setTimeout(populateGradeSummary, 500);
-});
+}
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bootGemDashboard);
+} else {
+  bootGemDashboard();
+}
 </script>
 
 <div id="gem-header-bar" style="background:#f8f9fa;border:0.5px solid #ddd;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px">

@@ -15,6 +15,22 @@ def get_latest_gem():
     with open(path) as f:
         return json.load(f), files[0]
 
+def _js_num(v):
+    """Emit a JS number or null (0 is preserved; only None → null)."""
+    if v is None:
+        return "null"
+    try:
+        return str(float(v))
+    except (TypeError, ValueError):
+        return "null"
+
+
+def _js_str(s):
+    if s is None:
+        return ""
+    return str(s).replace("\\", "\\\\").replace('"', '\\"')
+
+
 def build_gem_data_js(gem, source_file):
     now = datetime.now()
     lines = []
@@ -27,17 +43,17 @@ def build_gem_data_js(gem, source_file):
         vs = r.get("versus", {})
         entry = (
             f'  "{tk}": {{'
-            f'grade:"{g["grade"]}",gem_score:{g["gem_score"]:.1f},'
+            f'grade:"{_js_str(g.get("grade"))}",gem_score:{g["gem_score"]:.1f},'
             f'u1y:{g["upside_1y_pct"]:.2f},u5y:{g["upside_5y_pct"]:.2f},'
             f'worst1y:{g["worst_drop_1y_pct"]:.2f},'
-            f'unreal:{vs.get("unrealized_pnl_pct") or "null"},'
-            f'cur_vs_1y:{vs.get("current_vs_ev_1y_pct") or "null"},'
-            f'mos:{vs.get("entry_margin_of_safety_1y_pct") or "null"},'
-            f'risk_avg:{g.get("risk_avg") or "null"},'
-            f'risk_level:"{g.get("risk_level","UNKNOWN")}",'
+            f'unreal:{_js_num(vs.get("unrealized_pnl_pct"))},'
+            f'cur_vs_1y:{_js_num(vs.get("current_vs_ev_1y_pct"))},'
+            f'mos:{_js_num(vs.get("entry_margin_of_safety_1y_pct"))},'
+            f'risk_avg:{_js_num(g.get("risk_avg"))},'
+            f'risk_level:"{_js_str(g.get("risk_level","UNKNOWN"))}",'
             f'risk_int:{str(g.get("risk_integrated",False)).lower()},'
-            f'pgrade:"{g.get("precision_grade","")}",'
-            f'mode:"{r["valuation_mode"]}"}}'
+            f'pgrade:"{_js_str(g.get("precision_grade",""))}",'
+            f'mode:"{_js_str(r.get("valuation_mode",""))}"}}'
         )
         lines.append(entry + ',')
 
