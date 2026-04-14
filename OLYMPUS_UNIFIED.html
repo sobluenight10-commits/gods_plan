@@ -738,7 +738,7 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
   background: #1a1a2e; color: #e8e8f0;
   font-size: 12px; font-family: 'DM Sans', sans-serif; font-weight: 400; line-height: 1.6;
   padding: 12px 16px; border-radius: 8px; white-space: pre-line;
-  min-width: 280px; max-width: 420px;
+  min-width: 320px; max-width: 480px;
   z-index: 9999; pointer-events: none;
   opacity: 0; transition: opacity 0.18s;
   box-shadow: 0 6px 28px rgba(0,0,0,0.5);
@@ -2451,35 +2451,34 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
   'use strict';
 
   var FX = {EUR: 0.88, KRW: 1350, HKD: 7.78};
+  var NON_USD = {'000660.KS':'KRW','272210.KS':'KRW','1810.HK':'HKD','ASML':'EUR','MC.PA':'EUR'};
 
-  function fmtLocal(v, ticker, currency) {
+  function fmtNative(v, ticker) {
     if (v == null || v === 0) return '\u2014';
-    var kr = ['000660.KS','272210.KS'];
-    var hk = ['1810.HK'];
-    var eu = ['ASML','MC.PA'];
-    if (kr.indexOf(ticker) >= 0) {
-      var w = v * FX.KRW;
-      if (w >= 1e6) return '\u20A9' + (w/1e6).toFixed(1) + 'M';
-      if (w >= 1e3) return '\u20A9' + Math.round(w/1e3) + 'K';
-      return '\u20A9' + Math.round(w);
+    var cur = NON_USD[ticker];
+    if (cur === 'KRW') {
+      var w = v; // already in native for projections
+      if (v >= 1e6) return '\u20A9' + (v/1e6).toFixed(1) + 'M';
+      if (v >= 1e3) return '\u20A9' + Math.round(v/1e3) + 'K';
+      return '\u20A9' + Math.round(v);
     }
-    if (hk.indexOf(ticker) >= 0) return 'HK$' + (v * FX.HKD).toFixed(1);
-    if (eu.indexOf(ticker) >= 0) return '\u20AC' + Math.round(v * FX.EUR).toLocaleString();
-    return null;
-  }
-
-  function fmtUSD(v) {
-    if (v == null || v === 0) return '\u2014';
+    if (cur === 'HKD') return 'HK$' + v.toFixed(1);
+    if (cur === 'EUR') return '\u20AC' + (v >= 1000 ? Math.round(v).toLocaleString() : v.toFixed(0));
     if (v >= 1000) return '$' + Math.round(v).toLocaleString();
-    if (v >= 10)   return '$' + v.toFixed(1);
+    if (v >= 10) return '$' + v.toFixed(1);
     return '$' + v.toFixed(2);
   }
 
-  function fmt(v, ticker) {
-    var usd = fmtUSD(v);
-    var local = fmtLocal(v, ticker);
-    if (local && usd !== '\u2014') return usd + '<br><span style="font-size:9px;color:#888">' + local + '</span>';
-    return usd;
+  function fmtDual(v, ticker) {
+    if (v == null || v === 0) return '\u2014';
+    var usd = '$' + (v >= 1000 ? Math.round(v).toLocaleString() : v >= 10 ? v.toFixed(1) : v.toFixed(2));
+    var cur = NON_USD[ticker];
+    if (!cur) return usd;
+    var local;
+    if (cur === 'KRW') { var w = v * FX.KRW; local = '\u20A9' + (w >= 1e6 ? (w/1e6).toFixed(1)+'M' : w >= 1e3 ? Math.round(w/1e3)+'K' : Math.round(w)); }
+    else if (cur === 'HKD') { local = 'HK$' + (v * FX.HKD).toFixed(1); }
+    else if (cur === 'EUR') { local = '\u20AC' + Math.round(v * FX.EUR).toLocaleString(); }
+    return usd + ' <span style="color:#888;font-size:9px">(' + local + ')</span>';
   }
 
   function pct(v, size) {
@@ -2489,63 +2488,76 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     return '<span style="color:'+c+';font-size:'+(size||11)+'px;font-weight:600">'+s+v.toFixed(1)+'%</span>';
   }
 
-  function twoLayerVerdict(ticker, pos, proj) {
-    var u1y = pos.gem_u1y;
-    var gap = pos.soros_gap || 0;
-    var action = pos.action || 'HOLD';
+  /* ── Mini-thesis tooltip ── */
+  function buildThesisTip(ticker, pos, proj) {
     var grade = pos.gem_grade || '?';
     var price = pos.price || 0;
     var conv = pos.conviction || 0;
+    var u1y = pos.gem_u1y;
+    var u5y = pos.gem_u5y;
+    var gap = pos.soros_gap || 0;
+    var sc = pos.scenarios || {};
 
     var near = (u1y != null && u1y < -5) ? 'NEAR-TERM OVERVALUED' : (u1y != null && u1y > 10) ? 'NEAR-TERM UNDERVALUED' : 'NEAR-TERM FAIR';
     var longUp = 0;
     if (proj['5y'] && proj['5y'].upside_pct != null) longUp = proj['5y'].upside_pct;
     else if (proj['3y'] && proj['3y'].upside_pct != null) longUp = proj['3y'].upside_pct;
     var long = longUp > 15 ? 'LONG-TERM UNDERVALUED' : longUp < -10 ? 'LONG-TERM OVERVALUED' : 'LONG-TERM FAIR';
-    var gapNote = gap >= 30 ? ' (+' + gap + '% narrative gap)' : '';
+    var gapNote = gap >= 30 ? ' (+' + gap + '% gap)' : '';
 
-    var line1 = ticker + '  ' + fmtUSD(price) + '  Grade: ' + grade + '  GOD: ' + (pos.god_score||'?') + '  Conv: ' + conv + '/10';
-    var line2 = near + ' \u00B7 ' + long + gapNote;
+    var t = ticker + ' ' + fmtDual(price,ticker) + '  |  Grade: ' + grade + '  |  Conv: ' + conv + '/10';
+    t += '\n' + near + '  \u2022  ' + long + gapNote;
 
-    var soWhat = '';
+    t += '\n\nSCENARIO DEFINITIONS';
+    t += '\n\u2022 WORST (W) = ' + (sc.W || 'Recession + thesis stress + multiple compression');
+    t += '\n\u2022 NORMAL (N) = ' + (sc.N || 'Consensus trajectory + steady demand');
+    t += '\n\u2022 BULL (B) = ' + (sc.B || 'Thesis fully realised + catalysts hit');
+
+    var hl = ['1m','6m','1y','3y','5y'];
+    var labels = ['1M','6M','1Y','3Y','5Y'];
+    var evLine = '\n\nEV vs Current Price';
+    for (var i = 0; i < hl.length; i++) {
+      var p = proj[hl[i]];
+      if (p && p.upside_pct != null) {
+        var s = p.upside_pct >= 0 ? '+' : '';
+        evLine += '\n' + labels[i] + ': ' + s + p.upside_pct.toFixed(0) + '%';
+      }
+    }
+    t += evLine;
+
+    var action = pos.action || 'HOLD';
+    t += '\n\nSO WHAT';
     if (action === 'DIP_WATCH' || action === 'DIP WATCH' || (action.indexOf && action.indexOf('DIP') >= 0)) {
-      var ezl = pos.ez_low || 0; var ezh = pos.ez_high || 0;
-      soWhat = '\n\nSO WHAT: Do NOT buy at ' + fmtUSD(price) + '.\nEntry zone ' + fmtUSD(ezl) + '\u2013' + fmtUSD(ezh) + '.\nSet limit alert. When price enters zone \u2192 ARMED.';
+      t += '\nDo NOT buy at current price. Entry zone ' + fmtNative(pos.ez_low,ticker) + '\u2013' + fmtNative(pos.ez_high,ticker) + '. Set limit alert. When price enters zone \u2192 ARMED.';
     } else if (action === 'HOLD') {
-      soWhat = '\n\nSO WHAT: Do nothing. Thesis intact.\nMonitor weekly. No action required.';
+      t += '\nDo nothing. Thesis intact. Near-term valuation rich, long-term growth on track. Monitor weekly. No action today.';
     } else if (action.indexOf && action.indexOf('ARMED') >= 0) {
-      soWhat = '\n\nSO WHAT: Limit order is LIVE in broker.\nDo nothing. Wait for fill.';
+      t += '\nLimit order LIVE. Do nothing. Wait for fill. One shot \u2014 thesis + price aligned.';
     } else if (action === 'ADD' || (action.indexOf && action.indexOf('ADD') >= 0)) {
-      soWhat = '\n\nSO WHAT: Price in entry zone NOW.\nGEM + Soros aligned. BUY HERE.';
+      t += '\nPrice in entry zone NOW. GEM + Soros aligned. BUY HERE.';
     } else if (action === 'BUY') {
-      soWhat = '\n\nSO WHAT: Buy signal active. Set limit.';
+      t += '\nBuy signal active. Check entry zone. Set limit.';
     } else if (action.indexOf && action.indexOf('EXIT') >= 0) {
-      soWhat = '\n\nSO WHAT: Thesis dead/wounded. Review immediately.';
+      t += '\nThesis dead/wounded. Exit or review IMMEDIATELY.';
+    } else {
+      t += '\n' + (pos.action_reason || 'Monitor and reassess.');
     }
 
-    return line1 + '\n' + line2 + soWhat;
+    return t;
   }
 
+  /* ── Scenario table: native currency only, % is king ── */
   function buildScenarioTD(ticker, proj, pnl, u1y, pos) {
     var h  = ['1m','6m','1y','3y','5y'];
     var hl = ['1M','6M','1Y','3Y','5Y'];
     var hasData = false;
 
-    var horizonModel = {
-      '1m': 'Heston MC P10 (10K paths)',
-      '6m': 'Heston MC + fundamental blend',
-      '1y': 'EPS\u00D7PE / Rev\u00D7PS fundamental',
-      '3y': 'DCF: rev growth + margins',
-      '5y': 'Terminal DCF: full thesis horizon'
-    };
-
-    function makeRow(cls, label, key, tipLabel) {
+    function makeRow(cls, label, key) {
       var cells = hl.map(function(lbl, i) {
         var hkey = h[i];
         var val = proj[hkey] ? proj[hkey][key] : null;
         if (val != null) hasData = true;
-        var tip = lbl + ' ' + tipLabel + ': ' + fmtUSD(val) + '\nModel: ' + horizonModel[hkey];
-        return '<td class="oly-tip" data-tip="' + tip.replace(/"/g,'&quot;') + '">' + fmt(val, ticker) + '</td>';
+        return '<td>' + fmtNative(val, ticker) + '</td>';
       }).join('');
       return '<tr class="' + cls + '"><td>' + label + '</td>' + cells + '</tr>';
     }
@@ -2559,8 +2571,7 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
         if (ev == null || ev === 0) return '<td style="color:#ccc">\u2014</td>';
         var c = (up||0) >= 0 ? '#2d7a2d' : '#c0392b';
         var s = (up||0) >= 0 ? '+' : '';
-        var tip = 'EV at ' + lbl + ' = 50%W + 30%N + 20%B\n= ' + fmtUSD(ev) + ' (' + s + (up||0).toFixed(1) + '% vs now)\nPositive = buy signal';
-        return '<td class="oly-tip" data-tip="' + tip.replace(/"/g,'&quot;') + '" style="font-weight:700;color:'+c+'">' + fmt(ev,ticker) + '<br><span style="font-size:9px">' + s + (up||0).toFixed(0) + '%</span></td>';
+        return '<td style="font-weight:700;color:'+c+'"><strong>' + fmtNative(ev,ticker) + '</strong><br><span style="font-size:9px">' + s + (up||0).toFixed(0) + '%</span></td>';
       }).join('');
       return '<tr class="sc-ev"><td>EV</td>' + cells + '</tr>';
     }
@@ -2577,9 +2588,9 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     var header = '<tr><td></td>' + hl.map(function(l){ return '<th>'+l+'</th>'; }).join('') + '</tr>';
     var table = '<table class="scenario-tbl">'
       + header
-      + makeRow('sc-worst','W','worst','Worst')
-      + makeRow('sc-normal','N','normal','Normal')
-      + makeRow('sc-bull','B','bull','Bull')
+      + makeRow('sc-worst','W','worst')
+      + makeRow('sc-normal','N','normal')
+      + makeRow('sc-bull','B','bull')
       + evRow()
       + vsRow()
       + '</table>';
@@ -2614,22 +2625,19 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
   function applyEvalTip(tr, pos) {
     var evalCell = tr.querySelector('.mx-eval');
     if (!evalCell) return;
-
-    // FIX: Update visible grade letter from actual GEM data
     var trackEl = evalCell.querySelector('[class*="eval-track"]');
     if (trackEl && pos && pos.gem_grade && pos.gem_grade !== '\u2014') {
-      var actualGrade = pos.gem_grade;
-      trackEl.textContent = actualGrade;
-      trackEl.className = 'eval-track-' + actualGrade.toLowerCase();
+      var g = pos.gem_grade;
+      trackEl.textContent = g;
+      trackEl.className = 'eval-track-' + g.toLowerCase();
       trackEl.classList.add('oly-tip');
-      trackEl.dataset.tip = 'GEM Grade: ' + actualGrade + '\n\nA = 1y EV \u2265+20% AND 5y EV \u2265+100% AND worst >\u221260%\nB = 1y EV \u2265+10% AND 5y EV \u2265+50% AND worst >\u221250%\nC = 1y EV \u22650% AND 5y EV \u226520%\nD = Fails thresholds\n\nActual: 1y=' + (pos.gem_u1y != null ? pos.gem_u1y.toFixed(1)+'%' : '?') + ' 5y=' + (pos.gem_u5y != null ? pos.gem_u5y.toFixed(1)+'%' : '?') + '\n\nA = Buy signal | B = Hold/watch | C/D = No add';
+      trackEl.dataset.tip = 'GEM Grade: ' + g + '\n\nA = 1y EV \u2265+20% AND 5y \u2265+100%\nB = 1y \u2265+10% AND 5y \u2265+50%\nC = Marginal | D = Fails\n\nActual: 1y=' + (pos.gem_u1y != null ? pos.gem_u1y.toFixed(1)+'%' : '?') + ' 5y=' + (pos.gem_u5y != null ? pos.gem_u5y.toFixed(1)+'%' : '?');
     }
-
     var gatesEl = evalCell.querySelector('.eval-gates');
     if (gatesEl && !gatesEl.dataset.tipped) {
       gatesEl.dataset.tipped = '1';
       gatesEl.classList.add('oly-tip');
-      gatesEl.dataset.tip = 'Thesis Gates: ' + gatesEl.textContent.trim() + '\n\nP1=Paradigm P2=Capital P3=Price P4=Thesis\nAll gates = max conviction';
+      gatesEl.dataset.tip = 'Gates: ' + gatesEl.textContent.trim() + '\nP1=Paradigm P2=Capital P3=Price P4=Thesis';
     }
   }
 
@@ -2637,19 +2645,27 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     var actEl = tr.querySelector('.mx-act');
     if (actEl && !actEl.dataset.tip) {
       var tips = {
-        'HOLD': 'HOLD\n\nThesis intact. Price not in entry zone.\nDo nothing. Monitor weekly.',
-        'DIP WATCH': 'DIP WATCH\n\nNarrative gap detected.\nPrice above entry zone \u2014 do not chase.\nSet alert. When zone \u2192 ARMED.',
-        'ARMED': 'ARMED\n\nLimit order in broker.\nDo nothing. Wait for fill.',
-        'ADD': 'ADD\n\nPrice in entry zone NOW.\nBuy here.',
-        'BUY': 'BUY\n\nActive buy signal.\nSet limit.',
-        'EXIT REVIEW': 'EXIT REVIEW\n\nThesis wounded.\nQuantify damage.',
-        'EXIT NOW': 'EXIT NOW\n\nThesis dead. Exit now.',
-        'WATCH': 'WATCH\n\nNo position yet.\nWait for catalyst.',
-        'WAIT': 'WAIT\n\nToo early. Do not act.',
-        'IPO': 'IPO\n\nPrepare capital for listing.'
+        'HOLD':'HOLD\nThesis intact. No action.',
+        'DIP WATCH':'DIP WATCH\nAbove entry zone. Wait.',
+        'ARMED':'ARMED\nLimit live. Wait for fill.',
+        'ADD':'ADD\nIn entry zone. Buy.',
+        'BUY':'BUY\nBuy signal. Set limit.',
+        'EXIT REVIEW':'EXIT REVIEW\nThesis wounded.',
+        'EXIT NOW':'EXIT NOW\nThesis dead. Exit.',
+        'WATCH':'WATCH\nNo position. Wait.',
+        'WAIT':'WAIT\nToo early.',
+        'IPO':'IPO\nPrepare capital.'
       };
       actEl.classList.add('oly-tip');
-      actEl.dataset.tip = tips[action] || 'Action: ' + action;
+      actEl.dataset.tip = tips[action] || action;
+    }
+  }
+
+  /* ── Also update the "Today" price cell to show dual currency ── */
+  function updatePriceCell(tr, pos, ticker) {
+    var priceEl = tr.querySelector('.pnow');
+    if (priceEl && pos.price && pos.price > 0) {
+      priceEl.innerHTML = fmtDual(pos.price, ticker);
     }
   }
 
@@ -2658,7 +2674,6 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     allRows.forEach(function(tr) {
       var ticker = tr.getAttribute('data-ticker');
       if (!ticker) return;
-
       var pos = positions[ticker] || {};
       var proj = pos.projections || {};
 
@@ -2672,18 +2687,17 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
         td.setAttribute('colspan', '5');
         td.className = 'mx-scenarios';
         td.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y, pos);
-        var verdict = twoLayerVerdict(ticker, pos, proj);
         td.classList.add('oly-tip');
-        td.dataset.tip = verdict;
+        td.dataset.tip = buildThesisTip(ticker, pos, proj);
         parent.insertBefore(td, firstPt);
         mxPts.forEach(function(pt) { parent.removeChild(pt); });
       } else if (existing) {
         existing.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y, pos);
-        var verdict2 = twoLayerVerdict(ticker, pos, proj);
         existing.classList.add('oly-tip');
-        existing.dataset.tip = verdict2;
+        existing.dataset.tip = buildThesisTip(ticker, pos, proj);
       }
 
+      updatePriceCell(tr, pos, ticker);
       applyEvalTip(tr, pos);
       var actionText = pos.action || (tr.querySelector('.mx-act') ? tr.querySelector('.mx-act').textContent.trim() : 'HOLD');
       applyActionTip(tr, actionText);

@@ -147,6 +147,7 @@ def run_engine(data):
             "ranto_bias": ranto_bias.get(ticker,0),
             "soros_gap":  cfg.get("soros_gap",0),
             "soros_type": cfg.get("soros_type",""),
+            "scenarios": data.get("scenarios",{}).get(ticker,{}),
         }
         scored.append((score, ticker))
 

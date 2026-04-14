@@ -38,6 +38,159 @@ UNIVERSE = {
     "IAU":       {"entry":0,     "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"neutral", "conviction":3, "sector":"Tactical",    "status":"portfolio","god_score":30},
 }
 
+SCENARIOS = {
+  "PLTR": {
+    "W": "Defense budget cuts + AI spending freeze + multiple compression",
+    "N": "Steady gov contracts + AIP enterprise growth",
+    "B": "AI mega-cycle + NATO adoption + commercial inflection"
+  },
+  "TSM": {
+    "W": "China invasion risk + foundry overcapacity + smartphone slump",
+    "N": "Consensus semi cycle + steady foundry demand",
+    "B": "AI mega-cycle + N2 monopoly + CoWoS shortage premium"
+  },
+  "000660.KS": {
+    "W": "Memory oversupply + China DRAM dumping + smartphone slump",
+    "N": "HBM3E ramp + steady server demand",
+    "B": "AI memory supercycle + HBM monopoly pricing power"
+  },
+  "1810.HK": {
+    "W": "China economic slowdown + EV margin compression",
+    "N": "Smartphone + IoT steady growth + EV scale",
+    "B": "EV breakout + ecosystem lock-in + global expansion"
+  },
+  "UEC": {
+    "W": "Uranium price collapse + permitting delays",
+    "N": "Burke Hollow production ramp + utility contracts",
+    "B": "Nuclear renaissance + spot uranium $120+ + US energy security"
+  },
+  "URNM": {
+    "W": "Uranium spot crash + ETF outflows",
+    "N": "Structural uranium deficit + utility restocking",
+    "B": "Nuclear renaissance + 50 new reactors globally"
+  },
+  "RKLB": {
+    "W": "Neutron delay + launch failure + funding gap",
+    "N": "Electron cadence + Neutron 2027 + backlog growth",
+    "B": "Neutron success + constellation wins + space infrastructure"
+  },
+  "PL": {
+    "W": "NASA budget cuts + satellite failure + cash burn",
+    "N": "NASA contract expansion + defense demand",
+    "B": "Climate data monopoly + defense upside + constellation expansion"
+  },
+  "TMO": {
+    "W": "Biotech funding winter + pharma capex cuts",
+    "N": "Steady life sciences demand + bolt-on M&A",
+    "B": "Gene therapy boom + pandemic preparedness spending"
+  },
+  "KTOS": {
+    "W": "Defense sequestration + drone competition",
+    "N": "Valkyrie program + steady defense budgets",
+    "B": "AI drone adoption + autonomous systems mega-trend"
+  },
+  "COHR": {
+    "W": "Fiber glut + datacom pricing pressure",
+    "N": "AI datacom growth + photonics demand",
+    "B": "800G/1.6T upgrade supercycle + silicon photonics monopoly"
+  },
+  "VRT": {
+    "W": "Data center build pause + competition + margin pressure",
+    "N": "Steady DC power demand + Vertiv backlog",
+    "B": "AI power density surge + cooling monopoly + pricing power"
+  },
+  "NTR": {
+    "W": "Fertilizer price collapse + crop oversupply",
+    "N": "Steady ag demand + potash/nitrogen pricing",
+    "B": "Food security crisis + fertilizer supply disruption + China P ban"
+  },
+  "272210.KS": {
+    "W": "Humanoid delay + competition from China",
+    "N": "Factory automation growth + robotics adoption",
+    "B": "Humanoid breakout + Samsung/Hyundai partnerships"
+  },
+  "NVDA": {
+    "W": "AI spending freeze + China export ban + AMD competition",
+    "N": "Blackwell ramp + enterprise AI adoption",
+    "B": "AGI compute layer monopoly + sovereign AI + $10T TAM"
+  },
+  "OKLO": {
+    "W": "NRC rejection + technology failure + no revenue",
+    "N": "SMR certification + Meta power deal + first reactor",
+    "B": "SMR mass deployment + nuclear renaissance + 100 reactors"
+  },
+  "CCJ": {
+    "W": "Uranium spot crash + Canadian regulatory risk",
+    "N": "Utility contracts + steady production + spot $80",
+    "B": "Nuclear renaissance + spot $150 + western supply premium"
+  },
+  "ASML": {
+    "W": "Recession + AI capex freeze + China export ban",
+    "N": "Consensus semi cycle + steady foundry demand",
+    "B": "AI mega-cycle + EUV monopoly + new fab orders"
+  },
+  "ASTS": {
+    "W": "Satellite failure + spectrum issues + cash burn",
+    "N": "BlueBird constellation + carrier partnerships",
+    "B": "Direct-to-device monopoly + 2B subscriber TAM"
+  },
+  "BEAM": {
+    "W": "Clinical failure + FDA rejection + cash burn",
+    "N": "Phase 1/2 data readout + partnership deals",
+    "B": "Base editing platform proves out + $50B gene therapy TAM"
+  },
+  "NTLA": {
+    "W": "Phase 3 TTR failure + competition + dilution",
+    "N": "TTR approval path + pipeline progress",
+    "B": "In-vivo CRISPR proves safe + platform value unlocked"
+  },
+  "AMAT": {
+    "W": "Semi capex downcycle + China restrictions",
+    "N": "Steady equipment demand + technology transitions",
+    "B": "AI fab buildout supercycle + ICAPS leadership"
+  },
+  "FCX": {
+    "W": "Copper price crash + Indonesian political risk",
+    "N": "Steady copper demand + Grasberg production",
+    "B": "AI data center copper demand + green energy supercycle"
+  },
+  "CWEN": {
+    "W": "Interest rate spike + PPA renegotiation risk",
+    "N": "Contracted cash flows + dividend growth",
+    "B": "Renewable premium pricing + acquisition upside"
+  },
+  "UUUU": {
+    "W": "Uranium/REE price crash + permitting issues",
+    "N": "White Mesa production + REE diversification",
+    "B": "US energy security premium + REE supply chain decoupling"
+  },
+  "CRSP": {
+    "W": "Casgevy commercial failure + competition + dilution",
+    "N": "Casgevy steady launch + pipeline progress",
+    "B": "CRISPR platform dominance + ex-vivo scale"
+  },
+  "ARKQ": {
+    "W": "Innovation selloff + rate shock + redemptions",
+    "N": "Robotics/AI basket steady growth",
+    "B": "Autonomous revolution + robotics adoption curve"
+  },
+  "BOTZ": {
+    "W": "Robotics hype fade + rate shock + outflows",
+    "N": "Factory automation steady growth",
+    "B": "Humanoid revolution + AI-robot convergence"
+  },
+  "MC.PA": {
+    "W": "Luxury demand collapse + China slowdown",
+    "N": "Steady luxury demand + pricing power",
+    "B": "Aspirational class expansion + brand monopoly"
+  },
+  "IAU": {
+    "W": "Gold crash + real rates spike + dollar surge",
+    "N": "Inflation hedge + central bank buying",
+    "B": "Currency crisis + gold $4000+ + de-dollarization"
+  }
+}
+
 def get_live_prices():
     import yfinance as yf
     tickers = list(UNIVERSE.keys())
@@ -81,4 +234,5 @@ def get_all_data():
         "dry_powder_eur": 1500.0,
         "vix": prices.get("^VIX", 19.12),
         "blog_ranto28": ranto,
+        "scenarios": SCENARIOS,
     }

@@ -160,6 +160,7 @@ def build_dashboard_state(state):
             "projections": r["projections"],
             "soros_gap":   r["soros_gap"],
             "ranto_bias":  r["ranto_bias"],
+            "scenarios":   r.get("scenarios",{}),
         }
     path = os.path.join(BASE, "data", "dashboard_state.json")
     with open(path, "w", encoding="utf-8") as f:
