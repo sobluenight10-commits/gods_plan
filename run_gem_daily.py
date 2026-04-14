@@ -14,16 +14,55 @@ from minerva_gem import evaluate
 INPUT_FILE  = os.path.join(os.path.dirname(__file__), "gem_inputs", "portfolio_all.json")
 OUTPUT_DIR  = os.path.join(os.path.dirname(__file__), "gem_results")
 
+def fetch_live_prices(tickers):
+    """Fetch FRESH prices from yfinance. Returns {ticker: price} dict."""
+    prices = {}
+    try:
+        import yfinance as yf
+        print(f"[GEM] Fetching live prices for {len(tickers)} tickers...")
+        for t in tickers:
+            try:
+                h = yf.Ticker(t).history(period="5d")
+                if not h.empty:
+                    live = round(float(h["Close"].iloc[-1]), 4)
+                    if live > 0:
+                        prices[t] = live
+            except Exception as e:
+                print(f"  [WARN] {t}: yfinance failed: {e}")
+        print(f"[GEM] Got live prices for {len(prices)}/{len(tickers)} tickers")
+    except ImportError:
+        print("[GEM] WARNING: yfinance not installed")
+    return prices
+
 def run():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     with open(INPUT_FILE, "r") as f:
         positions = json.load(f)
 
+    # LIVE PRICE OVERRIDE — always use freshest yfinance prices
+    all_tickers = [p["ticker"] for p in positions]
+    live_prices = fetch_live_prices(all_tickers)
+
+    updated = 0
+    for p in positions:
+        t = p["ticker"]
+        if t in live_prices:
+            old = p.get("current_price", 0)
+            new = live_prices[t]
+            p["current_price"] = new
+            if abs(new - old) / max(old, 1) > 0.03:
+                print(f"  [PRICE] {t}: {old} -> {new} ({(new-old)/max(old,1)*100:+.1f}%)")
+                updated += 1
+
+    if updated:
+        print(f"[GEM] {updated} prices significantly changed")
+    else:
+        print("[GEM] All prices current (or yfinance unavailable)")
+
     results = []
     grade_changes = []
 
-    # Load previous day result if exists for change detection
     prev_grades = {}
     prev_files = sorted([f for f in os.listdir(OUTPUT_DIR) if f.startswith("gem_") and f.endswith(".json")])
     if prev_files:
@@ -34,26 +73,6 @@ def run():
                     prev_grades[r["ticker"]] = r["grading"]["grade"]
         except Exception:
             pass
-
-    # LIVE PRICE OVERRIDE — always use freshest yfinance prices
-    try:
-        import yfinance as yf
-        print(f"Fetching live prices for {len(positions)} tickers...")
-        for p in positions:
-            try:
-                h = yf.Ticker(p["ticker"]).history(period="2d")
-                if not h.empty:
-                    live = round(float(h["Close"].iloc[-1]), 4)
-                    if live > 0:
-                        old = p.get("current_price", 0)
-                        p["current_price"] = live
-                        if abs(live - old) / max(old, 1) > 0.05:
-                            print(f"  {p['ticker']}: {old} -> {live} (UPDATED)")
-            except Exception as e:
-                print(f"  {p['ticker']}: yfinance failed: {e}")
-        print("Live prices fetched")
-    except ImportError:
-        print("WARNING: yfinance not available")
 
     for pos in positions:
         result = evaluate(pos)
@@ -68,7 +87,6 @@ def run():
             })
         results.append(result)
 
-    # Sort by grade A→D then by 5y upside desc
     grade_order = {"A": 0, "B": 1, "C": 2, "D": 3}
     results.sort(key=lambda r: (
         grade_order.get(r["grading"]["grade"], 9),
