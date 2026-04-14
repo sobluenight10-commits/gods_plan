@@ -41,7 +41,7 @@ TICKERS = [
     ("CWEN",      "CWEN",      "USD"),
 ]
 
-OUT = "/var/www/html/data/prices.json"
+OUT = "/root/gods_plan/data/prices.json"
 ALERT_STATE = "/root/gods_plan/data/plunge_alerts_today.json"
 BERLIN = pytz.timezone("Europe/Berlin")
 INTERVAL = 60
