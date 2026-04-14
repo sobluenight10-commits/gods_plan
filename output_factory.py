@@ -19,8 +19,8 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 
 # NOTE: Telegram credentials must be provided via environment variables.
 # This avoids committing secrets into the repository.
-BOT_TOKEN = os.getenv("OLYMPUS_BOT_TOKEN", "")
-CHAT_ID   = os.getenv("OLYMPUS_CHAT_ID", "")
+BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+CHAT_ID   = os.getenv("TELEGRAM_CHAT_ID", "")
 
 def send_telegram(text):
     if not BOT_TOKEN or not CHAT_ID:
