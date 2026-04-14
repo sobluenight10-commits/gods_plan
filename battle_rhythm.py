@@ -1480,5 +1480,28 @@ def generate_briefing(briefing_id: str, force: bool = False) -> Optional[str]:
         return None
 
 
+
+def run_morning_brief_v2():
+    """Run MINERVA-10X morning brief with live prices."""
+    import importlib.util, os
+    spec = importlib.util.spec_from_file_location(
+        "morning_brief_v2",
+        os.path.join(os.path.dirname(__file__), "morning_brief_v2.py")
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+
+    import json
+    with open(os.path.join(os.path.dirname(__file__), "data", "directives.json"), encoding="utf-8") as f:
+        directives = json.load(f)
+    liq = directives.get("liquidity", {})
+
+    brief = mod.build_brief(
+        liq_b=liq.get("net_liq_b", 2368),
+        liq_delta=liq.get("vs_last_week_b", 189),
+        vix=19.12
+    )
+    return brief
+
 if __name__ == "__main__":
     run_news_pulse()

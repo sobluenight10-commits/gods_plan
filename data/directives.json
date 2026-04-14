@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-14 08:40 CET",
+  "last_updated": "2026-04-14 09:00 CET",
   "one_command": "Set OKLO $44 + CCJ $100 + UEC €11 limits in Trade Republic — deploy full €1,500 post April 15",
   "actions": [
     {
@@ -76,10 +76,11 @@
     "direction": "EXPANDING",
     "direction_arrow": "↑",
     "vs_last_week_b": 189,
-    "action": "DEPLOY dry powder after April 15",
-    "historical_context": "2023 SVB level but direction EXPANDING post-tax TGA drain",
-    "last_updated": "2026-04-14 08:40 CET",
-    "source": "FRED manual April 13 2026"
+    "vs_last_week_sign": "+",
+    "action": "DEPLOY dry powder after April 15 — TGA drain = liquidity expanding",
+    "historical_context": "2023 SVB level but EXPANDING direction post-tax season",
+    "last_updated": "2026-04-14 09:00 CET",
+    "source": "FRED manual"
   },
   "god_scores": {
     "000660.KS": {
