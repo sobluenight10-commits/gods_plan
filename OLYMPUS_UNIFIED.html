@@ -1473,6 +1473,21 @@ MINERVA ACTION CHANGE RULE (permanent):
     <div class="liq-updated" id="liqUpdated">Last updated: —</div>
   </div>
 
+  <div class="card" style="margin-top:18px;padding:16px 18px;border:1px solid rgba(196,168,79,0.35);">
+    <div class="sec-t" style="margin-bottom:8px;">AUTO EXPECTATION ENGINE</div>
+    <div id="liqBand" style="font-size:13px;color:var(--ink2);line-height:1.55;">—</div>
+    <div id="liqVel" style="font-size:12px;color:var(--ink3);margin-top:8px;">—</div>
+    <div id="liqSurprise" style="font-size:12px;color:var(--ink3);margin-top:4px;">—</div>
+    <div id="liqRegime" style="font-size:12px;color:var(--ink);margin-top:8px;font-weight:700;">—</div>
+    <div id="liqExpectNote" style="font-size:11px;color:var(--ink3);margin-top:6px;font-style:italic;">—</div>
+  </div>
+
+  <div class="card" style="margin-top:16px;padding:16px 18px;border:1px solid rgba(79,70,229,0.35);">
+    <div class="sec-t" style="margin-bottom:8px;">TECH RADAR · AUTO RSS</div>
+    <div id="techRadarList" style="font-size:12px;line-height:1.5;color:var(--ink2);">Loading…</div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:10px;">Feeds: HN, TechCrunch, Verge, Ars, NYT Tech — high-score items also ping Telegram.</div>
+  </div>
+
   <div class="liq-scale">
     <div style="font-size:11px;font-weight:800;letter-spacing:2px;color:var(--ink);margin-bottom:6px;">VISUAL SCALE · $0B → $5,000B</div>
     <div class="liq-scale-cap">
@@ -2261,7 +2276,8 @@ async function loadLiqTab() {
     const d = await r.json();
     const liq = d.liquidity || {};
 
-    const net = liq.net_liq_value != null ? Number(liq.net_liq_value) : 0;
+    const netRaw = liq.net_liq_value != null ? liq.net_liq_value : liq.net_liq_b;
+    const net = netRaw != null ? Number(netRaw) : 0;
     const netB = Math.round(net);
     const netEl = document.getElementById("liqNet");
     const zoneEl = document.getElementById("liqZone");
@@ -2282,6 +2298,41 @@ async function loadLiqTab() {
     if (upd) upd.textContent = "Last updated: " + (liq.last_updated || "—");
     const todayHist = document.getElementById("liqTodayHist");
     if (todayHist) todayHist.textContent = "$" + netB + "B";
+
+    const lb = document.getElementById("liqBand");
+    const lv = document.getElementById("liqVel");
+    const ls = document.getElementById("liqSurprise");
+    const lr = document.getElementById("liqRegime");
+    const ln = document.getElementById("liqExpectNote");
+    if (lb && liq.expectation_low_b != null && liq.expectation_high_b != null) {
+      lb.innerHTML = "Corridor (rolling): <strong>$" + Math.round(liq.expectation_low_b).toLocaleString() + "B – $" +
+        Math.round(liq.expectation_high_b).toLocaleString() + "B</strong> · mid <strong>$" +
+        Math.round(liq.expectation_mid_b || 0).toLocaleString() + "B</strong> · status <strong>" +
+        (liq.corridor_status || "—") + "</strong>";
+    } else if (lb) lb.textContent = "Corridor: collecting FRED history (need a few prints) — bootstrap band in pre_alarm_engine.";
+    if (lv) {
+      var v7 = liq.velocity_7d_b != null ? liq.velocity_7d_b + "B" : "—";
+      var v4 = liq.velocity_4w_b != null ? liq.velocity_4w_b + "B" : "—";
+      lv.textContent = "7d velocity: " + v7 + " · 4w velocity: " + v4;
+    }
+    if (ls) ls.textContent = "Surprise vs mid: " + (liq.surprise_score != null ? liq.surprise_score : "—") +
+      " (GEM macro_liquidity_regime: " + (liq.macro_liquidity_regime || "—") + ")";
+    if (lr) lr.textContent = "Regime → " + String(liq.macro_liquidity_regime || "—").toUpperCase() + " (tight / neutral / loose)";
+    if (ln) ln.textContent = liq.expectation_note || "";
+
+    const tr = document.getElementById("techRadarList");
+    if (tr) {
+      var hdrs = (d.tech_radar && d.tech_radar.headlines) ? d.tech_radar.headlines : [];
+      if (hdrs.length) {
+        tr.innerHTML = hdrs.map(function(h) {
+          return "<div style=\"margin-bottom:10px;\"><span style=\"color:var(--gold);\">[" + (h.score || 0) + "]</span> " +
+            "<a href=\"" + String(h.link || "#").replace(/"/g, "&quot;") + "\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--blue);\">" +
+            String(h.title || "").replace(/</g, "&lt;") + "</a> <span style=\"color:var(--ink3);\">· " + String(h.source || "") + "</span></div>";
+        }).join("");
+      } else {
+        tr.textContent = "No tech headlines yet — scheduler will populate (or run: python main.py --radar on server).";
+      }
+    }
 
     const pct = Math.min(95, Math.max(2, (net / 5000) * 100));
     const marker = document.getElementById("liqMarker");

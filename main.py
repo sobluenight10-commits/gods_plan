@@ -272,15 +272,41 @@ def _setup_schedule():
     schedule.every(15).minutes.do(check_news_alerts)
     schedule.every(10).minutes.do(check_sec_filings)
 
+    def _job_fred_refresh():
+        try:
+            from pre_alarm_system import run_scheduled_fred_refresh
+
+            run_scheduled_fred_refresh()
+        except Exception as e:
+            logger.warning("FRED refresh job: %s", e)
+
+    def _job_tech_radar():
+        try:
+            from tech_radar import run_tech_radar_scan
+
+            run_tech_radar_scan(send_telegram_high=True)
+        except Exception as e:
+            logger.warning("Tech radar job: %s", e)
+
+    _fr = int(getattr(app_config, "FRED_REFRESH_INTERVAL_MINUTES", 60))
+    _fr = max(15, _fr)
+    _tr = int(getattr(app_config, "TECH_RADAR_INTERVAL_MINUTES", 30))
+    _tr = max(10, _tr)
+    schedule.every(_fr).minutes.do(_job_fred_refresh)
+    schedule.every(_tr).minutes.do(_job_tech_radar)
+
     logger.info(
         "Registered %s daily + %s weekly + news pulse every %s min "
         "(Berlin window %s–%s) + thesis/spike scan every 5 min (weekdays 15:30–22:00 Berlin) "
-        "+ NewsAPI keyword scan every 15 min (weekdays 06:30–23:30 Berlin)",
+        "+ NewsAPI keyword scan every 15 min (weekdays 06:30–23:30 Berlin) "
+        "+ FRED/pre-alarm every %s min + tech radar every %s min",
         len(DAILY_SCHEDULE),
         len(WEEKLY_SCHEDULE),
         pulse_min,
         p_start,
         p_end,
+        _fr,
+        _tr,
     )
 
 
@@ -336,6 +362,8 @@ def start_full_system():
             "· Thesis/spike tier scan every 5 min (weekdays 15:30–22:00 Berlin, THESIS_ALERT_TICKERS & ALERT_TIER_*)",
             "· NewsAPI keyword scan every 15 min (weekdays 06:30–23:30 Berlin, set NEWS_API_KEY)",
             f"· Blog RSS every {BLOG_FETCH_INTERVAL_MINUTES} min (ranto28)",
+            f"· FRED §11 + liquidity pre-alarm every {int(getattr(app_config, 'FRED_REFRESH_INTERVAL_MINUTES', 60))} min",
+            f"· Tech radar (RSS) every {int(getattr(app_config, 'TECH_RADAR_INTERVAL_MINUTES', 30))} min — /tech",
         ]
         send_telegram("\n".join(lines))
     except Exception as e:
@@ -398,9 +426,19 @@ def main():
     parser.add_argument("--schedule", action="store_true")
     parser.add_argument("--ping", action="store_true")
     parser.add_argument("--olympus", action="store_true")
+    parser.add_argument("--radar", action="store_true", help="Run tech radar + FRED pre-alarm once")
     args = parser.parse_args()
 
     validate_config()
+
+    if args.radar:
+        from pre_alarm_system import run_scheduled_fred_refresh
+        from tech_radar import run_tech_radar_scan
+
+        run_scheduled_fred_refresh()
+        run_tech_radar_scan(send_telegram_high=True)
+        logger.info("Manual --radar: FRED + tech radar complete")
+        return
 
     if args.ping:
         from telegram_bot import send_test_ping

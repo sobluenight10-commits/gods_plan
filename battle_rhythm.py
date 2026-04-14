@@ -148,7 +148,17 @@ def fetch_fred_liquidity() -> dict:
             hist_parallel = "2025 peak — strong conditions"
         else:
             hist_parallel = "2020-2021 COVID liquidity peak"
+        out["hist_parallel"] = hist_parallel
+        out["res_b"] = res_b
+        out["tga_b"] = tga_b
+        out["rrp_b"] = rrp_b
         write_liquidity_to_directives(net, res_b, tga_b, rrp_b, change)
+        try:
+            from pre_alarm_system import enrich_liquidity_directives_and_alarm
+
+            enrich_liquidity_directives_and_alarm(out)
+        except Exception as _e:
+            logger.warning("pre_alarm enrich: %s", _e)
 
     return out
 

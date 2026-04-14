@@ -40,6 +40,32 @@ TITAN_SYSTEM_URL = os.getenv(
     "http://5.189.176.185/index.html",
 ).strip()
 
+# ── OLYMPUS pre-alarm (liquidity expectation + velocity) ─────────────────────
+LIQUIDITY_ROLLING_DAYS = int(os.getenv("LIQUIDITY_ROLLING_DAYS", "90"))
+PRE_ALARM_SURPRISE_ALERT = float(os.getenv("PRE_ALARM_SURPRISE_ALERT", "0.82"))
+PRE_ALARM_VELOCITY_ALERT_B = float(os.getenv("PRE_ALARM_VELOCITY_ALERT_B", "85"))
+PRE_ALARM_CORRIDOR_MARGIN_B = float(os.getenv("PRE_ALARM_CORRIDOR_MARGIN_B", "15"))
+LIQUIDITY_BOOTSTRAP_LOW_B = float(os.getenv("LIQUIDITY_BOOTSTRAP_LOW_B", "2100"))
+LIQUIDITY_BOOTSTRAP_HIGH_B = float(os.getenv("LIQUIDITY_BOOTSTRAP_HIGH_B", "2900"))
+FRED_REFRESH_INTERVAL_MINUTES = int(os.getenv("FRED_REFRESH_INTERVAL_MINUTES", "60"))
+
+# Tech radar RSS (comma-separated URLs; empty = built-in list in tech_radar.py)
+_tech_feeds = os.getenv("TECH_RADAR_FEEDS", "").strip()
+TECH_RADAR_FEEDS: List[str] = (
+    [x.strip() for x in _tech_feeds.split(",") if x.strip()] if _tech_feeds else []
+)
+TECH_RADAR_INTERVAL_MINUTES = int(os.getenv("TECH_RADAR_INTERVAL_MINUTES", "30"))
+TECH_RADAR_SCORE_ALERT = int(os.getenv("TECH_RADAR_SCORE_ALERT", "8"))
+TECH_RADAR_MAX_ITEMS = int(os.getenv("TECH_RADAR_MAX_ITEMS", "24"))
+PORTFOLIO_TECH_TICKERS: tuple = tuple(
+    x.strip().upper()
+    for x in os.getenv(
+        "PORTFOLIO_TECH_TICKERS",
+        "TSM,NVDA,ASML,AMD,PLTR,ARM,INTC,QCOM,AVGO,MU,COHR,VRT,RKLB,AMAT",
+    ).split(",")
+    if x.strip()
+)
+
 # NewsAPI (keyword scan in price_alert.check_news_alerts)
 NEWS_API_KEY = os.getenv("NEWS_API_KEY", "")
 

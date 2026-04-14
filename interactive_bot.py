@@ -103,6 +103,8 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• /risk — Portfolio risk summary\n"
         "• /risk PL — Deep risk screen for ticker\n"
         "• /fund NVDA — Quarterly fundamentals\n"
+        "• /tech — Tech radar (RSS) top headlines\n"
+        "• /liq — FRED refresh + §11 pre-alarm into dashboard\n"
         "• /reset — Clear conversation memory\n\n"
         "<b>Or just type:</b>\n"
         "\"CRISPR status\" · \"should I buy UEC?\" · \"oil today?\"\n"
@@ -186,6 +188,56 @@ async def cmd_blog(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await em.reply_text("⚠️ Blog timed out (60s). Naver may be slow.")
     except Exception as e:
         await em.reply_text(f"⚠️ {str(e)[:200]}")
+
+
+async def cmd_tech(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    em = update.effective_message
+    if not em:
+        return
+    await em.reply_text("🛰 Polling tech RSS… (~20s)")
+    try:
+        loop = asyncio.get_event_loop()
+        pulse = await loop.run_in_executor(None, _sync_tech_radar)
+        items = (pulse or {}).get("items") or []
+        if not items:
+            await em.reply_text("📭 No headlines stored yet.", disable_web_page_preview=True)
+            return
+        lines = []
+        for x in items[:8]:
+            lines.append(f"· [{x.get('score', 0)}] {x.get('title', '')[:100]}")
+            lines.append(f"  {x.get('link', '')[:120]}")
+        await em.reply_text("\n".join(lines)[:4000], disable_web_page_preview=True)
+    except Exception as e:
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
+
+
+def _sync_tech_radar() -> dict:
+    from tech_radar import run_tech_radar_scan
+
+    return run_tech_radar_scan(send_telegram_high=False)
+
+
+async def cmd_liquidity(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    em = update.effective_message
+    if not em:
+        return
+    await em.reply_text("⚡ Refreshing FRED + pre-alarm…")
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _sync_liq_refresh)
+        await em.reply_text(
+            "✅ Liquidity + expectation corridor written to directives.json — "
+            "reload §11 LIQUIDITY on the dashboard.",
+            disable_web_page_preview=True,
+        )
+    except Exception as e:
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
+
+
+def _sync_liq_refresh() -> None:
+    from pre_alarm_system import run_scheduled_fred_refresh
+
+    run_scheduled_fred_refresh()
 
 
 def _sync_blog() -> str:
@@ -670,6 +722,8 @@ def register_interactive_handlers(app: Application) -> None:
     app.add_handler(CommandHandler("risk", cmd_risk), group=0)
     app.add_handler(CommandHandler("fundamentals", cmd_fundamentals), group=0)
     app.add_handler(CommandHandler("fund", cmd_fundamentals), group=0)
+    app.add_handler(CommandHandler("tech", cmd_tech), group=0)
+    app.add_handler(CommandHandler("liq", cmd_liquidity), group=0)
     app.add_handler(CommandHandler("reset", cmd_reset), group=0)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message), group=1)
     app.add_error_handler(_error_handler)
