@@ -77,14 +77,22 @@ def ranto28_engine(posts, universe_tickers):
     action_posts = []
     for p in posts:
         affected = [t for t in p.get("affected_tickers",[]) if t in universe_tickers]
-        if not affected: continue
         sig = p.get("signal","NONE")
         for t in affected:
             if sig=="BUY":    bias[t] = min(15, bias[t]+10)
             elif sig=="WATCH": bias[t] = min(15, bias[t]+5)
             elif sig=="REDUCE":bias[t] = max(-15,bias[t]-10)
-        action_posts.append({"title":p["title"],"theme":p.get("macro_theme",""),
-                             "tickers":affected,"action":sig,"summary":p.get("summary","")})
+        action_posts.append({
+            "title": p.get("title",""),
+            "date": p.get("date",""),
+            "url": p.get("url",""),
+            "theme": p.get("macro_theme",""),
+            "tickers": affected,
+            "affected_tickers": p.get("affected_tickers",[]),
+            "action": sig,
+            "summary": p.get("summary",""),
+            "sectors": p.get("sectors",[]),
+        })
     return action_posts, bias
 
 def score_action(action_result, gem, pos_cfg, ranto_bias, macro):
