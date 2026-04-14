@@ -2841,6 +2841,13 @@ window._GEM_META = {
   grade_summary: {"A+": 1, "A": 8, "B+": 14, "B": 3, "C+": 3, "C": 1}
 };
 
+const TICKER_NAMES = {};
+document.querySelectorAll('.mx-row').forEach(function(tr) {
+  var tk = tr.getAttribute('data-ticker');
+  var nm = tr.querySelector('.mx-nm');
+  if (tk && nm) TICKER_NAMES[tk] = nm.textContent.trim();
+});
+
 function gemBadge(grade) {
   const bg = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
   const fg = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
@@ -2913,6 +2920,26 @@ function injectGemIntoTables() {
     td.appendChild(inner);
     sub.appendChild(td);
     mainRow.insertAdjacentElement('afterend', sub);
+  });
+}
+
+function syncEvalWithGem() {
+  var gradeClass = {
+    S:"eval-track-s","A+":"eval-track-ap",A:"eval-track-a",
+    "B+":"eval-track-bp",B:"eval-track-b","C+":"eval-track-cp",
+    C:"eval-track-c",D:"eval-track-d",F:"eval-track-f"
+  };
+  document.querySelectorAll('.mx-row').forEach(function(tr) {
+    var ticker = tr.getAttribute('data-ticker');
+    if (!ticker) return;
+    var d = GEM_DATA[ticker];
+    if (!d) return;
+    var evalCell = tr.querySelector('.mx-eval');
+    if (!evalCell) return;
+    var cls = gradeClass[d.grade] || 'eval-track-b';
+    evalCell.innerHTML = '<span class="' + cls + '">' + d.grade + '</span>' +
+      '<div class="eval-gates" style="font-size:9px;color:#888;margin-top:2px">' +
+      (d.gem_score ? d.gem_score.toFixed(1) + '/100' : '') + '</div>';
   });
 }
 
@@ -2999,8 +3026,10 @@ function populateGradeSummary() {
     var evColor = function(v) { return v == null ? '#888' : v > 0 ? '#3B6D11' : '#A32D2D'; };
     var evFmt = function(v) { return v == null ? '\u2014' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'; };
     var dot = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + (tierDot[r.tier]||'#999') + ';margin-right:3px;vertical-align:middle"></span>';
+    var name = TICKER_NAMES[r.ticker] || '';
+    var nameHtml = name ? '<span style="color:#888;font-size:10px;font-weight:400;margin-left:4px">' + name + '</span>' : '';
     html += '<tr style="background:' + bg + '">' +
-      '<td style="padding:3px 8px;font-weight:600">' + r.ticker + '</td>' +
+      '<td style="padding:3px 8px;font-weight:600">' + r.ticker + nameHtml + '</td>' +
       '<td style="text-align:center;padding:3px 8px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + r.pgrade + '</span></td>' +
       '<td style="text-align:right;padding:3px 8px">' + r.gem.toFixed(1) + '</td>' +
       '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
@@ -3057,6 +3086,7 @@ setInterval(loadRiskHeatmap, 5 * 60 * 1000);
 
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(injectGemIntoTables, 300);
+  setTimeout(syncEvalWithGem, 350);
   setTimeout(updateGemGradeBar, 400);
   setTimeout(populateGradeSummary, 500);
 });
