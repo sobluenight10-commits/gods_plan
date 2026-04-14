@@ -76,13 +76,32 @@ LOG_PATH = os.getenv("LOG_PATH", "titan_k.log")
 TIMEZONE = os.getenv("TIMEZONE", "Europe/Berlin")
 DATA_FILE = os.getenv("DATA_FILE", os.path.join("data", "titan_state.json"))
 
-# ── Blog (ranto28) ────────────────────────────────────────────────────────────
+# ── Blog (Naver) — default ranto28 is "메르의 블로그" (same ID, display name only)
 NAVER_BLOG_ID = os.getenv("NAVER_BLOG_ID", "ranto28")
+NAVER_BLOG_LABEL = os.getenv("NAVER_BLOG_LABEL", "메르 (ranto28)")
 NAVER_RSS_URL = os.getenv(
     "NAVER_RSS_URL",
     f"https://rss.blog.naver.com/{NAVER_BLOG_ID}.xml",
 )
+# Optional extra Naver RSS feeds: comma-separated blog IDs (e.g. "otherid") or full https://rss.blog.naver.com/....xml
+BLOG_EXTRA_RSS_URLS = os.getenv("BLOG_EXTRA_RSS_URLS", "").strip()
 BLOG_FETCH_INTERVAL_MINUTES = int(os.getenv("BLOG_FETCH_INTERVAL_MINUTES", "30"))
+
+
+def naver_blog_rss_list() -> List[str]:
+    """All Naver blog RSS URLs (primary + BLOG_EXTRA_RSS_URLS)."""
+    urls: List[str] = [NAVER_RSS_URL.strip()]
+    extra = (BLOG_EXTRA_RSS_URLS or "").strip()
+    if not extra:
+        return urls
+    for part in extra.split(","):
+        p = part.strip()
+        if not p:
+            continue
+        u = p if p.startswith("http") else f"https://rss.blog.naver.com/{p}.xml"
+        if u not in urls:
+            urls.append(u)
+    return urls
 
 # ── News pulse (Layer 3) ──────────────────────────────────────────────────────
 NEWS_PULSE_INTERVAL_MINUTES = int(os.getenv("NEWS_PULSE_INTERVAL_MINUTES", "120"))

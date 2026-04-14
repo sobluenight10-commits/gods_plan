@@ -237,6 +237,8 @@ def get_ranto28():
         "은행": "GLOBAL", "파월": "GLOBAL", "금리": "GLOBAL",
         "이스라엘": "GLOBAL", "호르무즈": "ENERGY",
         "호주": "INFRASTRUCTURE", "중국": "GLOBAL",
+        "전쟁": "GLOBAL", "항공모함": "GLOBAL", "항모": "GLOBAL", "부시함": "GLOBAL",
+        "해군": "GLOBAL", "NATO": "GLOBAL", "대만": "GLOBAL",
     }
 
     TICKER_KEYWORDS = {
@@ -245,22 +247,37 @@ def get_ranto28():
         "데이터센터": ["VRT", "NVDA"], "비료": ["NTR"],
         "이란": ["UEC", "XLE"], "호르무즈": ["UEC", "XLE"],
         "은행": [], "금리": [], "관세": [],
+        "전쟁": ["KTOS", "LMT"], "항공모함": ["KTOS", "LMT", "RTX"],
+        "항모": ["KTOS", "RTX"], "부시함": ["KTOS", "LMT"],
     }
 
     try:
-        rss_url = "https://rss.blog.naver.com/ranto28.xml"
-        r = requests.get(rss_url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
-        r.raise_for_status()
-        xml = r.text
+        from config import naver_blog_rss_list
+
+        xml_chunks = []
+        for rss_url in naver_blog_rss_list():
+            try:
+                r = requests.get(rss_url, timeout=15, headers={"User-Agent": "Mozilla/5.0 OLYMPUS/1.0"})
+                r.raise_for_status()
+                xml_chunks.append(r.text)
+            except Exception as ex:
+                print(f"[RANTO28] RSS {rss_url[:40]}… failed: {ex}")
+        xml = "\n".join(xml_chunks)
 
         items = re.findall(r"<item>(.*?)</item>", xml, re.DOTALL)
-        for item in items[:15]:
+        seen_links = set()
+        for item in items[:24]:
             title_m = re.search(r"<title><!\[CDATA\[(.*?)\]\]></title>", item)
             link_m = re.search(r"<link><!\[CDATA\[(.*?)\]\]></link>", item)
             date_m = re.search(r"<pubDate>(.*?)</pubDate>", item)
 
             title = title_m.group(1).strip() if title_m else ""
             url = link_m.group(1).strip() if link_m else ""
+            ukey = url.split("?")[0] if url else ""
+            if ukey and ukey in seen_links:
+                continue
+            if ukey:
+                seen_links.add(ukey)
             pub_date = None
 
             if date_m:

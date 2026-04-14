@@ -18,7 +18,7 @@ import requests
 import feedparser
 from bs4 import BeautifulSoup
 
-from config import NAVER_BLOG_ID, NAVER_RSS_URL
+from config import NAVER_BLOG_ID, naver_blog_rss_list
 
 logger = logging.getLogger("titan_k.scraper")
 
@@ -66,37 +66,51 @@ def fetch_blog_posts(days_back: int = 1, max_posts: int = 5) -> List[Dict]:
 
 
 def _fetch_rss(cutoff: datetime, max_posts: int) -> List[Dict]:
-    """Parse RSS with timeout."""
-    feed = feedparser.parse(NAVER_RSS_URL, request_headers=HEADERS)
+    """Parse all configured Naver RSS feeds (primary + BLOG_EXTRA_RSS_URLS), merge, dedupe."""
     posts = []
-
-    for entry in feed.entries[:max_posts * 2]:
-        pub_date = None
-        if hasattr(entry, "published_parsed") and entry.published_parsed:
-            pub_date = datetime(*entry.published_parsed[:6])
-        elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
-            pub_date = datetime(*entry.updated_parsed[:6])
-
-        if pub_date and pub_date < cutoff:
+    src_label = NAVER_BLOG_ID or "ranto28"
+    for rss_url in naver_blog_rss_list():
+        try:
+            r = requests.get(rss_url, timeout=REQUEST_TIMEOUT, headers=HEADERS)
+            r.raise_for_status()
+            feed = feedparser.parse(r.text)
+        except Exception as e:
+            logger.warning("RSS fetch %s: %s", rss_url[:48], e)
             continue
+        for entry in feed.entries[:max_posts * 3]:
+            pub_date = None
+            if hasattr(entry, "published_parsed") and entry.published_parsed:
+                pub_date = datetime(*entry.published_parsed[:6])
+            elif hasattr(entry, "updated_parsed") and entry.updated_parsed:
+                pub_date = datetime(*entry.updated_parsed[:6])
 
-        url = entry.get("link", "")
-        if "redirect" in url:
-            url = re.sub(r".*redirect.*url=", "", url)
+            if pub_date and pub_date < cutoff:
+                continue
 
-        posts.append({
-            "title": entry.get("title", "Untitled"),
-            "url": url,
-            "date": pub_date.strftime("%Y-%m-%d") if pub_date else "",
-            "summary": _clean_html(entry.get("summary", "")),
-            "content": "",
-            "source": "ranto28",
-        })
+            url = entry.get("link", "")
+            if "redirect" in url:
+                url = re.sub(r".*redirect.*url=", "", url)
 
-        if len(posts) >= max_posts:
+            posts.append({
+                "title": entry.get("title", "Untitled"),
+                "url": url,
+                "date": pub_date.strftime("%Y-%m-%d") if pub_date else "",
+                "summary": _clean_html(entry.get("summary", "")),
+                "content": "",
+                "source": src_label,
+            })
+
+    seen = set()
+    out = []
+    for p in posts:
+        u = (p.get("url") or "").split("?")[0]
+        if not u or u in seen:
+            continue
+        seen.add(u)
+        out.append(p)
+        if len(out) >= max_posts:
             break
-
-    return posts
+    return out
 
 
 def _fetch_scrape(cutoff: datetime, max_posts: int) -> List[Dict]:

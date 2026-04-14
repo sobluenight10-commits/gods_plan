@@ -11,7 +11,7 @@ import feedparser
 import requests
 from datetime import datetime
 
-from config import NAVER_RSS_URL, BLOG_FETCH_INTERVAL_MINUTES
+from config import BLOG_FETCH_INTERVAL_MINUTES, naver_blog_rss_list
 
 logger = logging.getLogger("titan_k.blog_monitor")
 
@@ -20,6 +20,15 @@ CHECK_INTERVAL = max(60, int(BLOG_FETCH_INTERVAL_MINUTES) * 60)  # seconds; min 
 THEME_MAP = {
     "이란": ("Middle East Conflict", ["KTOS", "272210.KS", "NTR"], ["LMT", "XOM", "FLNG"]),
     "전쟁": ("War Premium", ["KTOS", "272210.KS"], ["LMT", "RTX", "NOC"]),
+    # Naval / carrier / escalation (titles often omit explicit "전쟁")
+    "항공모함": ("Naval / Carrier Group", ["KTOS", "272210.KS"], ["LMT", "RTX", "NOC", "GD"]),
+    "항모": ("Naval / Carrier Group", ["KTOS", "272210.KS"], ["LMT", "RTX", "NOC"]),
+    "부시함": ("US Navy / Strike Group", ["KTOS", "272210.KS"], ["LMT", "RTX"]),
+    "해협": ("Strait / Chokepoint Risk", ["KTOS", "NTR"], ["XOM", "URNM"]),
+    "호르무즈": ("Strait / Energy Risk", ["NTR", "UEC"], ["XLE", "XOM"]),
+    "대만": ("Taiwan Strait Tension", ["TSM", "1810.HK"], ["LMT", "RTX"]),
+    "남중국해": ("South China Sea", ["KTOS"], ["LMT", "RTX"]),
+    "NATO": ("Alliance / Defense", ["KTOS"], ["LMT", "RTX", "NOC"]),
     "LNG": ("LNG Shortage", ["NTR"], ["FLNG", "GLNG", "KSOE"]),
     "가스": ("Gas/Energy", ["NTR", "UEC"], ["FLNG", "LNG"]),
     "원자력": ("Nuclear Renaissance", ["UEC", "URNM", "OKLO", "UUUU"], ["CCJ", "NXE"]),
@@ -80,6 +89,8 @@ def classify_blog_theme(content: str, direct_tickers: list) -> dict:
     new_watchlist -= PORTFOLIO
     new_watchlist -= set(direct_tickers or [])
 
+    detected_themes = list(dict.fromkeys(detected_themes))
+
     return {
         "direct_tickers": list(direct_tickers or []),
         "themes": detected_themes,
@@ -128,45 +139,50 @@ def _save_seen(s: set) -> None:
 _seen_urls: set = _load_seen()
 
 
-def _fetch_rss_xml():
+def _fetch_rss_xml(rss_url: str):
     """Fetch RSS XML via requests (Naver blocks feedparser's built-in HTTP)."""
     try:
-        r = requests.get(NAVER_RSS_URL, timeout=15,
-                         headers={"User-Agent": "Mozilla/5.0 OLYMPUS/1.0"})
+        r = requests.get(
+            rss_url,
+            timeout=15,
+            headers={"User-Agent": "Mozilla/5.0 OLYMPUS/1.0"},
+        )
         r.raise_for_status()
         return r.text
     except Exception as e:
-        logger.warning("RSS HTTP fetch failed: %s", e)
+        logger.warning("RSS HTTP fetch failed (%s): %s", rss_url[:48], e)
         return None
 
 
 def _check_for_new_posts():
-    """Poll RSS and return list of posts not seen before."""
+    """Poll all configured RSS feeds; return posts not seen before (URL-deduped)."""
     global _seen_urls
     new_posts = []
     try:
-        xml = _fetch_rss_xml()
-        if not xml:
-            return new_posts
-        feed = feedparser.parse(xml)
-        for entry in feed.entries[:10]:
-            url = _norm_url(entry.get("link", ""))
-            if not url:
+        for rss_url in naver_blog_rss_list():
+            xml = _fetch_rss_xml(rss_url)
+            if not xml:
                 continue
-            if url in _seen_urls:
-                continue
-            _seen_urls.add(url)
-            _save_seen(_seen_urls)
+            feed = feedparser.parse(xml)
+            for entry in feed.entries[:10]:
+                url = _norm_url(entry.get("link", ""))
+                if not url:
+                    continue
+                if url in _seen_urls:
+                    continue
+                _seen_urls.add(url)
+                _save_seen(_seen_urls)
 
-            pub_date = None
-            if hasattr(entry, "published_parsed") and entry.published_parsed:
-                pub_date = datetime(*entry.published_parsed[:6])
+                pub_date = None
+                if hasattr(entry, "published_parsed") and entry.published_parsed:
+                    pub_date = datetime(*entry.published_parsed[:6])
 
-            new_posts.append({
-                "title": entry.get("title", "Untitled"),
-                "url": url,
-                "date": pub_date.strftime("%Y-%m-%d %H:%M") if pub_date else "",
-            })
+                new_posts.append({
+                    "title": entry.get("title", "Untitled"),
+                    "url": url,
+                    "date": pub_date.strftime("%Y-%m-%d %H:%M") if pub_date else "",
+                    "feed": rss_url[:60],
+                })
     except Exception as e:
         logger.error(f"RSS check failed: {e}")
     return new_posts
@@ -179,16 +195,16 @@ def _seed_seen():
         logger.info("Blog monitor resumed with %s URLs on disk — no RSS re-seed", len(_seen_urls))
         return
     try:
-        xml = _fetch_rss_xml()
-        if not xml:
-            logger.warning("RSS seed: no XML returned")
-            return
-        feed = feedparser.parse(xml)
-        for entry in feed.entries[:20]:
-            url = _norm_url(entry.get("link", ""))
-            if url:
-                _seen_urls.add(url)
-                _save_seen(_seen_urls)
+        for rss_url in naver_blog_rss_list():
+            xml = _fetch_rss_xml(rss_url)
+            if not xml:
+                continue
+            feed = feedparser.parse(xml)
+            for entry in feed.entries[:20]:
+                url = _norm_url(entry.get("link", ""))
+                if url:
+                    _seen_urls.add(url)
+                    _save_seen(_seen_urls)
         logger.info("Blog monitor first seed: %s existing posts marked seen", len(_seen_urls))
     except Exception as e:
         logger.error(f"Seed failed: {e}")

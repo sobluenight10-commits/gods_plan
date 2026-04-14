@@ -183,7 +183,7 @@ def send_blog_briefing(briefing: dict):
     """Format and send the blog analysis briefing."""
     from html import escape as html_escape
 
-    from config import TITAN_SYSTEM_URL
+    from config import TITAN_SYSTEM_URL, NAVER_BLOG_LABEL
 
     posts = briefing.get("posts", [])
     summary = briefing.get("summary", "No summary available.")
@@ -192,7 +192,7 @@ def send_blog_briefing(briefing: dict):
     header = (
         f"🔱 <b>titan_K BLOG BRIEFING</b>\n"
         f"📅 {timestamp} Berlin\n"
-        f"📡 ranto28 Naver Blog\n"
+        f"📡 {html_escape(NAVER_BLOG_LABEL)} — Naver RSS\n"
         f"{'━' * 28}\n\n"
     )
 
