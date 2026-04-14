@@ -707,6 +707,42 @@ td.mx-soros-gap.soros-cell:hover .soros-tooltip{display:block;}
 
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--es-paper)}::-webkit-scrollbar-thumb{background:var(--es-rule)}
 
+/* Scenario table */
+.mx-scenarios { padding: 3px 6px; vertical-align: top; min-width: 320px; }
+.scenario-tbl { border-collapse: collapse; width: 100%; font-family: monospace; font-size: 11px; table-layout: fixed; }
+.scenario-tbl td, .scenario-tbl th { text-align: right; padding: 2px 6px; white-space: nowrap; overflow: hidden; }
+.scenario-tbl td:first-child { text-align: left; font-weight: 700; min-width: 20px; max-width: 20px; }
+.scenario-tbl th { color: #aaa; font-weight: 400; font-size: 10px; }
+.scenario-tbl .sc-worst td { color: #c0392b; }
+.scenario-tbl .sc-normal td { color: #444; }
+.scenario-tbl .sc-bull   td { color: #2d7a2d; }
+.scenario-tbl .sc-ev     td { color: #2a6e2a; font-weight: 600; background: #f0f8f0; }
+.scenario-tbl .sc-vs     td { font-size: 9px; background: #fafafa; border-top: 1px solid #eee; }
+.mx-versus { padding: 2px 6px 4px; display: flex; gap: 12px; flex-wrap: wrap; border-top: 1px solid #eee; background: #fefefe; font-size: 10px; }
+
+/* Soros gap column — fixed width, no overflow */
+.soros-cell { max-width: 155px; min-width: 120px; overflow: hidden; }
+.mx-soros-hot { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+
+/* Action column — fixed width */
+td:has(.mx-act) { min-width: 95px; white-space: nowrap; }
+
+/* Universal tooltip */
+.oly-tip { position: relative; cursor: help; }
+.oly-tip::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 8px); left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e; color: #e8e8f0;
+  font-size: 11px; font-family: sans-serif; font-weight: 400; line-height: 1.5;
+  padding: 8px 12px; border-radius: 6px; white-space: pre-line;
+  min-width: 220px; max-width: 320px;
+  z-index: 9999; pointer-events: none;
+  opacity: 0; transition: opacity 0.15s;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+}
+.oly-tip:hover::after { opacity: 1; }
+
 </style>
 </head>
 <body>
@@ -820,10 +856,10 @@ td.mx-soros-gap.soros-cell:hover .soros-tooltip{display:block;}
   <div id="es-panel-matrix">
 <div class="tbl-scroll">
 <table class="master matrix-v2 matrix-v3">
-<thead><tr><th>Stock</th><th>Sector</th><th class="r">GOD</th><th class="r">EVAL</th><th class="r">Entry</th><th class="r">Today</th><th class="r">VS Today</th><th class="r">1M</th><th class="r">6M</th><th class="r">1Y</th><th class="r">3Y</th><th class="r">5Y</th><th>Soros gap</th><th>Action</th><th class="r">Target</th></tr></thead><tbody>
-
-
-
+<thead><tr><th>Stock</th><th>Sector</th><th class="r">GOD</th><th class="r">EVAL</th><th class="r">Entry</th><th class="r">Today</th><th class="r">VS Today</th><th colspan="5" class="oly-tip" style="text-align:center; min-width:340px"
+    data-tip="Price Scenarios (Worst / Normal / Bull)&#10;W = Bear: Heston MC P10 for 1M/6M, EPS×PE bear for 1Y+&#10;N = Base: 50th percentile&#10;B = Bull: P90, EPS×PE bull&#10;EV = Expected Value (50%W + 30%N + 20%B)&#10;vs% = EV vs current price&#10;Weights are intentionally pessimistic.">
+  SCENARIOS · W / N / B · EV · vs%
+</th><th>Soros gap</th><th>Action</th><th class="r">Target</th></tr></thead><tbody>
 <tr><td colspan="15" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c1)"></div><div class="cname" style="color:var(--c1)">Intelligence</div><div class="cdesc">AGI · Quantum · Neural Interfaces · Advanced Memory · AI Hardware</div></div></td></tr>
 <tr class="mx-row mx-st-pf" data-ticker="000660.KS" data-entry-num="85000" data-entry-mode="krw" data-thesis="intact" title="HBM3E backbone of AGI — NEVER SELL."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">000660.KS</div><div class="mx-nm">SK Hynix</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:95%;background:var(--c1)"></div></div><span class="god-num">95</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">4/7 gates</div></td><td class="r mx-entry">₩85,000</td><td class="r mx-today"><span class="pnow" id="price-000660.KS" data-ticker="000660.KS">—</span></td><td class="r mx-vs-today"></td><td colspan="5" class="mx-scenarios" data-injected="1" style="padding:2px 4px;vertical-align:top"><table class="scenario-tbl" style="border-collapse:collapse;width:100%;font-family:monospace"><tr><td style="padding:0 4px;font-size:9px;color:#bbb"></td><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">1M</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">6M</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">1Y</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">3Y</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">5Y</th></tr><tr class="sc-worst"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#c0392b;min-width:14px">W</td><td style="text-align:right;padding:0 4px;font-size:10px">₩83K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩64K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩42K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩42K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩26K</td></tr><tr class="sc-normal"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#555;min-width:14px">N</td><td style="text-align:right;padding:0 4px;font-size:10px">₩98K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩97K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩111K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩166K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩128K</td></tr><tr class="sc-bull"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#2d7a2d;min-width:14px">B</td><td style="text-align:right;padding:0 4px;font-size:10px">₩114K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩140K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩230K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩494K</td><td style="text-align:right;padding:0 4px;font-size:10px">₩520K</td></tr><tr style="background:#f0f8f0"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#2a6e2a">EV</td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#c0392b">₩94K<br><span style="font-size:8px">-1%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#c0392b">₩89K<br><span style="font-size:8px">-6%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#2d7a2d">₩100K<br><span style="font-size:8px">+5%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#2d7a2d">₩170K<br><span style="font-size:8px">+78%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#2d7a2d">₩155K<br><span style="font-size:8px">+63%</span></td></tr><tr style="background:#fafafa;border-top:1px solid #eee"><td style="padding:0 4px;font-size:9px;color:#aaa">vs%</td><td style="text-align:right;padding:0 4px"><span style="color:#c0392b;font-size:9px;font-weight:500">-1.4%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#c0392b;font-size:9px;font-weight:500">-6.5%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#2d7a2d;font-size:9px;font-weight:500">+5.3%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#2d7a2d;font-size:9px;font-weight:500">+78.5%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#2d7a2d;font-size:9px;font-weight:500">+63.4%</span></td></tr></table><div style="padding:2px 5px 3px;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid #eee;background:#fefefe"><span style="color:#888;font-size:10px">P&amp;L: </span><span style="color:#2d7a2d;font-size:10px;font-weight:500">+1197.6%</span><span style="color:#888;font-size:10px">vs1y: </span><span style="color:#2d7a2d;font-size:10px;font-weight:500">+5.3%</span><span style="color:#888;font-size:10px">entry→5y: </span><span style="color:#2d7a2d;font-size:10px;font-weight:500">+63.4%</span></div></td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
 <tr class="mx-row mx-st-pf" data-ticker="TSM" data-entry-num="287.4" data-entry-mode="eur_from_usd" data-thesis="intact" title="Foundry monopoly — N2 / CoWoS demand."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">TSM</div><div class="mx-nm">TSMC ADR</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:90%;background:var(--c1)"></div></div><span class="god-num">90</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">5/7 gates</div></td><td class="r mx-entry">€287.40</td><td class="r mx-today"><span class="pnow" id="price-TSM" data-ticker="TSM">—</span></td><td class="r mx-vs-today"></td><td colspan="5" class="mx-scenarios" data-injected="1" style="padding:2px 4px;vertical-align:top"><table class="scenario-tbl" style="border-collapse:collapse;width:100%;font-family:monospace"><tr><td style="padding:0 4px;font-size:9px;color:#bbb"></td><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">1M</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">6M</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">1Y</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">3Y</th><th style="text-align:right;padding:0 4px;font-size:9px;color:#bbb;font-weight:400">5Y</th></tr><tr class="sc-worst"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#c0392b;min-width:14px">W</td><td style="text-align:right;padding:0 4px;font-size:10px">$153.2</td><td style="text-align:right;padding:0 4px;font-size:10px">$123.6</td><td style="text-align:right;padding:0 4px;font-size:10px">$91.8</td><td style="text-align:right;padding:0 4px;font-size:10px">$104.7</td><td style="text-align:right;padding:0 4px;font-size:10px">$67.4</td></tr><tr class="sc-normal"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#555;min-width:14px">N</td><td style="text-align:right;padding:0 4px;font-size:10px">$175.3</td><td style="text-align:right;padding:0 4px;font-size:10px">$174.8</td><td style="text-align:right;padding:0 4px;font-size:10px">$192.6</td><td style="text-align:right;padding:0 4px;font-size:10px">$277.4</td><td style="text-align:right;padding:0 4px;font-size:10px">$202.9</td></tr><tr class="sc-bull"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#2d7a2d;min-width:14px">B</td><td style="text-align:right;padding:0 4px;font-size:10px">$198.5</td><td style="text-align:right;padding:0 4px;font-size:10px">$238.8</td><td style="text-align:right;padding:0 4px;font-size:10px">$323.7</td><td style="text-align:right;padding:0 4px;font-size:10px">$574.4</td><td style="text-align:right;padding:0 4px;font-size:10px">$562.6</td></tr><tr style="background:#f0f8f0"><td style="padding:0 4px;font-size:10px;font-weight:700;color:#2a6e2a">EV</td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#c0392b">$168.9<br><span style="font-size:8px">-1%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#c0392b">$162.0<br><span style="font-size:8px">-5%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#c0392b">$168.4<br><span style="font-size:8px">-1%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#2d7a2d">$250.4<br><span style="font-size:8px">+47%</span></td><td style="text-align:right;padding:0 4px;font-size:10px;font-weight:600;color:#2d7a2d">$207.1<br><span style="font-size:8px">+22%</span></td></tr><tr style="background:#fafafa;border-top:1px solid #eee"><td style="padding:0 4px;font-size:9px;color:#aaa">vs%</td><td style="text-align:right;padding:0 4px"><span style="color:#c0392b;font-size:9px;font-weight:500">-0.6%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#c0392b;font-size:9px;font-weight:500">-4.7%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#c0392b;font-size:9px;font-weight:500">-0.9%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#2d7a2d;font-size:9px;font-weight:500">+47.3%</span></td><td style="text-align:right;padding:0 4px"><span style="color:#2d7a2d;font-size:9px;font-weight:500">+21.8%</span></td></tr></table><div style="padding:2px 5px 3px;display:flex;gap:10px;flex-wrap:wrap;border-top:1px solid #eee;background:#fefefe"><span style="color:#888;font-size:10px">P&amp;L: </span><span style="color:#2d7a2d;font-size:10px;font-weight:500">+28.6%</span><span style="color:#888;font-size:10px">vs1y: </span><span style="color:#c0392b;font-size:10px;font-weight:500">-0.9%</span><span style="color:#888;font-size:10px">entry→5y: </span><span style="color:#2d7a2d;font-size:10px;font-weight:500">+21.8%</span></div></td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
@@ -2405,6 +2441,199 @@ async function loadDecisionEngine() {
 loadDecisionEngine();
 setInterval(loadDecisionEngine, 5 * 60 * 1000);
 
+</script>
+
+<script>
+(function() {
+  'use strict';
+
+  function fmt(v, ticker) {
+    if (v == null || v === 0) return '—';
+    var kr = ['000660.KS','272210.KS'];
+    var hk = ['1810.HK'];
+    var eu = ['ASML','MC.PA'];
+    if (kr.indexOf(ticker) >= 0) {
+      if (v >= 1e6) return '₩' + (v/1e6).toFixed(1) + 'M';
+      if (v >= 1e3) return '₩' + Math.round(v/1e3) + 'K';
+      return '₩' + Math.round(v);
+    }
+    if (hk.indexOf(ticker) >= 0) return 'HK$' + v.toFixed(1);
+    if (eu.indexOf(ticker) >= 0) return v >= 1000 ? '€' + Math.round(v).toLocaleString() : '€' + v.toFixed(0);
+    if (v >= 1000) return '$' + Math.round(v).toLocaleString();
+    if (v >= 10)   return '$' + v.toFixed(1);
+    return '$' + v.toFixed(2);
+  }
+
+  function pct(v, size) {
+    if (v == null) return '<span style="color:#ccc;font-size:'+(size||10)+'px">—</span>';
+    var c = v >= 0 ? '#2d7a2d' : '#c0392b';
+    var s = v >= 0 ? '+' : '';
+    return '<span style="color:'+c+';font-size:'+(size||10)+'px;font-weight:500">'+s+v.toFixed(1)+'%</span>';
+  }
+
+  function buildScenarioTD(ticker, proj, pnl, u1y) {
+    var h  = ['1m','6m','1y','3y','5y'];
+    var hl = ['1M','6M','1Y','3Y','5Y'];
+
+    // Tooltip for each horizon
+    var horizonTips = {
+      '1m': 'Heston Stochastic Volatility MC\n10,000 paths · ρ=−0.7\nShort-term noise dominates',
+      '6m': 'Heston MC blended with\nearly fundamental signals\nVolatility mean-reversion kicks in',
+      '1y': 'EPS × PE fundamental model\nBear/Base/Bull EPS scenarios\nMacro cycle matters most here',
+      '3y': 'DCF-based fundamental model\nRevenue growth + margin expansion\nCompounding starts to show',
+      '5y': 'Terminal value DCF\nFull thesis realisation horizon\nNarrative gap resolves here'
+    };
+
+    function makeRow(cls, label, key, tipPrefix) {
+      var cells = hl.map(function(lbl, i) {
+        var hkey = h[i];
+        var val = proj[hkey] ? proj[hkey][key] : null;
+        var tip = tipPrefix + '\nHorizon: ' + lbl + '\n' + (horizonTips[hkey] || '');
+        return '<td class="oly-tip" data-tip=\"'+tip.replace(/\"/g,'&quot;')+'\" style=\"text-align:right;padding:2px 6px\">'+fmt(val, ticker)+'</td>';
+      }).join('');
+      return '<tr class=\"'+cls+'\"><td>'+label+'</td>'+cells+'</tr>';
+    }
+
+    function evRow() {
+      var cells = hl.map(function(lbl, i) {
+        var hkey = h[i];
+        var p    = proj[hkey] || {};
+        var ev   = p.ev;
+        var up   = p.upside_pct;
+        if (ev == null || ev === 0) return '<td style=\"text-align:right;padding:2px 6px;color:#ccc\">—</td>';
+        var c    = (up||0) >= 0 ? '#2d7a2d' : '#c0392b';
+        var s    = (up||0) >= 0 ? '+' : '';
+        var pks  = up != null ? '<br><span style=\"font-size:8px\">'+s+up.toFixed(0)+'%</span>' : '';
+        var tip  = 'Expected Value = 50%×Worst + 30%×Normal + 20%×Bull\nHorizon: '+lbl+'\n'+up.toFixed(1)+'% vs current price\nPositive = buy signal at this horizon';
+        return '<td class=\"oly-tip\" data-tip=\"'+tip.replace(/\"/g,'&quot;')+'\" style=\"text-align:right;padding:2px 6px;font-weight:600;color:'+c+'\">'+fmt(ev,ticker)+pks+'</td>';
+      }).join('');
+      return '<tr class=\"sc-ev\"><td>EV</td>'+cells+'</tr>';
+    }
+
+    function vsRow() {
+      var cells = hl.map(function(lbl, i) {
+        var hkey = h[i];
+        var up   = proj[hkey] ? proj[hkey].upside_pct : null;
+        var tip  = 'EV vs current price at '+lbl+'\nPositive = GEM says buy at this horizon\nNegative = GEM says overvalued at this horizon';
+        return '<td class=\"oly-tip\" data-tip=\"'+tip.replace(/\"/g,'&quot;')+'\" style=\"text-align:right;padding:2px 4px\">'+pct(up,9)+'</td>';
+      }).join('');
+      return '<tr class=\"sc-vs\"><td style=\"font-size:9px;color:#aaa\">vs%</td>'+cells+'</tr>';
+    }
+
+    var header = '<tr><td></td>'+hl.map(function(l){ return '<th>'+l+'</th>'; }).join('')+'</tr>';
+
+    var scenTip = 'W = Worst case (Heston P10 / EPS bear)\nN = Normal case (P50 / EPS base)\nB = Bull case (P90 / EPS bull)\nEV = 50%W + 30%N + 20%B (pessimistic weights)\nvs% = EV discount/premium to current price';
+
+    var table = '<table class=\"scenario-tbl\" title=\"'+scenTip+'\">'
+      + header
+      + makeRow('sc-worst','W','worst','Worst case scenario (P10 Heston / EPS bear)')
+      + makeRow('sc-normal','N','normal','Base case scenario (P50 / EPS base)')
+      + makeRow('sc-bull','B','bull','Bull case scenario (P90 / EPS bull)')
+      + evRow()
+      + vsRow()
+      + '</table>';
+
+    // Versus line
+    var vparts = [];
+    if (pnl  != null) vparts.push('<span style=\"color:#888\">P&L: </span>'+pct(pnl));
+    if (u1y  != null) vparts.push('<span style=\"color:#888\">vs1y: </span>'+pct(u1y));
+    var p5y = proj['5y'] ? proj['5y'].upside_pct : null;
+    if (p5y  != null) vparts.push('<span style=\"color:#888\">entry→5y: </span>'+pct(p5y));
+    var versus = vparts.length ? '<div class=\"mx-versus\">'+vparts.join('')+'</div>' : '';
+
+    return table + versus;
+  }
+
+  function applyGodScoreTip(tr, godScore) {
+    var godCell = tr.querySelector('.god-cell');
+    if (godCell && !godCell.dataset.tip) {
+      var grade = godScore >= 80 ? 'Track A — Portfolio grade' : godScore >= 60 ? 'Track B — Watchlist grade' : 'Below threshold';
+      godCell.classList.add('oly-tip');
+      godCell.dataset.tip = 'GOD Score: '+godScore+'/100\n'+grade+'\n\nFormula:\nParadigm Fit    × 0.30\nCapital Quality × 0.25\nPrice vs Value  × 0.20\nThesis Clarity  × 0.15\nBalance Sheet   × 0.10\n\n≥80 = conviction hold\n60–79 = watchlist\n<60 = review exit';
+    }
+  }
+
+  function applyEvalTip(tr) {
+    var evalCell = tr.querySelector('.mx-eval');
+    if (evalCell && !evalCell.dataset.tipped) {
+      evalCell.dataset.tipped = '1';
+      var trackEl = evalCell.querySelector('[class*=\"eval-track\"]');
+      var grade   = trackEl ? trackEl.textContent.trim() : '—';
+      var gatesEl = evalCell.querySelector('.eval-gates');
+      var gates   = gatesEl ? gatesEl.textContent.trim() : '';
+      trackEl && trackEl.classList.add('oly-tip');
+      if (trackEl) {
+        trackEl.dataset.tip = 'GEM Grade: '+grade+'\n\nA = 1y EV ≥+20% + 5y EV ≥+100% + worst >−60%\nB = 1y EV ≥+10% + 5y EV ≥+50%\nC = Marginal upside\nD = Fails all thresholds\n\nGrade A = GEM Portfolio (buy signal)\nGrade B = GEM Universe (hold/watch)\nGrade C/D = No add signal from GEM';
+      }
+      gatesEl && gatesEl.classList.add('oly-tip');
+      if (gatesEl) {
+        gatesEl.dataset.tip = 'Investment Thesis Gates\n\n'+gates+'\n\nP1 = Paradigm fit confirmed (Earth Shifter)\nP2 = Capital quality verified (cash flow positive)\nP3 = Price vs value attractive (MoS exists)\nP4 = Thesis clarity proven (catalyst identified)\n\nAll gates = maximum conviction entry\nMissing gates = position sizing reduced';
+      }
+    }
+  }
+
+  function applyActionTip(tr, action) {
+    var actEl = tr.querySelector('.mx-act');
+    if (actEl && !actEl.dataset.tip) {
+      var tips = {
+        'HOLD':           'HOLD\n\nThesis intact. Price not in entry zone.\nDo nothing. Monitor weekly.',
+        'DIP WATCH':      'DIP WATCH\n\nNarrative gap detected.\nPrice above entry zone — do not chase.\nSet limit when price approaches entry zone.\nDo not buy at current price.',
+        'ARMED':          'ARMED\n\nLimit order placed in broker.\nDo nothing. Wait for fill.\nOne shot — thesis + price aligned at limit.',
+        'ADD':            'ADD\n\nPrice in entry zone now.\nThesis intact. GEM + Soros aligned.\nBuy here.',
+        'ARMED · ONE SHOT': 'ARMED · ONE SHOT\n\nStop breach + thesis INTACT.\nThis is the maximum conviction entry point.\nNarrative gap just widened further.\nSet limit at current dip price immediately.\nMissing this fill = missing the best entry.',
+        'EXIT REVIEW':    'EXIT REVIEW\n\nThesis wounded.\nQuantify damage before deciding.\nApply Contract Size Rule:\n<5% revenue = MINOR = hold\n>30% revenue = CRITICAL = exit',
+        'EXIT NOW':       'EXIT NOW\n\nThesis dead.\nExit regardless of price.\nNo hoping for bounce. Lesson #02.'
+      };
+      actEl.classList.add('oly-tip');
+      actEl.dataset.tip = tips[action] || 'Action: '+action;
+    }
+  }
+
+  function injectAll(positions) {
+    Object.keys(positions).forEach(function(ticker) {
+      var pos   = positions[ticker];
+      var proj  = pos.projections || {};
+      var tr    = document.querySelector('[data-ticker=\"'+ticker+'\"]');
+      if (!tr) return;
+
+      // Replace 5 mx-pt cells with one scenario td
+      var mxPts = tr.querySelectorAll('.mx-pt');
+      if (mxPts.length === 5) {
+        var firstPt = mxPts[0];
+        var parent  = firstPt.parentNode;
+
+        var td = document.createElement('td');
+        td.setAttribute('colspan','5');
+        td.className = 'mx-scenarios';
+        td.setAttribute('data-injected','1');
+        td.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y);
+        parent.insertBefore(td, firstPt);
+        mxPts.forEach(function(pt){ parent.removeChild(pt); });
+      }
+
+      // Apply tooltips
+      applyGodScoreTip(tr, pos.god_score || 0);
+      applyEvalTip(tr);
+      applyActionTip(tr, pos.action || 'HOLD');
+    });
+  }
+
+  // Load dashboard_state.json and inject
+  fetch('/data/dashboard_state.json?t=' + Date.now())
+    .then(function(r){ return r.json(); })
+    .then(function(state){
+      var positions = state.positions || {};
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){ injectAll(positions); });
+      } else {
+        injectAll(positions);
+      }
+      // Re-run after prices load (prices update DOM after 3s)
+      setTimeout(function(){ injectAll(positions); }, 3500);
+    })
+    .catch(function(e){ console.warn('dashboard_state.json load failed:', e); });
+
+})();
 </script>
 </body>
 
