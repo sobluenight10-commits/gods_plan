@@ -1,5 +1,5 @@
 {
-  "last_updated": "2026-04-14 09:00 CET",
+  "last_updated": "2026-04-14 09:14 CET",
   "one_command": "Set OKLO $44 + CCJ $100 + UEC €11 limits in Trade Republic — deploy full €1,500 post April 15",
   "actions": [
     {
@@ -67,20 +67,14 @@
   "dry_powder_after": 0,
   "deploy_timing": "Post April 15 — TGA drain ends, liquidity returns",
   "liquidity": {
-    "net_liq_b": 2368,
-    "reserves_b": 3116,
-    "tga_b": 748,
-    "rrp_b": 0,
+    "net_liq_value": 2368,
+    "net_liq_text": "$2,368B",
     "zone": "WARNING",
     "zone_color": "#e07b39",
-    "direction": "EXPANDING",
-    "direction_arrow": "↑",
-    "vs_last_week_b": 189,
-    "vs_last_week_sign": "+",
-    "action": "DEPLOY dry powder after April 15 — TGA drain = liquidity expanding",
-    "historical_context": "2023 SVB level but EXPANDING direction post-tax season",
-    "last_updated": "2026-04-14 09:00 CET",
-    "source": "FRED manual"
+    "outlook_text": "EXPANDING ↑ | Post-tax TGA drain | Deploy post April 15",
+    "action_text": "DEPLOY dry powder after April 15 — TGA drain = liquidity expanding",
+    "change_text": "vs last week: +$189B ↑",
+    "last_updated": "2026-04-14 09:14 CET"
   },
   "god_scores": {
     "000660.KS": {

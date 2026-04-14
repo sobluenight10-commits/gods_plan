@@ -94,6 +94,23 @@ def _cleanup(signum=None, frame=None):
 signal.signal(signal.SIGINT, _cleanup)
 signal.signal(signal.SIGTERM, _cleanup)
 import atexit
+
+# MINERVA-10X morning brief v2 with live prices
+import importlib.util as _ilu, os as _os
+def _run_brief_v2():
+    spec = _ilu.spec_from_file_location("mb2", 
+        _os.path.join(_os.path.dirname(__file__), "morning_brief_v2.py"))
+    mod = _ilu.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    import json
+    with open(_os.path.join(_os.path.dirname(__file__), "data", "directives.json")) as f:
+        d = json.load(f)
+    liq = d.get("liquidity", {})
+    return mod.build_brief(
+        liq_b=liq.get("net_liq_value", 2368),
+        liq_delta=liq.get("vs_last_week_b", 189),
+        vix=19.12
+    )
 atexit.register(_release_lock)
 
 
