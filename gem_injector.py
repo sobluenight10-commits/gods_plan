@@ -222,18 +222,18 @@ function updateGemGradeBar() {{
 function populateGradeSummary() {{
   var body = document.getElementById('grade-summary-body');
   if (!body) return;
+  var gradeRank = {{S:0,"A+":1,A:2,"B+":3,B:4,"C+":5,C:6,D:7,F:8}};
   var rows = [];
-  var godScores = {{}};
-  document.querySelectorAll('.mx-row[data-ticker]').forEach(function(tr) {{
-    var tk = tr.getAttribute('data-ticker');
-    var gn = tr.querySelector('.god-num');
-    if (tk && gn) godScores[tk] = parseFloat(gn.textContent) || 0;
-  }});
   Object.keys(GEM_DATA).forEach(function(tk) {{
     var d = GEM_DATA[tk];
-    rows.push({{ticker: tk, grade: d.grade, gem: godScores[tk] || 0, u1y: d.u1y, u5y: d.u5y}});
+    rows.push({{ticker: tk, grade: d.grade, gem: d.gem_score || 0, u1y: d.u1y, u5y: d.u5y}});
   }});
-  rows.sort(function(a, b) {{ return b.gem - a.gem; }});
+  rows.sort(function(a, b) {{
+    var ga = gradeRank[a.grade] != null ? gradeRank[a.grade] : 9;
+    var gb = gradeRank[b.grade] != null ? gradeRank[b.grade] : 9;
+    if (ga !== gb) return ga - gb;
+    return b.gem - a.gem;
+  }});
   var bgMap = {{S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"}};
   var fgMap = {{S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"}};
   var html = '';

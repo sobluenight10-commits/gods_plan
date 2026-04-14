@@ -804,41 +804,25 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 <div class="soros-wrap">
   <div class="soros-card">
     <div class="soros-h">SOROS REFLEXIVITY PANEL</div>
-    <div class="soros-subh">🔱 Soros Gaps</div>
-    <table id="soros-gap-static" style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:10px;">
-      <thead><tr style="border-bottom:1px solid rgba(212,175,55,0.3);">
-        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">STOCK</th>
-        <th style="text-align:center;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">GAP</th>
-        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">SIGNAL</th>
+    <table style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-size:11px;">
+      <thead><tr style="border-bottom:2px solid rgba(212,175,55,0.4);">
+        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;color:#8b6914;">STOCK</th>
+        <th style="text-align:center;padding:4px 8px;font-size:9px;letter-spacing:0.1em;color:#8b6914;">TYPE</th>
+        <th style="text-align:center;padding:4px 8px;font-size:9px;letter-spacing:0.1em;color:#8b6914;">GAP / LIMIT</th>
+        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;color:#8b6914;">SIGNAL</th>
       </tr></thead>
       <tbody>
-        <tr><td style="padding:3px 8px;font-weight:700">PLTR</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 59%</td><td style="padding:3px 8px">Entry zone €95–109</td></tr>
-        <tr><td style="padding:3px 8px;font-weight:700">OKLO</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 60%</td><td style="padding:3px 8px">Buy $44 — Meta 1.2GW</td></tr>
-        <tr><td style="padding:3px 8px;font-weight:700">NVDA</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 45%</td><td style="padding:3px 8px">Buy on pullback</td></tr>
-        <tr><td style="padding:3px 8px;font-weight:700">1810.HK</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 41%</td><td style="padding:3px 8px">Hold — tariff fear</td></tr>
-        <tr><td style="padding:3px 8px;font-weight:700">FCX</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 32%</td><td style="padding:3px 8px">Hold $54.50 stop</td></tr>
-        <tr><td style="padding:3px 8px;font-weight:700">UEC</td><td style="text-align:center;padding:3px 8px;font-weight:800">⚡ ARM</td><td style="padding:3px 8px">€11 limit armed</td></tr>
-        <tr><td style="padding:3px 8px;font-weight:700">KTOS</td><td style="text-align:center;padding:3px 8px">−13.7%</td><td style="padding:3px 8px">Sector pullback — hold</td></tr>
+        <tr><td style="padding:2px 8px;font-weight:700">OKLO</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">60%</td><td style="padding:2px 8px">Buy $44 — Meta 1.2GW</td></tr>
+        <tr style="background:#f8f9fa"><td style="padding:2px 8px;font-weight:700">PLTR</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">59%</td><td style="padding:2px 8px">Entry zone €95–109</td></tr>
+        <tr><td style="padding:2px 8px;font-weight:700">NVDA</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">45%</td><td style="padding:2px 8px">Buy on pullback</td></tr>
+        <tr style="background:#f8f9fa"><td style="padding:2px 8px;font-weight:700">1810.HK</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">41%</td><td style="padding:2px 8px">Hold — tariff fear</td></tr>
+        <tr><td style="padding:2px 8px;font-weight:700">UEC</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">⚡ ARM</td><td style="text-align:center;padding:2px 8px;font-weight:800">€11</td><td style="padding:2px 8px">Limit armed — thesis intact</td></tr>
+        <tr style="background:#f8f9fa"><td style="padding:2px 8px;font-weight:700">FCX</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">32%</td><td style="padding:2px 8px">Hold $54.50 stop</td></tr>
+        <tr><td style="padding:2px 8px;font-weight:700">KTOS</td><td style="text-align:center;padding:2px 8px;color:#888">−13.7%</td><td style="text-align:center;padding:2px 8px">—</td><td style="padding:2px 8px">Sector pullback — hold</td></tr>
+        <tr style="border-top:1px solid rgba(212,175,55,0.3);background:rgba(56,189,248,0.05)"><td style="padding:2px 8px;font-weight:700">ASML</td><td style="text-align:center;padding:2px 8px;color:#185FA5;font-weight:700">BUY</td><td style="text-align:center;padding:2px 8px;font-weight:800">€1,080</td><td style="padding:2px 8px">Apr 16 earnings — beat=buy, miss=wait</td></tr>
       </tbody>
+      <tbody id="soros-outside-portfolio"></tbody>
     </table>
-    <div class="soros-subh">Outside Portfolio · Limits</div>
-    <table style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:8px;">
-      <thead><tr style="border-bottom:1px solid rgba(212,175,55,0.3);">
-        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">STOCK</th>
-        <th style="text-align:center;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">ACTION</th>
-        <th style="text-align:right;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">LIMIT</th>
-        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">BUDGET</th>
-      </tr></thead>
-      <tbody>
-        <tr style="border-left:3px solid #38bdf8;background:rgba(56,189,248,0.07);">
-          <td style="padding:3px 8px;font-weight:700">ASML</td>
-          <td style="text-align:center;padding:3px 8px;font-weight:800">BUY</td>
-          <td style="text-align:right;padding:3px 8px">€1,080</td>
-          <td style="padding:3px 8px">Apr 16 earnings ⚡</td>
-        </tr>
-      </tbody>
-    </table>
-    <div id="soros-outside-portfolio"></div>
     <div id="soros-one-command" class="soros-cmd">⏳ Awaiting directives…</div>
     <div id="soros-updated" class="soros-upd"></div>
   </div>
@@ -2423,6 +2407,7 @@ async function loadDecisionEngine() {
   const actions = Array.isArray(data.actions) ? data.actions : [];
 
   let outHtml = "";
+  let rowIdx = 0;
   const plan = Array.isArray(data.deployment_plan) ? data.deployment_plan : [];
   plan.forEach(function (row) {
     if (!row || !row.ticker) return;
@@ -2430,18 +2415,13 @@ async function loadDecisionEngine() {
     const lim = row.limit != null ? deEsc(String(row.limit)) : "\u2014";
     const amt = row.amount_eur != null ? Math.round(Number(row.amount_eur)) : null;
     const rs = row.reason != null ? deEsc(String(row.reason)) : "";
-    const eur = amt != null && !Number.isNaN(amt) ? "\u20AC" + amt.toLocaleString("en-IE") : "\u2014";
-    outHtml +=
-      '<div class="soros-line"><span class="sl-main">\uD83D\uDCB0 ' +
-      tk +
-      " \u2014 BUY at " +
-      lim +
-      " \u2014 " +
-      eur +
-      "</span>" +
-      '<span class="sl-sub">' +
-      (rs || "Limit armed — size when spot confirms.") +
-      "</span></div>";
+    const eur = amt != null && !Number.isNaN(amt) ? "\u20AC" + amt.toLocaleString("en-IE") : "";
+    const bg = rowIdx % 2 === 0 ? "" : " style=\"background:#f8f9fa\"";
+    outHtml += '<tr' + bg + '><td style="padding:2px 8px;font-weight:700">' + tk +
+      '</td><td style="text-align:center;padding:2px 8px;color:#185FA5;font-weight:700">BUY</td>' +
+      '<td style="text-align:center;padding:2px 8px;font-weight:800">' + lim + '</td>' +
+      '<td style="padding:2px 8px">' + (rs || "Limit armed") + (eur ? " · " + eur : "") + '</td></tr>';
+    rowIdx++;
   });
   actions.forEach(function (a) {
     if (!a || String(a.type || "").toUpperCase() !== "WATCH") return;
@@ -2449,15 +2429,14 @@ async function loadDecisionEngine() {
     if (HELD_SET.has(a.ticker) || HELD_SET.has(tku)) return;
     const tk = deEsc(a.ticker);
     const rs = deEsc(a.reason || "");
-    outHtml +=
-      '<div class="soros-line"><span class="sl-main">\uD83D\uDD0D ' +
-      tk +
-      " \u2014 WATCH \u2014 prepare capital</span>" +
-      '<span class="sl-sub">' +
-      (rs || "IPO / catalyst window — narrative vs reality.") +
-      "</span></div>";
+    const bg = rowIdx % 2 === 0 ? "" : " style=\"background:#f8f9fa\"";
+    outHtml += '<tr' + bg + '><td style="padding:2px 8px;font-weight:700">' + tk +
+      '</td><td style="text-align:center;padding:2px 8px;color:#6b7280;font-weight:600">WATCH</td>' +
+      '<td style="text-align:center;padding:2px 8px">\u2014</td>' +
+      '<td style="padding:2px 8px">' + (rs || "Prepare capital") + '</td></tr>';
+    rowIdx++;
   });
-  outsideEl.innerHTML = outHtml || '<div class="soros-line sl-sub">\u2014</div>';
+  outsideEl.innerHTML = outHtml;
 
   const oc = data.one_command != null ? String(data.one_command) : "";
   cmdEl.textContent = "\u2694 ONE COMMAND: " + (oc ? oc : "\u2014");
@@ -2942,18 +2921,18 @@ function updateGemGradeBar() {
 function populateGradeSummary() {
   var body = document.getElementById('grade-summary-body');
   if (!body) return;
+  var gradeRank = {S:0,"A+":1,A:2,"B+":3,B:4,"C+":5,C:6,D:7,F:8};
   var rows = [];
-  var godScores = {};
-  document.querySelectorAll('.mx-row[data-ticker]').forEach(function(tr) {
-    var tk = tr.getAttribute('data-ticker');
-    var gn = tr.querySelector('.god-num');
-    if (tk && gn) godScores[tk] = parseFloat(gn.textContent) || 0;
-  });
   Object.keys(GEM_DATA).forEach(function(tk) {
     var d = GEM_DATA[tk];
-    rows.push({ticker: tk, grade: d.grade, gem: godScores[tk] || 0, u1y: d.u1y, u5y: d.u5y});
+    rows.push({ticker: tk, grade: d.grade, gem: d.gem_score || 0, u1y: d.u1y, u5y: d.u5y});
   });
-  rows.sort(function(a, b) { return b.gem - a.gem; });
+  rows.sort(function(a, b) {
+    var ga = gradeRank[a.grade] != null ? gradeRank[a.grade] : 9;
+    var gb = gradeRank[b.grade] != null ? gradeRank[b.grade] : 9;
+    if (ga !== gb) return ga - gb;
+    return b.gem - a.gem;
+  });
   var bgMap = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
   var fgMap = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
   var html = '';
