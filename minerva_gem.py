@@ -67,6 +67,50 @@ R_FREE     = 0.04   # risk-free rate
 LIQ_MULT  = {"tight": 0.95, "neutral": 1.00, "loose": 1.05}
 SENT_MULT = {"negative": 0.97, "neutral": 1.00, "positive": 1.03}
 
+# ── Sector Calibration Tables (adapted from scenario-projection-engine) ──────
+# EV/EBITDA (or EV/Rev for pre-rev) ranges by scenario, for sanity-checking
+SECTOR_MULTIPLES = {
+    "Intelligence":  {"worst": (15, 20), "normal": (22, 28), "bull": (35, 50)},
+    "Energy":        {"worst": (4, 8),   "normal": (8, 14),  "bull": (15, 25)},
+    "Space":         {"worst": (8, 12),  "normal": (15, 25), "bull": (30, 50)},  # EV/Rev
+    "Bio":           {"worst": (8, 12),  "normal": (15, 30), "bull": (30, 60)},  # EV/Rev
+    "Robotics":      {"worst": (12, 16), "normal": (18, 24), "bull": (28, 40)},
+    "Defense":       {"worst": (12, 15), "normal": (16, 20), "bull": (22, 28)},
+    "Infra":         {"worst": (10, 14), "normal": (16, 22), "bull": (24, 35)},
+    "Global":        {"worst": (6, 10),  "normal": (10, 16), "bull": (16, 24)},
+    "Locked":        {"worst": (10, 14), "normal": (18, 24), "bull": (28, 40)},
+    "Tactical":      {"worst": (6, 8),   "normal": (8, 12),  "bull": (12, 16)},
+}
+
+# Revenue CAGR reference ranges by company maturity x scenario
+CAGR_REFERENCE = {
+    "pre_profit":  {"worst": (-0.10, 0.00), "normal": (0.15, 0.25), "bull": (0.30, 0.50)},
+    "growth":      {"worst": (0.00, 0.08),  "normal": (0.10, 0.18), "bull": (0.20, 0.35)},
+    "mature":      {"worst": (-0.05, 0.03), "normal": (0.03, 0.08), "bull": (0.08, 0.15)},
+}
+
+# Monitoring cadence by grade + thesis status
+MONITOR_CADENCE = {
+    ("S", "intact"):    "monthly",
+    ("A+", "intact"):   "monthly",
+    ("A", "intact"):    "monthly",
+    ("B+", "intact"):   "monthly",
+    ("B", "intact"):    "quarterly",
+    ("C+", "intact"):   "weekly",
+    ("C", "intact"):    "weekly",
+    ("D", "intact"):    "weekly",
+    ("F", "intact"):    "daily",
+    ("D", "wounded"):   "daily",
+    ("F", "wounded"):   "daily",
+    ("F", "dead"):      "exit",
+}
+
+ACTION_WORDS = {
+    "S":  "Strong Hold", "A+": "Hold + Add dips", "A": "Hold",
+    "B+": "Hold", "B": "Hold — monitor", "C+": "Watch closely",
+    "C":  "Trim candidate", "D": "Review thesis", "F": "Avoid / Exit",
+}
+
 
 def _r(v, n=2):
     return round(float(v), n)
@@ -370,6 +414,24 @@ def evaluate(data):
 
     two_layer = f"{gem_verdict} · {soros_verdict}" if soros_verdict else gem_verdict
 
+    # ── "So What" action signal ──────────────────────────────────────────────
+    near_label = "OVERVALUED" if u1 < -5 else "FAIR" if u1 < 5 else "UNDERVALUED"
+    long_label = "OVERVALUED" if u5 < 5 else "FAIR" if u5 < 30 else "UNDERVALUED"
+
+    cadence_key = (grade, thesis)
+    if cadence_key not in MONITOR_CADENCE:
+        cadence_key = (grade, "intact")
+    cadence = MONITOR_CADENCE.get(cadence_key, "monthly")
+
+    action_word = ACTION_WORDS.get(grade, "Review")
+    sector = data.get("sector", "")
+
+    so_what = (
+        f"{action_word}. Thesis {thesis}. "
+        f"Near: {near_label}, Long: {long_label}. "
+        f"Monitor {cadence}."
+    )
+
     return {
         "ticker":         data["ticker"],
         "sector":         data.get("sector", ""),
@@ -393,6 +455,13 @@ def evaluate(data):
             "gem_portfolio":     gem_p,
             "god_score_warning": warn,
             "reason":            reason,
+        },
+        "so_what": {
+            "action":    action_word,
+            "signal":    so_what,
+            "near_term": near_label,
+            "long_term": long_label,
+            "cadence":   cadence,
         },
     }
 
@@ -462,7 +531,9 @@ if __name__ == "__main__":
         print(f"\n{r['ticker']} | mode: {r['valuation_mode']}")
         print(f"  heston_used: {r['heston_used']} | {elapsed:.1f}s")
         print(f"  two_layer_verdict: {r['two_layer_verdict']}")
-        print(f"  {'─'*55}")
+        sw = r.get("so_what", {})
+        print(f"  so_what: {sw.get('signal','')}")
+        print(f"  {'-'*55}")
         for h in ["1m","6m","1y","3y","5y"]:
             pr = r["projections"][h]
             flag = " ⚠️" if pr["worst_drop_pct"] < -75 and h in ["1m","6m"] else ""
