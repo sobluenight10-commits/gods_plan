@@ -1533,6 +1533,7 @@ MINERVA ACTION CHANGE RULE (permanent):
 
   <div class="card" style="margin-top:18px;padding:16px 18px;border:1px solid rgba(196,168,79,0.35);">
     <div class="sec-t" style="margin-bottom:8px;">AUTO EXPECTATION ENGINE</div>
+    <div id="liqCorridorTrend" style="font-size:14px;font-weight:800;letter-spacing:0.03em;margin-bottom:10px;line-height:1.4;">—</div>
     <div id="liqBand" style="font-size:13px;color:var(--ink2);line-height:1.55;">—</div>
     <div id="liqVel" style="font-size:12px;color:var(--ink3);margin-top:8px;">—</div>
     <div id="liqSurprise" style="font-size:12px;color:var(--ink3);margin-top:4px;">—</div>
@@ -2357,11 +2358,29 @@ async function loadLiqTab() {
     const todayHist = document.getElementById("liqTodayHist");
     if (todayHist) todayHist.textContent = "$" + netB + "B";
 
+    const lct = document.getElementById("liqCorridorTrend");
     const lb = document.getElementById("liqBand");
     const lv = document.getElementById("liqVel");
     const ls = document.getElementById("liqSurprise");
     const lr = document.getElementById("liqRegime");
     const ln = document.getElementById("liqExpectNote");
+    if (lct) {
+      const v7n = liq.velocity_7d_b != null ? Number(liq.velocity_7d_b) : null;
+      const v4n = liq.velocity_4w_b != null ? Number(liq.velocity_4w_b) : null;
+      const vDir = v7n != null && !isNaN(v7n) ? v7n : (v4n != null && !isNaN(v4n) ? v4n : null);
+      const src = v7n != null && !isNaN(v7n) ? "7d" : (v4n != null && !isNaN(v4n) ? "4w (7d n/a)" : null);
+      if (vDir == null || src == null) {
+        lct.textContent = "Corridor trend: — (velocity pending — refresh FRED / pre-alarm)";
+        lct.style.color = "var(--ink3)";
+      } else if (vDir > 0) {
+        lct.innerHTML = "<span style=\"color:#1a5c35\">📈 Rising</span> · net liq <strong>+$" + Math.abs(vDir).toFixed(0) + "B</strong> vs ~" + src + " ago <span style=\"font-size:11px;font-weight:600;color:var(--ink3)\">(more system liquidity)</span>";
+      } else if (vDir < 0) {
+        lct.innerHTML = "<span style=\"color:#b71c1c\">📉 Falling</span> · net liq <strong>−$" + Math.abs(vDir).toFixed(0) + "B</strong> vs ~" + src + " ago <span style=\"font-size:11px;font-weight:600;color:var(--ink3)\">(drain)</span>";
+      } else {
+        lct.textContent = "→ Flat · ~0B vs ~" + src + " ago";
+        lct.style.color = "var(--ink2)";
+      }
+    }
     if (lb && liq.expectation_low_b != null && liq.expectation_high_b != null) {
       lb.innerHTML = "Corridor (rolling): <strong>$" + Math.round(liq.expectation_low_b).toLocaleString() + "B – $" +
         Math.round(liq.expectation_high_b).toLocaleString() + "B</strong> · mid <strong>$" +
