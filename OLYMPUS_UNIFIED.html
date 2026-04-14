@@ -38,6 +38,56 @@
   --c1:#1e3a6e;--c2:#1e5c2a;--c3:#4a1a7a;--c4:#1a4f4f;--c5:#6b2d14;--c6:#1e3050;--c-radar:#7a3500;
 
 }
+/* GEM grade table — RISK header hover + SO WHAT column */
+.gem-th-risk-wrap { position: relative; text-align: center; vertical-align: bottom; }
+.gem-th-risk-hover {
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 2px 4px;
+  border-radius: 4px;
+}
+.gem-th-risk-hover:hover { background: rgba(212,175,55,0.12); }
+.gem-hint-i {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+  font-weight: 800;
+  border-radius: 50%;
+  background: #d4af37;
+  color: #fff;
+  line-height: 1;
+  font-family: 'Barlow', sans-serif;
+}
+.gem-risk-popup {
+  display: none;
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 6px);
+  transform: translateX(-50%);
+  width: min(300px, 86vw);
+  padding: 10px 12px;
+  background: #1a2030;
+  color: #e8eaf0;
+  font-size: 10px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-align: left;
+  letter-spacing: 0.02em;
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.25);
+  z-index: 500;
+  border: 1px solid rgba(212,175,55,0.35);
+  pointer-events: none;
+}
+.gem-th-risk-hover:hover .gem-risk-popup,
+.gem-th-risk-wrap:hover .gem-risk-popup { display: block; }
+.gem-sowhat-cell { font-size: 9px; line-height: 1.35; max-width: 120px; text-align: left !important; color: #333; }
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;}
 
@@ -789,16 +839,24 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 
 <div id="grade-summary-panel" style="padding:12px 40px 8px;background:#fafafa;border-bottom:1px solid #e5e5e5;">
   <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8b6914;margin-bottom:8px;">GEM GRADE SUMMARY <span style="font-weight:400;color:#888;font-size:9px;letter-spacing:0">— Risk-Integrated v5 · <span style="color:#2d7a2d">●</span> I <span style="color:#b8860b">●</span> II <span style="color:#a32d2d">●</span> III · Downside penalty + 9-dim risk scoring</span></div>
-  <table id="grade-summary-table" style="border-collapse:collapse;width:100%;max-width:800px;font-family:'DM Mono',monospace;font-size:11px;">
+  <table id="grade-summary-table" style="border-collapse:collapse;width:100%;max-width:960px;font-family:'DM Mono',monospace;font-size:11px;">
     <thead><tr style="border-bottom:2px solid #d4af37;">
       <th style="text-align:left;padding:3px 8px;color:#555;font-size:10px;">TICKER</th>
       <th style="text-align:center;padding:3px 8px;color:#555;font-size:10px;">GRADE</th>
-      <th style="text-align:center;padding:3px 4px;color:#555;font-size:10px;">RISK</th>
+      <th class="gem-th-risk-wrap" style="padding:3px 4px;color:#555;font-size:10px;">
+        <span class="gem-th-risk-hover">
+          RISK<span class="gem-hint-i">i</span>
+          <span class="gem-risk-popup"><strong style="color:#f0d78c">What &ldquo;RISK&rdquo; means here</strong><br><br>
+          This column is the <strong>9-dimension fundamental risk band</strong> (same engine as the Risk Heatmap below): revenue concentration, profitability trend, balance-sheet leverage, cash runway, revenue volatility, valuation cushion, liquidity, sector cyclicality, catalyst dependency. Each dimension is scored 0&ndash;9 (0 = none, 9 = severe); they roll into an average and a label: LOW / MODERATE / HIGH / CRITICAL.<br><br>
+          In GEM v5, that profile is <strong>integrated with downside / asymmetry</strong> before letter grades. It measures <strong>structural thesis risk</strong>, not day-to-day price noise.</span>
+        </span>
+      </th>
       <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">GEM</th>
       <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">1Y EV%</th>
       <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">5Y EV%</th>
+      <th style="text-align:left;padding:3px 8px;color:#555;font-size:9px;max-width:118px;" title="Rule-based guidance from grade + risk + 1Y EV — not personalized advice.">SO WHAT</th>
     </tr></thead>
-    <tbody id="grade-summary-body"><tr><td colspan="6" style="padding:6px;color:#999;font-style:italic">Loading…</td></tr></tbody>
+    <tbody id="grade-summary-body"><tr><td colspan="7" style="padding:6px;color:#999;font-style:italic">Loading…</td></tr></tbody>
   </table>
 </div>
 
@@ -3041,6 +3099,43 @@ function updateGemGradeBar() {
   bar.innerHTML = html;
 }
 
+/** Heuristic action line from grade + integrated risk + 1Y EV (dashboard hint only). */
+function soWhatToDo(grade, riskLevel, u1y) {
+  var risk = String(riskLevel || 'UNKNOWN').toUpperCase();
+  var g = String(grade || 'F');
+  var ev = (u1y == null || isNaN(u1y)) ? null : Number(u1y);
+  if (risk === 'UNKNOWN') {
+    return { line: 'Confirm risk file', tip: 'Run / refresh risk screener on server so risk_level merges into GEM.' };
+  }
+  if (risk === 'CRITICAL' || risk === 'HIGH') {
+    if (g === 'F' || g === 'D' || g === 'C' || g === 'C+') {
+      return { line: 'Avoid or tiny spec', tip: 'High structural risk with weaker grade — only minimal tactical size if any.' };
+    }
+    if (g === 'A' || g === 'A+' || g === 'S') {
+      return { line: 'Size like a catalyst', tip: 'Strong GEM but high risk — smaller size, limits, clear invalidation.' };
+    }
+    return { line: 'Tighten / de-risk', tip: 'Cut size, widen awareness of catalysts, or wait for cleaner setup.' };
+  }
+  if (risk === 'MODERATE') {
+    if (g === 'A' || g === 'A+' || g === 'B+' || g === 'B') {
+      return { line: 'Hold, add selective', tip: 'Acceptable integrated risk — add only on predefined rules / limits.' };
+    }
+    return { line: 'Right-size conviction', tip: 'Moderate risk — match position to thesis strength and liquidity needs.' };
+  }
+  if (risk === 'LOW') {
+    if (g === 'A' || g === 'A+' || g === 'S') {
+      return { line: 'Core — add on dips', tip: 'Low structural risk + top tier — default core; add on planned pullbacks.' };
+    }
+    if (g === 'B+' || g === 'B') {
+      return { line: 'Hold / accumulate', tip: 'Low risk — accumulate within allocation bands.' };
+    }
+  }
+  if (ev != null && ev < -12) {
+    return { line: 'Re-check thesis', tip: 'Poor 1Y EV vs model — verify assumptions before adding.' };
+  }
+  return { line: 'Review vs plan', tip: 'Weaker tier or mixed signals — align with portfolio rules and size limits.' };
+}
+
 function computePrecisionTiers(rows) {
   var tierLabels = {1:'I', 2:'II', 3:'III'};
   var buckets = {};
@@ -3086,7 +3181,8 @@ function populateGradeSummary() {
       ticker: tk, grade: d.grade, gem: d.gem_score || 0,
       u1y: d.u1y, u5y: d.u5y,
       risk_avg: d.risk_avg, risk_level: d.risk_level || 'UNKNOWN',
-      pgrade: d.pgrade || d.grade
+      pgrade: d.pgrade || d.grade,
+      u1yNum: d.u1y != null ? Number(d.u1y) : null
     });
   });
 
@@ -3103,7 +3199,7 @@ function populateGradeSummary() {
   var fgMap = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
   var tierDot = {1:'#2d7a2d', 2:'#b8860b', 3:'#a32d2d'};
   var riskBg = {CRITICAL:'#FCEBEB',HIGH:'#FFF3E0',MODERATE:'#F5F5F5',LOW:'#EAF3DE',UNKNOWN:'#F5F5F5'};
-  var riskFg = {CRITICAL:'#C62828',HIGH:'#E65100',MODERATE:'#616161',LOW:'#2E7D32',UNKNOWN:'#9E9E9E'};
+  var riskFg = {CRITICAL:'#B71C1C',HIGH:'#E65100',MODERATE:'#616161',LOW:'#2E7D32',UNKNOWN:'#9E9E9E'};
   var html = '';
   rows.forEach(function(r, i) {
     var bg = i % 2 === 0 ? '#fff' : '#f8f9fa';
@@ -3115,6 +3211,9 @@ function populateGradeSummary() {
     var serverPG = r.pgrade || r.grade;
     var rl = r.risk_level || 'UNKNOWN';
     var riskBadge = '<span style="background:' + (riskBg[rl]||riskBg.UNKNOWN) + ';color:' + (riskFg[rl]||riskFg.UNKNOWN) + ';font-size:8px;font-weight:600;padding:1px 4px;border-radius:2px;letter-spacing:0.3px">' + rl + '</span>';
+    var sow = soWhatToDo(r.grade, r.risk_level, r.u1yNum);
+    var sowTip = (sow.tip || '').replace(/"/g, '&quot;');
+    var sowLine = (sow.line || '—').replace(/</g, '&lt;');
     html += '<tr style="background:' + bg + '">' +
       '<td style="padding:3px 8px;font-weight:600">' + r.ticker + nameHtml + '</td>' +
       '<td style="text-align:center;padding:3px 8px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + serverPG + '</span></td>' +
@@ -3122,12 +3221,13 @@ function populateGradeSummary() {
       '<td style="text-align:right;padding:3px 8px">' + r.gem.toFixed(1) + '</td>' +
       '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
       '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u5y) + '">' + evFmt(r.u5y) + '</td>' +
+      '<td class="gem-sowhat-cell" style="padding:3px 6px" title="' + sowTip + '"><span style="font-weight:700;color:#185FA5">' + sowLine + '</span></td>' +
       '</tr>';
   });
   body.innerHTML = html;
   } catch (err) {
     console.error('populateGradeSummary', err);
-    body.innerHTML = '<tr><td colspan="6" style="padding:6px;color:#a32d2d;font-size:11px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
+    body.innerHTML = '<tr><td colspan="7" style="padding:6px;color:#a32d2d;font-size:11px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
   }
 }
 
