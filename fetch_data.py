@@ -216,56 +216,93 @@ def get_liquidity():
     }
 
 def get_ranto28():
-    """Load blog signals, filtering to only last 48h by date field."""
+    """Fetch ranto28 blog posts directly from RSS — last 48h only.
+    No dependency on daemon services or cached files."""
+    import re
     from datetime import timedelta
-    cutoff = datetime.datetime.now() - timedelta(hours=48)
-    signals = []
     try:
-        path = os.path.join(BASE, "data", "blog_signals.json")
-        with open(path) as f: raw = json.load(f)
-        for s in raw:
-            d = s.get("date", "")
-            if d:
-                try:
-                    pd = datetime.datetime.strptime(d[:10], "%Y-%m-%d")
-                    if pd < cutoff:
-                        continue
-                except ValueError:
-                    pass
-            signals.append(s)
-    except Exception:
-        pass
+        import requests
+    except ImportError:
+        return []
 
-    bt_path = os.path.join(BASE, "data", "blog_tickers.json")
+    from datetime import timezone as _tz
+    cutoff = datetime.datetime.now(_tz.utc) - timedelta(hours=48)
+    signals = []
+
+    SECTOR_KEYWORDS = {
+        "우라늄": "ENERGY", "원유": "ENERGY", "석유": "ENERGY", "원전": "ENERGY",
+        "구리": "INFRASTRUCTURE", "니켈": "INFRASTRUCTURE", "비료": "INFRASTRUCTURE",
+        "반도체": "INTELLIGENCE", "AI": "INTELLIGENCE", "데이터센터": "INTELLIGENCE",
+        "이란": "GLOBAL", "중동": "GLOBAL", "트럼프": "GLOBAL", "관세": "GLOBAL",
+        "은행": "GLOBAL", "파월": "GLOBAL", "금리": "GLOBAL",
+        "이스라엘": "GLOBAL", "호르무즈": "ENERGY",
+        "호주": "INFRASTRUCTURE", "중국": "GLOBAL",
+    }
+
+    TICKER_KEYWORDS = {
+        "구리": ["FCX", "COPX"], "우라늄": ["UEC", "URNM", "CCJ"],
+        "원유": ["XLE"], "석유": ["XLE"], "반도체": ["TSM", "000660.KS"],
+        "데이터센터": ["VRT", "NVDA"], "비료": ["NTR"],
+        "이란": ["UEC", "XLE"], "호르무즈": ["UEC", "XLE"],
+        "은행": [], "금리": [], "관세": [],
+    }
+
     try:
-        import time as _time
-        if os.path.exists(bt_path):
-            age_h = (_time.time() - os.path.getmtime(bt_path)) / 3600
-            if age_h < 96:
-                with open(bt_path) as f: bt = json.load(f)
-                for entry in bt.get("history", []):
-                    d = entry.get("date", "")
-                    if d:
-                        try:
-                            pd = datetime.datetime.strptime(d[:10], "%Y-%m-%d")
-                            if pd < cutoff:
-                                continue
-                        except ValueError:
-                            pass
-                    added = entry.get("added", [])
-                    if added:
-                        signals.append({
-                            "title": entry.get("post", ""),
-                            "date": d,
-                            "url": entry.get("url", ""),
-                            "affected_tickers": added[:5],
-                            "signal": "WATCH",
-                            "macro_theme": "",
-                            "summary": entry.get("post", "")[:120],
-                            "sectors": list((bt.get("by_sector") or {}).keys()),
-                        })
-    except Exception:
-        pass
+        rss_url = "https://rss.blog.naver.com/ranto28.xml"
+        r = requests.get(rss_url, timeout=15, headers={"User-Agent": "Mozilla/5.0"})
+        r.raise_for_status()
+        xml = r.text
+
+        items = re.findall(r"<item>(.*?)</item>", xml, re.DOTALL)
+        for item in items[:15]:
+            title_m = re.search(r"<title><!\[CDATA\[(.*?)\]\]></title>", item)
+            link_m = re.search(r"<link><!\[CDATA\[(.*?)\]\]></link>", item)
+            date_m = re.search(r"<pubDate>(.*?)</pubDate>", item)
+
+            title = title_m.group(1).strip() if title_m else ""
+            url = link_m.group(1).strip() if link_m else ""
+            pub_date = None
+
+            if date_m:
+                raw_date = date_m.group(1).strip()
+                try:
+                    from email.utils import parsedate_to_datetime
+                    pub_date = parsedate_to_datetime(raw_date)
+                    if pub_date.tzinfo is None:
+                        pub_date = pub_date.replace(tzinfo=_tz.utc)
+                except Exception:
+                    dm = re.search(r"(\d{4})-?(\d{2})-?(\d{2})", raw_date)
+                    if dm:
+                        pub_date = datetime.datetime(int(dm.group(1)), int(dm.group(2)), int(dm.group(3)), tzinfo=_tz.utc)
+
+            if pub_date and pub_date < cutoff:
+                continue
+
+            date_str = pub_date.strftime("%Y-%m-%d") if pub_date else ""
+
+            sectors = []
+            tickers = []
+            for kw, sec in SECTOR_KEYWORDS.items():
+                if kw in title:
+                    if sec not in sectors:
+                        sectors.append(sec)
+            for kw, tks in TICKER_KEYWORDS.items():
+                if kw in title:
+                    for tk in tks:
+                        if tk not in tickers:
+                            tickers.append(tk)
+
+            signals.append({
+                "title": title,
+                "date": date_str,
+                "url": url,
+                "affected_tickers": tickers[:5],
+                "signal": "WATCH",
+                "summary": title[:120],
+                "sectors": sectors,
+            })
+    except Exception as e:
+        print(f"[RANTO28] RSS fetch failed: {e}")
 
     return signals
 
