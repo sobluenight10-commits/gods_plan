@@ -48,7 +48,7 @@ _DEFAULT_FEEDS = [
     "https://hnrss.org/frontpage",
     "https://hnrss.org/newest?q=AI+OR+GPU+OR+LLM+OR+TSMC+OR+CUDA&count=20",
     "https://techcrunch.com/feed/",
-    "https://www.theverge.com/rss/index.xml",
+    "https://www.wired.com/feed/tag/ai/latest/rss",
     "https://arstechnica.com/feed/",
     "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
 ]
