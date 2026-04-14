@@ -1852,6 +1852,18 @@ function genCmds(cls, fsiOverride, net, fsi, layer4Warning, fund, safe){
 // ══════════════════════════════════════════════════════════════════
 const PRICES_JSON_URL = "/data/prices.json";
 
+/** Soros footer: merge directive timestamp + live price feed time (avoids stale 13:13 when prices refresh). */
+function renderSorosUpdatedLine() {
+  const el = document.getElementById("soros-updated");
+  if (!el) return;
+  const d = window.__directive_last;
+  const p = window.__prices_live;
+  const parts = [];
+  if (d) parts.push("Last updated: " + d);
+  if (p) parts.push("Live quotes: " + p);
+  el.textContent = parts.join(" · ");
+}
+
 async function loadLivePrices() {
   const badge = document.getElementById('live-price-badge');
   try {
@@ -1902,6 +1914,9 @@ async function loadLivePrices() {
     }
     const lastUp = document.getElementById("lastUpdate");
     if (lastUp) lastUp.textContent = updated;
+
+    window.__prices_live = updated;
+    renderSorosUpdatedLine();
 
     console.log("Prices loaded: " + updated_count + " tickers @ " + updated);
     if (typeof window.syncPlPortCardFromMatrix === "function") window.syncPlPortCardFromMatrix();
@@ -2417,7 +2432,8 @@ async function loadDecisionEngine() {
     outsideEl.innerHTML =
       '<div class="soros-line"><span class="sl-sub">\u23F3 Awaiting next brief — 07:00 Berlin</span></div>';
     cmdEl.textContent = "\u2694 ONE COMMAND: \u2014";
-    updEl.textContent = "";
+    window.__directive_last = "";
+    renderSorosUpdatedLine();
     return;
   }
 
@@ -2459,7 +2475,8 @@ async function loadDecisionEngine() {
   cmdEl.textContent = "\u2694 ONE COMMAND: " + (oc ? oc : "\u2014");
 
   const lu = data.last_updated != null ? String(data.last_updated) : "";
-  updEl.textContent = lu ? "Last updated: " + lu : "";
+  window.__directive_last = lu;
+  renderSorosUpdatedLine();
 
   const vixEl = document.getElementById("hdr-vix-num");
   if (vixEl != null && data.vix != null && data.vix !== "") {
@@ -2796,7 +2813,6 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     .catch(function(e) { console.warn('dashboard_state.json load failed:', e); });
 })();
 </script>
-</body>
 
 <!-- GEM_INJECT_START -->
 <script>
@@ -3072,7 +3088,8 @@ function riskLevelBadge(level) {
   return '<span style="background:'+c.bg+';color:'+c.fg+';padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700">'+level+'</span>';
 }
 function loadRiskHeatmap() {
-  var riskUrl = '/data/skill_results/risk_latest.json?t=' + Date.now();
+  var origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+  var riskUrl = origin + '/data/skill_results/risk_latest.json?t=' + Date.now();
   fetch(riskUrl)
     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
     .then(function(data) {
@@ -3111,21 +3128,48 @@ function loadRiskHeatmap() {
       }
     });
 }
-loadRiskHeatmap();
 setInterval(loadRiskHeatmap, 5 * 60 * 1000);
 
-/* Script block is after </body>: DOMContentLoaded may have already fired — use readyState + immediate boot */
-function bootGemDashboard() {
-  setTimeout(injectGemIntoTables, 300);
-  setTimeout(syncEvalWithGem, 350);
-  setTimeout(updateGemGradeBar, 400);
-  setTimeout(populateGradeSummary, 500);
+/* GEM + risk panels: inside <body>; readyState boot + window.load + watchdog if panels still show Loading */
+function runGemPanelsOnce() {
+  try {
+    if (typeof injectGemIntoTables === 'function') injectGemIntoTables();
+    if (typeof syncEvalWithGem === 'function') syncEvalWithGem();
+    if (typeof updateGemGradeBar === 'function') updateGemGradeBar();
+    if (typeof populateGradeSummary === 'function') populateGradeSummary();
+  } catch (e) {
+    console.error('[OLY] GEM panels', e);
+  }
+  try {
+    if (typeof loadRiskHeatmap === 'function') loadRiskHeatmap();
+  } catch (e2) {
+    console.error('[OLY] risk heatmap', e2);
+  }
+}
+function scheduleGemBoot() {
+  runGemPanelsOnce();
+  setTimeout(runGemPanelsOnce, 80);
+  setTimeout(runGemPanelsOnce, 400);
+  setTimeout(runGemPanelsOnce, 1200);
+  var tries = 0;
+  var watchdog = setInterval(function () {
+    tries++;
+    var gb = document.getElementById('grade-summary-body');
+    var rh = document.getElementById('risk-heatmap-rows');
+    var gStuck = gb && /Loading/i.test(gb.textContent || '');
+    var rStuck = rh && /Loading/i.test(rh.textContent || '');
+    if (gStuck || rStuck) runGemPanelsOnce();
+    if (tries >= 24 || (!gStuck && !rStuck)) clearInterval(watchdog);
+  }, 1500);
 }
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bootGemDashboard);
+  document.addEventListener('DOMContentLoaded', scheduleGemBoot);
 } else {
-  bootGemDashboard();
+  scheduleGemBoot();
 }
+window.addEventListener('load', function () {
+  setTimeout(runGemPanelsOnce, 0);
+});
 </script>
 
 <div id="gem-header-bar" style="background:#f8f9fa;border:0.5px solid #ddd;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px">
@@ -3146,4 +3190,5 @@ if (document.readyState === 'loading') {
   </div>
 </div>
 <!-- GEM_INJECT_END -->
+</body>
 </html>
