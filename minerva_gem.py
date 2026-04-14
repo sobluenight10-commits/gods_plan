@@ -15,8 +15,9 @@ ARCHITECTURE (three-layer):
     - Blended with Heston-derived vol context (not pure MC)
     - Macro + sentiment multipliers applied
 
-  LAYER 3 — 5Y: DCF terminal value
-    - CAGR compounding × exit multiple, discounted
+  LAYER 3 — 5Y: Terminal stock price (NOT discounted)
+    - CAGR compounding × blended PE (current + exit)/2
+    - Projects FUTURE price, not present value
     - Pure fundamental, no stochastic noise
 
 WEIGHTS: 50% Worst / 30% Normal / 20% Bull (OLYMPUS standard — pessimistic by design)
@@ -203,8 +204,6 @@ def evaluate(data):
     xb = data.get("exit_multiple_bear",   8.0)
     xn = data.get("exit_multiple_normal",15.0)
     xu = data.get("exit_multiple_bull",  30.0)
-    dr = data.get("discount_rate", 0.12)
-    df = 1 / (1 + dr)**5
 
     # Vol blend for 1Y (Heston-informed but not full MC)
     vb = min(0.40, vol * 0.80)
@@ -234,9 +233,9 @@ def evaluate(data):
             ru*(1+gu)**2*psu/sh, adj)
 
         p5y = _proj(P0,
-            max(rb*(1+gb)**4*xb/sh*df, P0*FLOOR_PCT),
-            rn*(1+gn)**4*xn/sh*df,
-            ru*(1+gu)**4*xu/sh*df, adj)
+            max(rb*(1+gb)**4*xb/sh, P0*FLOOR_PCT),
+            rn*(1+gn)**4*xn/sh,
+            ru*(1+gu)**4*xu/sh, adj)
 
         mode = "heston_1m6m + rev_ps_1y3y5y"
 
@@ -260,10 +259,15 @@ def evaluate(data):
             max(e3b*pb, P0*FLOOR_PCT),
             e3n*pn, e3u*pu, adj)
 
+        # 5Y: EPS compounded × blended PE (current PE + exit multiple)/2
+        # No discount — projecting FUTURE stock price, not present value
+        pe5b = (pb + xb) / 2
+        pe5n = (pn + xn) / 2
+        pe5u = (pu + xu) / 2
         e5b, e5n, e5u = eb*(1+gb)**4, en*(1+gn)**4, eu*(1+gu)**4
         p5y = _proj(P0,
-            max(e5b*xb*df, P0*FLOOR_PCT),
-            e5n*xn*df, e5u*xu*df, adj)
+            max(e5b*pe5b, P0*FLOOR_PCT),
+            e5n*pe5n, e5u*pe5u, adj)
 
         mode = "heston_1m6m + eps_pe_1y3y5y"
 
@@ -275,10 +279,13 @@ def evaluate(data):
     thesis = data.get("thesis_status", "intact")
     macro  = data.get("macro_status",  "neutral")
 
+    # Grading calibrated for 50/30/20 pessimistic weighting:
+    # Under 50%W+30%N+20%B, a "fair" stock has EV ≈ -10%.
+    # Thresholds must reflect this built-in drag.
     if thesis != "intact" or macro == "broken": grade = "D"
-    elif u1>=20 and u5>=100 and d1>-60:         grade = "A"
-    elif u1>=10 and u5>=50  and d1>-50:         grade = "B"
-    elif u1>=0  and u5>=20:                     grade = "C"
+    elif u1>=0  and u5>=50  and d1>-50:         grade = "A"
+    elif u1>=-8 and u5>=20  and d1>-50:         grade = "B"
+    elif u1>=-15 and u5>=0:                     grade = "C"
     else:                                        grade = "D"
 
     gem_u = grade in ["A","B"]
