@@ -20,7 +20,10 @@ ARCHITECTURE (three-layer):
     - Projects FUTURE price, not present value
     - Pure fundamental, no stochastic noise
 
-WEIGHTS: 50% Worst / 30% Normal / 20% Bull (OLYMPUS standard — pessimistic by design)
+WEIGHTS: 40% Worst / 40% Normal / 20% Bull (OLYMPUS v2 — reality-anchored)
+  - Reality: stock prices embed expectations. Pure worst-case dominance
+    ignores that markets price in consensus. 40W/40N/20B reflects that
+    "normal" is the market's revealed bet, not an optimistic fantasy.
 FLOOR: 5% of current price (equity survives — not options)
 
 WHAT WAS TAKEN FROM HESTON PAPER:
@@ -34,6 +37,10 @@ WHAT WAS TAKEN FROM HESTON PAPER:
 WHAT WAS REJECTED:
   ✗ Heston for 5Y paths (noise, not signal)
   ✗ 50N/30B/20W weighting (wrong direction for OLYMPUS)
+  ✗ 50W/30N/20B (too harsh — normal IS the market's bet)
+
+GRADING: GEM Score (0-100) → 9 tiers: S / A+ / A / B+ / B / C+ / C / D / F
+  Components: 5Y-upside(35) + 1Y-upside(25) + downside-protection(20) + asymmetry(20)
   ✗ Hard yfinance dependency (optional enhancement only)
 
 SELF-VERIFICATION: verify_gem_output() runs automatically.
@@ -48,7 +55,7 @@ try:
 except ImportError:
     HAS_NUMPY = False
 
-WW, WN, WB = 0.5, 0.3, 0.2  # OLYMPUS weights: Worst/Normal/Bull
+WW, WN, WB = 0.4, 0.4, 0.2  # OLYMPUS v2 weights: Worst/Normal/Bull
 FLOOR_PCT  = 0.05
 K_FUND     = 1.28   # fundamental scenario sigma multiplier
 N_PATHS    = 10000  # Monte Carlo paths
@@ -134,8 +141,50 @@ def _mc_scenarios(S0, T, sigma_hist, implied_vol=None):
     return worst, normal, bull
 
 
+def _lerp(x, xs, ys):
+    """Piecewise linear interpolation for scoring curves."""
+    if x <= xs[0]: return ys[0]
+    if x >= xs[-1]: return ys[-1]
+    for i in range(len(xs) - 1):
+        if xs[i] <= x <= xs[i + 1]:
+            t = (x - xs[i]) / (xs[i + 1] - xs[i])
+            return ys[i] + t * (ys[i + 1] - ys[i])
+    return ys[-1]
+
+GRADE_THRESHOLDS = [
+    (80, "S"), (70, "A+"), (60, "A"), (50, "B+"),
+    (40, "B"), (30, "C+"), (20, "C"), (10, "D"), (0, "F"),
+]
+
+
+def _gem_score(u1, u5, d1, b1_gain):
+    """
+    Multi-factor GEM Score (0-100) → 9-tier letter grade.
+
+    Components (sum to 100 max):
+      5Y upside   (0-35):  long-term compounding value
+      1Y upside   (0-25):  near-term thesis validation
+      Downside    (0-20):  1Y worst-drop risk management
+      Asymmetry   (0-20):  bull-gain / worst-drop ratio (fat-tailed upside)
+    """
+    s5 = _lerp(u5, [-50, 0, 25, 50, 100, 200], [0, 10, 18, 24, 30, 35])
+    s1 = _lerp(u1, [-30, -15, 0, 10, 25], [0, 5, 12, 18, 25])
+    sd = _lerp(d1, [-70, -50, -30, -15, -5], [0, 5, 10, 15, 20])
+    ratio = b1_gain / max(abs(d1), 1) if d1 < -1 else 3.0
+    sa = _lerp(ratio, [0.3, 1.0, 2.0, 3.5], [0, 5, 12, 20])
+    raw = s5 + s1 + sd + sa
+    return round(min(100, max(0, raw)), 1)
+
+
+def _score_to_grade(score):
+    for threshold, grade in GRADE_THRESHOLDS:
+        if score >= threshold:
+            return grade
+    return "F"
+
+
 def _proj(P0, worst_raw, normal_raw, bull_raw, adj):
-    """Apply adj multiplier and compute EV with OLYMPUS 50/30/20 weights."""
+    """Apply adj multiplier and compute EV with OLYMPUS 40/40/20 weights."""
     floor = P0 * FLOOR_PCT
     w  = max(worst_raw  * adj, floor)
     n  = max(normal_raw * adj, floor)
@@ -271,31 +320,32 @@ def evaluate(data):
 
         mode = "heston_1m6m + eps_pe_1y3y5y"
 
-    # ── Grading ──────────────────────────────────────────────────────────────
+    # ── GEM Score — multi-factor 0-100 → 9-tier grade ──────────────────────
     u1 = p1y["upside_pct"]
     u5 = p5y["upside_pct"]
     d1 = p1y["worst_drop_pct"]
+    b1 = p1y["bull_gain_pct"]
 
     thesis = data.get("thesis_status", "intact")
     macro  = data.get("macro_status",  "neutral")
 
-    # Grading calibrated for 50/30/20 pessimistic weighting:
-    # Under 50%W+30%N+20%B, a "fair" stock has EV ≈ -10%.
-    # Thresholds must reflect this built-in drag.
-    if thesis != "intact" or macro == "broken": grade = "D"
-    elif u1>=0  and u5>=50  and d1>-50:         grade = "A"
-    elif u1>=-8 and u5>=20  and d1>-50:         grade = "B"
-    elif u1>=-15 and u5>=0:                     grade = "C"
-    else:                                        grade = "D"
+    raw_score = _gem_score(u1, u5, d1, b1)
+    grade = _score_to_grade(raw_score)
 
-    gem_u = grade in ["A","B"]
-    gem_p = grade == "A"
-    warn  = f"GOD Score {gs} below 70 — manual review" if gem_p and gs and gs<70 else None
+    if thesis == "dead":
+        grade, raw_score = "F", min(raw_score, 9)
+    elif thesis == "wounded" and raw_score >= 30:
+        grade, raw_score = "C+", min(raw_score, 39)
+    elif macro == "broken" and raw_score >= 40:
+        grade, raw_score = "B", min(raw_score, 49)
 
-    reas = {"A": f"Grade A: 1y {u1:+.1f}%, 5y {u5:+.1f}%, worst {d1:.1f}%.",
-            "B": f"Grade B: 1y {u1:+.1f}%, 5y {u5:+.1f}%, worst {d1:.1f}%.",
-            "C": f"Grade C: 1y {u1:+.1f}%, 5y {u5:+.1f}%, marginal.",
-            "D": f"Grade D: thesis={thesis}, 1y {u1:+.1f}%, 5y {u5:+.1f}%."}
+    gem_u = grade in ["S", "A+", "A", "B+", "B"]
+    gem_p = grade in ["S", "A+", "A"]
+    warn  = f"GOD Score {gs} below 70 — manual review" if gem_p and gs and gs < 70 else None
+
+    reason = (f"Grade {grade} (GEM {raw_score:.0f}/100): "
+              f"1y {u1:+.1f}%, 5y {u5:+.1f}%, worst {d1:.1f}%, "
+              f"bull {b1:+.1f}%")
 
     # ── Versus matrix ────────────────────────────────────────────────────────
     vs = {
@@ -333,14 +383,16 @@ def evaluate(data):
         "two_layer_verdict": two_layer,
         "projections":    {"1m": p1m, "6m": p6m, "1y": p1y, "3y": p3y, "5y": p5y},
         "grading": {
+            "gem_score":         _r(raw_score, 1),
             "upside_1y_pct":     _r(u1),
             "upside_5y_pct":     _r(u5),
             "worst_drop_1y_pct": _r(d1),
+            "bull_gain_1y_pct":  _r(b1),
             "grade":             grade,
             "gem_universe":      gem_u,
             "gem_portfolio":     gem_p,
             "god_score_warning": warn,
-            "reason":            reas[grade],
+            "reason":            reason,
         },
     }
 
@@ -419,8 +471,9 @@ if __name__ == "__main__":
                   f"B={pr['bull']:8.2f}({pr['bull_gain_pct']:+.1f}%) "
                   f"EV={pr['ev']:8.2f}({pr['upside_pct']:+.1f}%){flag}")
         g = r["grading"]
-        print(f"  Grade:{g['grade']} | 1y:{g['upside_1y_pct']:+.1f}% "
-              f"5y:{g['upside_5y_pct']:+.1f}% worst:{g['worst_drop_1y_pct']:+.1f}%")
+        print(f"  Grade:{g['grade']} GEM:{g['gem_score']}/100 | "
+              f"1y:{g['upside_1y_pct']:+.1f}% 5y:{g['upside_5y_pct']:+.1f}% "
+              f"worst:{g['worst_drop_1y_pct']:+.1f}% bull:{g['bull_gain_1y_pct']:+.1f}%")
         if issues:
             all_pass = False
             for i in issues: print(f"  ✗ {i}")
