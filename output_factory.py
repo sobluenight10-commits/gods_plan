@@ -63,11 +63,14 @@ def build_brief(state):
         u1y = fmt_pct(r["gem_u1y"])
         verdicts += f"{t} \u2192 {r['action']['display']} @ {p} \u00b7 P&L {pnl} \u00b7 1y EV {u1y} \u00b7 {r['conviction']}/10\n"
 
-    # RANTO section — try blog_signals, then blog_tickers as fallback
+    # RANTO section — rich blog analysis
     ranto_block = ""
     if ranto:
         for p in ranto[:4]:
-            ranto_block += f"\u2022 {p['summary'][:80]} \u2192 {p['action']} ({','.join(p['tickers'])})\n"
+            ranto_block += f"\u2022 {p.get('summary','')[:120]}\n"
+            if p.get('theme'): ranto_block += f"  Theme: {p['theme']}\n"
+            tks = ','.join(p.get('tickers',[]))
+            if tks: ranto_block += f"  Impact: {tks} \u2192 {p.get('action','WATCH')}\n"
     if not ranto_block:
         try:
             bt_path = os.path.join(BASE, "data", "blog_tickers.json")
@@ -76,12 +79,21 @@ def build_brief(state):
                 age_h = (_time.time() - os.path.getmtime(bt_path)) / 3600
                 with open(bt_path) as f:
                     bt = json.load(f)
-                tickers_found = bt if isinstance(bt, list) else bt.get("tickers", [])
-                if tickers_found and age_h < 72:
-                    ranto_block = f"\u2022 {len(tickers_found)} signals detected in blog (updated {age_h:.0f}h ago)\n"
-                    for sig in tickers_found[:4]:
-                        name = sig if isinstance(sig, str) else sig.get("ticker", sig.get("name","?"))
-                        ranto_block += f"  \u2192 {name}\n"
+                history = bt.get("history", [])
+                by_sector = bt.get("by_sector", {})
+                if history and age_h < 96:
+                    for entry in history[-4:]:
+                        post_title = entry.get("post", "")
+                        added = entry.get("added", [])
+                        date = entry.get("date", "")
+                        url = entry.get("url", "")
+                        if post_title and added:
+                            ranto_block += f"\u2022 [{date}] {post_title[:100]}\n"
+                            ranto_block += f"  Signal: {', '.join(added[:3])}\n"
+                            if url: ranto_block += f"  \U0001F517 {url}\n"
+                    if by_sector:
+                        sectors = list(by_sector.keys())
+                        ranto_block += f"  Sectors: {', '.join(sectors)}\n"
         except Exception:
             pass
     if not ranto_block:

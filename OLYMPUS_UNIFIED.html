@@ -2450,22 +2450,36 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
 (function() {
   'use strict';
 
-  /* ── Currency formatter ── */
-  function fmt(v, ticker) {
+  var FX = {EUR: 0.88, KRW: 1350, HKD: 7.78};
+
+  function fmtLocal(v, ticker, currency) {
     if (v == null || v === 0) return '\u2014';
     var kr = ['000660.KS','272210.KS'];
     var hk = ['1810.HK'];
     var eu = ['ASML','MC.PA'];
     if (kr.indexOf(ticker) >= 0) {
-      if (v >= 1e6) return '\u20A9' + (v/1e6).toFixed(1) + 'M';
-      if (v >= 1e3) return '\u20A9' + Math.round(v/1e3) + 'K';
-      return '\u20A9' + Math.round(v);
+      var w = v * FX.KRW;
+      if (w >= 1e6) return '\u20A9' + (w/1e6).toFixed(1) + 'M';
+      if (w >= 1e3) return '\u20A9' + Math.round(w/1e3) + 'K';
+      return '\u20A9' + Math.round(w);
     }
-    if (hk.indexOf(ticker) >= 0) return 'HK$' + v.toFixed(1);
-    if (eu.indexOf(ticker) >= 0) return v >= 1000 ? '\u20AC' + Math.round(v).toLocaleString() : '\u20AC' + v.toFixed(0);
+    if (hk.indexOf(ticker) >= 0) return 'HK$' + (v * FX.HKD).toFixed(1);
+    if (eu.indexOf(ticker) >= 0) return '\u20AC' + Math.round(v * FX.EUR).toLocaleString();
+    return null;
+  }
+
+  function fmtUSD(v) {
+    if (v == null || v === 0) return '\u2014';
     if (v >= 1000) return '$' + Math.round(v).toLocaleString();
     if (v >= 10)   return '$' + v.toFixed(1);
     return '$' + v.toFixed(2);
+  }
+
+  function fmt(v, ticker) {
+    var usd = fmtUSD(v);
+    var local = fmtLocal(v, ticker);
+    if (local && usd !== '\u2014') return usd + '<br><span style="font-size:9px;color:#888">' + local + '</span>';
+    return usd;
   }
 
   function pct(v, size) {
@@ -2475,7 +2489,6 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     return '<span style="color:'+c+';font-size:'+(size||11)+'px;font-weight:600">'+s+v.toFixed(1)+'%</span>';
   }
 
-  /* ── Two-layer verdict for tooltip ── */
   function twoLayerVerdict(ticker, pos, proj) {
     var u1y = pos.gem_u1y;
     var gap = pos.soros_gap || 0;
@@ -2489,42 +2502,41 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     if (proj['5y'] && proj['5y'].upside_pct != null) longUp = proj['5y'].upside_pct;
     else if (proj['3y'] && proj['3y'].upside_pct != null) longUp = proj['3y'].upside_pct;
     var long = longUp > 15 ? 'LONG-TERM UNDERVALUED' : longUp < -10 ? 'LONG-TERM OVERVALUED' : 'LONG-TERM FAIR';
-
     var gapNote = gap >= 30 ? ' (+' + gap + '% narrative gap)' : '';
-    var line1 = ticker + '  $' + Math.round(price) + '  Grade: ' + grade + '  GOD: ' + (pos.god_score||'?') + '  Conv: ' + conv + '/10';
+
+    var line1 = ticker + '  ' + fmtUSD(price) + '  Grade: ' + grade + '  GOD: ' + (pos.god_score||'?') + '  Conv: ' + conv + '/10';
     var line2 = near + ' \u00B7 ' + long + gapNote;
 
     var soWhat = '';
-    if (action === 'DIP_WATCH' || action === 'DIP WATCH') {
+    if (action === 'DIP_WATCH' || action === 'DIP WATCH' || (action.indexOf && action.indexOf('DIP') >= 0)) {
       var ezl = pos.ez_low || 0; var ezh = pos.ez_high || 0;
-      soWhat = '\n\nSO WHAT: Do NOT buy at $' + Math.round(price) + '.\nEntry zone $' + ezl + '\u2013$' + ezh + '.\nSet limit alert. When price enters zone \u2192 ARMED.';
+      soWhat = '\n\nSO WHAT: Do NOT buy at ' + fmtUSD(price) + '.\nEntry zone ' + fmtUSD(ezl) + '\u2013' + fmtUSD(ezh) + '.\nSet limit alert. When price enters zone \u2192 ARMED.';
     } else if (action === 'HOLD') {
       soWhat = '\n\nSO WHAT: Do nothing. Thesis intact.\nMonitor weekly. No action required.';
-    } else if (action === 'ARMED' || action.indexOf('ARMED') >= 0) {
-      soWhat = '\n\nSO WHAT: Limit order is LIVE in broker.\nDo nothing. Wait for fill.\nIf filled \u2192 you own it at thesis price.';
-    } else if (action === 'ADD') {
-      soWhat = '\n\nSO WHAT: Price is IN entry zone NOW.\nGEM + Soros aligned. BUY HERE.';
-    } else if (action === 'EXIT' || action === 'EXIT NOW') {
-      soWhat = '\n\nSO WHAT: Thesis DEAD. Exit immediately.\nNo hoping for bounce.';
+    } else if (action.indexOf && action.indexOf('ARMED') >= 0) {
+      soWhat = '\n\nSO WHAT: Limit order is LIVE in broker.\nDo nothing. Wait for fill.';
+    } else if (action === 'ADD' || (action.indexOf && action.indexOf('ADD') >= 0)) {
+      soWhat = '\n\nSO WHAT: Price in entry zone NOW.\nGEM + Soros aligned. BUY HERE.';
     } else if (action === 'BUY') {
-      soWhat = '\n\nSO WHAT: Buy signal active.\nCheck entry zone and set limit.';
+      soWhat = '\n\nSO WHAT: Buy signal active. Set limit.';
+    } else if (action.indexOf && action.indexOf('EXIT') >= 0) {
+      soWhat = '\n\nSO WHAT: Thesis dead/wounded. Review immediately.';
     }
 
     return line1 + '\n' + line2 + soWhat;
   }
 
-  /* ── Build the scenario table HTML ── */
   function buildScenarioTD(ticker, proj, pnl, u1y, pos) {
     var h  = ['1m','6m','1y','3y','5y'];
     var hl = ['1M','6M','1Y','3Y','5Y'];
     var hasData = false;
 
     var horizonModel = {
-      '1m': 'Heston MC P10 (10K paths, \u03C1=-0.7)',
-      '6m': 'Heston MC + early fundamental blend',
-      '1y': 'EPS \u00D7 PE fundamental (bear/base/bull)',
-      '3y': 'DCF: revenue growth + margin expansion',
-      '5y': 'Terminal DCF: full thesis realisation'
+      '1m': 'Heston MC P10 (10K paths)',
+      '6m': 'Heston MC + fundamental blend',
+      '1y': 'EPS\u00D7PE / Rev\u00D7PS fundamental',
+      '3y': 'DCF: rev growth + margins',
+      '5y': 'Terminal DCF: full thesis horizon'
     };
 
     function makeRow(cls, label, key, tipLabel) {
@@ -2532,7 +2544,7 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
         var hkey = h[i];
         var val = proj[hkey] ? proj[hkey][key] : null;
         if (val != null) hasData = true;
-        var tip = lbl + ' ' + tipLabel + ': ' + fmt(val, ticker) + '\nModel: ' + horizonModel[hkey] + '\nAssumption: ' + (key === 'worst' ? 'Everything goes wrong. Recession + thesis stress.' : key === 'normal' ? 'Base case. Current trajectory continues.' : 'Thesis fully realised. Bull catalysts hit.');
+        var tip = lbl + ' ' + tipLabel + ': ' + fmtUSD(val) + '\nModel: ' + horizonModel[hkey];
         return '<td class="oly-tip" data-tip="' + tip.replace(/"/g,'&quot;') + '">' + fmt(val, ticker) + '</td>';
       }).join('');
       return '<tr class="' + cls + '"><td>' + label + '</td>' + cells + '</tr>';
@@ -2547,7 +2559,7 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
         if (ev == null || ev === 0) return '<td style="color:#ccc">\u2014</td>';
         var c = (up||0) >= 0 ? '#2d7a2d' : '#c0392b';
         var s = (up||0) >= 0 ? '+' : '';
-        var tip = 'EV at ' + lbl + ' = 50%\u00D7Worst + 30%\u00D7Normal + 20%\u00D7Bull\n= ' + fmt(ev,ticker) + ' (' + s + (up||0).toFixed(1) + '% vs now)\n\nWeights are pessimistic by design.\nPositive = buy signal at this horizon.';
+        var tip = 'EV at ' + lbl + ' = 50%W + 30%N + 20%B\n= ' + fmtUSD(ev) + ' (' + s + (up||0).toFixed(1) + '% vs now)\nPositive = buy signal';
         return '<td class="oly-tip" data-tip="' + tip.replace(/"/g,'&quot;') + '" style="font-weight:700;color:'+c+'">' + fmt(ev,ticker) + '<br><span style="font-size:9px">' + s + (up||0).toFixed(0) + '%</span></td>';
       }).join('');
       return '<tr class="sc-ev"><td>EV</td>' + cells + '</tr>';
@@ -2572,8 +2584,6 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
       + vsRow()
       + '</table>';
 
-    // Two-layer summary line
-    var verdict = twoLayerVerdict(ticker, pos || {}, proj);
     var verdictShort = '';
     if (pos) {
       var u = pos.gem_u1y;
@@ -2587,7 +2597,6 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
       verdictShort = '<div class="mx-scen-summary">' + near + ' \u00B7 ' + long + gapTag + '</div>';
     }
 
-    // Versus metrics
     var vparts = [];
     if (pnl != null) vparts.push('<span style="color:#888">P&L:</span> ' + pct(pnl));
     if (u1y != null) vparts.push('<span style="color:#888">vs1y:</span> ' + pct(u1y));
@@ -2602,22 +2611,25 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     return table + verdictShort + versus;
   }
 
-  /* ── Tooltip helpers ── */
-  function applyEvalTip(tr) {
+  function applyEvalTip(tr, pos) {
     var evalCell = tr.querySelector('.mx-eval');
-    if (evalCell && !evalCell.dataset.tipped) {
-      evalCell.dataset.tipped = '1';
-      var trackEl = evalCell.querySelector('[class*="eval-track"]');
-      var gatesEl = evalCell.querySelector('.eval-gates');
-      if (trackEl) {
-        trackEl.classList.add('oly-tip');
-        var g = trackEl.textContent.trim();
-        trackEl.dataset.tip = 'GEM Grade: ' + g + '\n\nA = 1y EV \u2265+20% + 5y EV \u2265+100% + worst >\u221260%\nB = 1y EV \u2265+10% + 5y EV \u2265+50%\nC = Marginal upside\nD = Fails all thresholds\n\nA = Buy signal | B = Hold/watch | C/D = No add';
-      }
-      if (gatesEl) {
-        gatesEl.classList.add('oly-tip');
-        gatesEl.dataset.tip = 'Thesis Gates: ' + gatesEl.textContent.trim() + '\n\nP1 = Paradigm fit (Earth Shifter)\nP2 = Capital quality (CF+)\nP3 = Price vs value (MoS)\nP4 = Thesis clarity (catalyst)\n\nAll gates = max conviction\nMissing = sizing reduced';
-      }
+    if (!evalCell) return;
+
+    // FIX: Update visible grade letter from actual GEM data
+    var trackEl = evalCell.querySelector('[class*="eval-track"]');
+    if (trackEl && pos && pos.gem_grade && pos.gem_grade !== '\u2014') {
+      var actualGrade = pos.gem_grade;
+      trackEl.textContent = actualGrade;
+      trackEl.className = 'eval-track-' + actualGrade.toLowerCase();
+      trackEl.classList.add('oly-tip');
+      trackEl.dataset.tip = 'GEM Grade: ' + actualGrade + '\n\nA = 1y EV \u2265+20% AND 5y EV \u2265+100% AND worst >\u221260%\nB = 1y EV \u2265+10% AND 5y EV \u2265+50% AND worst >\u221250%\nC = 1y EV \u22650% AND 5y EV \u226520%\nD = Fails thresholds\n\nActual: 1y=' + (pos.gem_u1y != null ? pos.gem_u1y.toFixed(1)+'%' : '?') + ' 5y=' + (pos.gem_u5y != null ? pos.gem_u5y.toFixed(1)+'%' : '?') + '\n\nA = Buy signal | B = Hold/watch | C/D = No add';
+    }
+
+    var gatesEl = evalCell.querySelector('.eval-gates');
+    if (gatesEl && !gatesEl.dataset.tipped) {
+      gatesEl.dataset.tipped = '1';
+      gatesEl.classList.add('oly-tip');
+      gatesEl.dataset.tip = 'Thesis Gates: ' + gatesEl.textContent.trim() + '\n\nP1=Paradigm P2=Capital P3=Price P4=Thesis\nAll gates = max conviction';
     }
   }
 
@@ -2626,24 +2638,22 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     if (actEl && !actEl.dataset.tip) {
       var tips = {
         'HOLD': 'HOLD\n\nThesis intact. Price not in entry zone.\nDo nothing. Monitor weekly.',
-        'DIP WATCH': 'DIP WATCH\n\nNarrative gap detected.\nPrice above entry zone \u2014 do not chase.\nSet alert. When price enters zone \u2192 ARMED.',
-        'ARMED': 'ARMED\n\nLimit order placed in broker.\nDo nothing. Wait for fill.\nOne shot \u2014 thesis + price aligned.',
-        'ADD': 'ADD\n\nPrice in entry zone NOW.\nThesis intact. GEM + Soros aligned.\nBuy here.',
-        'BUY': 'BUY\n\nActive buy signal.\nCheck entry zone. Set limit.',
-        'EXIT REVIEW': 'EXIT REVIEW\n\nThesis wounded.\nQuantify damage before deciding.',
-        'EXIT NOW': 'EXIT NOW\n\nThesis dead. Exit regardless of price.',
-        'WATCH': 'WATCH\n\nOn radar. No position yet.\nWait for catalyst or entry zone.',
-        'IPO': 'IPO\n\nPrepare capital for listing window.',
-        'WAIT': 'WAIT\n\nToo early or thesis unclear.\nDo not act yet.'
+        'DIP WATCH': 'DIP WATCH\n\nNarrative gap detected.\nPrice above entry zone \u2014 do not chase.\nSet alert. When zone \u2192 ARMED.',
+        'ARMED': 'ARMED\n\nLimit order in broker.\nDo nothing. Wait for fill.',
+        'ADD': 'ADD\n\nPrice in entry zone NOW.\nBuy here.',
+        'BUY': 'BUY\n\nActive buy signal.\nSet limit.',
+        'EXIT REVIEW': 'EXIT REVIEW\n\nThesis wounded.\nQuantify damage.',
+        'EXIT NOW': 'EXIT NOW\n\nThesis dead. Exit now.',
+        'WATCH': 'WATCH\n\nNo position yet.\nWait for catalyst.',
+        'WAIT': 'WAIT\n\nToo early. Do not act.',
+        'IPO': 'IPO\n\nPrepare capital for listing.'
       };
       actEl.classList.add('oly-tip');
       actEl.dataset.tip = tips[action] || 'Action: ' + action;
     }
   }
 
-  /* ── Main injection ── */
   function injectAll(positions) {
-    // Process EVERY mx-row, not just ones in dashboard_state
     var allRows = document.querySelectorAll('.mx-row');
     allRows.forEach(function(tr) {
       var ticker = tr.getAttribute('data-ticker');
@@ -2652,7 +2662,6 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
       var pos = positions[ticker] || {};
       var proj = pos.projections || {};
 
-      // Always inject scenario table — replace mx-pt cells or existing mx-scenarios
       var existing = tr.querySelector('.mx-scenarios');
       var mxPts = tr.querySelectorAll('.mx-pt');
 
@@ -2663,30 +2672,24 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
         td.setAttribute('colspan', '5');
         td.className = 'mx-scenarios';
         td.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y, pos);
-
-        // Make the whole scenario cell a tooltip target
         var verdict = twoLayerVerdict(ticker, pos, proj);
         td.classList.add('oly-tip');
         td.dataset.tip = verdict;
-
         parent.insertBefore(td, firstPt);
         mxPts.forEach(function(pt) { parent.removeChild(pt); });
       } else if (existing) {
-        // Re-inject into existing scenario cell
         existing.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y, pos);
         var verdict2 = twoLayerVerdict(ticker, pos, proj);
         existing.classList.add('oly-tip');
         existing.dataset.tip = verdict2;
       }
 
-      // Apply tooltips to eval and action
-      applyEvalTip(tr);
+      applyEvalTip(tr, pos);
       var actionText = pos.action || (tr.querySelector('.mx-act') ? tr.querySelector('.mx-act').textContent.trim() : 'HOLD');
       applyActionTip(tr, actionText);
     });
   }
 
-  // Load and inject
   fetch('/data/dashboard_state.json?t=' + Date.now())
     .then(function(r) { return r.json(); })
     .then(function(state) {
@@ -2694,14 +2697,11 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
       function run() { injectAll(positions); }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', run);
-      } else {
-        run();
-      }
+      } else { run(); }
       setTimeout(run, 3500);
       setTimeout(run, 8000);
     })
     .catch(function(e) { console.warn('dashboard_state.json load failed:', e); });
-
 })();
 </script>
 </body>
