@@ -136,12 +136,18 @@ def _mark_alerted(cache: dict, key: str):
 
 
 def _load_blog_tickers() -> List[str]:
-    """Tickers extracted from blog posts (blog_monitor); merged into NewsAPI scan."""
+    """Tickers extracted from blog posts + tactical_sleeve (Kiwoom/macro overlay); merged into NewsAPI scan."""
     try:
         with open(BLOG_TICKERS_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
         raw = data.get("tickers") or []
-        return [str(t).strip() for t in raw if t and str(t).strip()]
+        out = [str(t).strip() for t in raw if t and str(t).strip()]
+        for x in data.get("tactical_sleeve") or []:
+            if isinstance(x, dict) and x.get("ticker"):
+                t = str(x["ticker"]).strip()
+                if t and t not in out:
+                    out.append(t)
+        return out
     except Exception:
         return []
 

@@ -105,6 +105,71 @@ _started = False
 
 _SEEN_CACHE = os.path.join(os.path.dirname(__file__), "data", "seen_blog_urls.json")
 
+# US defense primes + macro names → Kiwoom / tactical · gold satellite overlay (not full portfolio)
+_TACTICAL_SLEEVE_TICKERS = frozenset({
+    "LMT", "NOC", "RTX", "GD", "LHX", "BA", "HII", "TXT", "KTOS", "AVAV", "CWEN",
+})
+
+
+def _merge_tactical_sleeve(existing: dict, stocks: list, post_title: str) -> dict:
+    """Merge blog-mentioned macro/defense watchlist for Master Matrix · Tactical · Gold satellite."""
+    ts = existing.get("tactical_sleeve")
+    if not isinstance(ts, list):
+        ts = []
+    by_t = {}
+    for x in ts:
+        if isinstance(x, dict) and x.get("ticker"):
+            by_t[str(x["ticker"]).upper().strip()] = x
+
+    for s in stocks:
+        if not isinstance(s, dict):
+            continue
+        t = str(s.get("ticker") or "").strip().upper()
+        name = (s.get("name") or "").strip()
+        if t in ("", "UNKNOWN", "?", "NONE"):
+            t = ""
+        sec = str(s.get("sector", "RADAR")).strip().upper()
+        try:
+            sc = int(s.get("titan_k_score") or s.get("score") or 7)
+        except (TypeError, ValueError):
+            sc = 7
+        sc = min(10, max(1, sc))
+        # Include: defense primes, ROBOTICS sector (defense), or explicit macro flag
+        macro = s.get("macro_overlay") or s.get("tactical_sleeve")
+        include = bool(
+            (t and t in _TACTICAL_SLEEVE_TICKERS)
+            or sec == "ROBOTICS"
+            or macro is True
+            or (isinstance(macro, str) and macro.lower() in ("true", "1", "yes"))
+        )
+        if not t and name:
+            # Name-only (e.g. Chinese listing TBD)
+            key = "NAME:" + name[:40]
+            by_t[key] = {
+                "ticker": "",
+                "name": name,
+                "score": sc,
+                "source_post": post_title[:100],
+                "updated": datetime.now().strftime("%Y-%m-%d"),
+                "note": "Ticker TBD — map HK/A-share when identified",
+            }
+            continue
+        if not t or not include:
+            continue
+        by_t[t] = {
+            "ticker": t,
+            "name": name or t,
+            "score": sc,
+            "source_post": post_title[:100],
+            "updated": datetime.now().strftime("%Y-%m-%d"),
+            "note": "Blog · Kiwoom / macro overlay — exit sleeve watch",
+        }
+
+    merged = sorted(by_t.values(), key=lambda z: (-int(z.get("score") or 0), z.get("ticker") or ""))
+    existing["tactical_sleeve"] = merged[:16]
+    existing["tactical_sleeve_updated"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    return existing
+
 
 def _norm_url(url: str) -> str:
     if not url or not isinstance(url, str):
@@ -230,12 +295,16 @@ For each stock, classify it into exactly ONE of these 7 sectors:
 2. ENERGY — Uranium, nuclear, oil, gas, solid-state batteries
 3. SPACE — Rockets, satellites, orbital infrastructure, lunar economy
 4. BIO — CRISPR, gene editing, longevity, AI drug discovery
-5. ROBOTICS — Humanoids, defense drones, autonomous systems, weapons
+5. ROBOTICS — Humanoids, defense drones, autonomous systems, weapons, prime defense contractors (LMT, NOC, RTX…)
 6. INFRASTRUCTURE — Photonics, data center power, semiconductor equipment, copper
 7. RADAR — Geopolitical plays, commodities, macro trades, does not fit above 6
 
+Also set:
+- "titan_k_score": integer 1–10 (conviction / relevance to the post; defense primes in a war/carrier headline = 7–9).
+- If the company has no US ticker (e.g. Chinese shipping), use "ticker": null, "name": "Full company name", "listing_unknown": true.
+
 Return ONLY a JSON array. No explanation. Example:
-[{{"ticker":"TSM","name":"TSMC","sector":"INTELLIGENCE"}},{{"ticker":"UEC","name":"Uranium Energy","sector":"ENERGY"}}]
+[{{"ticker":"LMT","name":"Lockheed Martin","sector":"ROBOTICS","titan_k_score":8}},{{"ticker":null,"name":"Shanghai Shihanlun Shipping","sector":"RADAR","listing_unknown":true,"titan_k_score":7}}]
 
 Use US ticker format. Korean stocks: 005930.KS format.
 If no stocks found return [].
@@ -258,16 +327,26 @@ Content: {post_content[:2000]}"""
         if not isinstance(stocks, list) or not stocks:
             return
 
-        stocks = [
-            s for s in stocks
-            if isinstance(s, dict) and s.get("ticker") and str(s["ticker"]).strip()
-        ]
+        cleaned = []
+        for s in stocks:
+            if not isinstance(s, dict):
+                continue
+            tk = s.get("ticker")
+            if tk is None or (isinstance(tk, str) and not str(tk).strip()):
+                if s.get("listing_unknown") or s.get("name"):
+                    cleaned.append(s)
+                continue
+            cleaned.append(s)
+        stocks = cleaned
+        if not stocks:
+            return
+
         for s in stocks:
             sec = str(s.get("sector", "RADAR")).strip().upper()
             s["sector"] = sec if sec in _VALID_SECTORS else "RADAR"
-
-        if not stocks:
-            return
+            tk = s.get("ticker")
+            if tk is not None and str(tk).strip():
+                s["ticker"] = str(tk).strip().upper()
 
         cache_path = os.path.join(os.path.dirname(__file__), "data", "blog_tickers.json")
         os.makedirs(os.path.dirname(cache_path), exist_ok=True)
@@ -284,7 +363,12 @@ Content: {post_content[:2000]}"""
         if "history" not in existing:
             existing["history"] = []
 
-        new_stocks = [s for s in stocks if s["ticker"] not in existing["tickers"]]
+        existing = _merge_tactical_sleeve(existing, stocks, post_title)
+
+        new_stocks = [
+            s for s in stocks
+            if s.get("ticker") and str(s["ticker"]).strip() and s["ticker"] not in existing["tickers"]
+        ]
 
         if new_stocks:
             for s in new_stocks:
@@ -305,8 +389,13 @@ Content: {post_content[:2000]}"""
                 "added": [s["ticker"] for s in new_stocks],
             })
 
+        try:
             with open(cache_path, "w", encoding="utf-8") as f:
                 _jbl.dump(existing, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            logger.warning("blog_tickers.json write failed: %s", e)
+
+        if new_stocks:
 
             by_sector = {}
             for s in new_stocks:

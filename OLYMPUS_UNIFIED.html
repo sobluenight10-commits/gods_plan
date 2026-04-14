@@ -1014,7 +1014,7 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 <tr><td colspan="15" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--locked)"></div><div class="cname" style="color:var(--locked)">Locked Position</div><div class="cdesc">TR promotional gift — cannot sell ~1 year</div></div></td></tr>
 <tr class="mx-row mx-st-locked" data-ticker="MC.PA" data-entry-num="474.43" data-entry-mode="eur_from_usd" data-thesis="intact" title="Locked TR gift — track only."><td><span class="mx-badge mx-badge-locked">🔒 LOCKED</span><div class="mx-tk">MC.PA</div><div class="mx-nm">LVMH</div></td><td><span class="sec-badge" style="background:var(--locked)">Locked Positio</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:75%;background:var(--locked)"></div></div><span class="god-num">75</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">locked</div></td><td class="r mx-entry">€474.43</td><td class="r mx-today"><span class="pnow" id="price-MC.PA" data-ticker="MC.PA">—</span></td><td class="r mx-vs-today">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-hold">HOLD LOCKED</span></td><td class="r mx-tgt">—</td></tr>
 <tr><td colspan="15" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--exit)"></div><div class="cname" style="color:var(--exit)">Tactical · Gold satellite</div><div class="cdesc">Kiwoom / macro overlay — exit sleeve</div></div></td></tr>
-<tr class="mx-row mx-st-pf" data-ticker="IAU" data-entry-num="42.65" data-entry-mode="usd" data-thesis="intact" title="Take profit on strength — redeploy."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">IAU</div><div class="mx-nm">iShares Gold ETF</div></td><td><span class="sec-badge" style="background:var(--exit)">Tactical · Gol</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:30%;background:var(--exit)"></div></div><span class="god-num">30</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">tactical</div></td><td class="r mx-entry">$42.65</td><td class="r mx-today"><span class="pnow" id="price-IAU" data-ticker="IAU">—</span></td><td class="r mx-vs-today">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-exit">EXIT</span></td><td class="r mx-tgt">Next rally</td></tr>
+<tr id="matrix-tactical-iau" class="mx-row mx-st-pf" data-ticker="IAU" data-entry-num="42.65" data-entry-mode="usd" data-thesis="intact" title="Take profit on strength — redeploy."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">IAU</div><div class="mx-nm">iShares Gold ETF</div></td><td><span class="sec-badge" style="background:var(--exit)">Tactical · Gol</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:30%;background:var(--exit)"></div></div><span class="god-num">30</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">tactical</div></td><td class="r mx-entry">$42.65</td><td class="r mx-today"><span class="pnow" id="price-IAU" data-ticker="IAU">—</span></td><td class="r mx-vs-today">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-exit">EXIT</span></td><td class="r mx-tgt">Next rally</td></tr>
 </tbody></table></div>
 
 <script>
@@ -2069,7 +2069,75 @@ function aggregateBlogTickersBlob(raw) {
       parts.push((r.ticker || "") + " " + (r.note || r.snippet || ""));
     });
   }
+  var ts = raw.tactical_sleeve;
+  if (Array.isArray(ts)) {
+    ts.forEach(function (x) {
+      if (!x || typeof x !== "object") return;
+      parts.push((x.ticker || "") + " " + (x.name || "") + " " + (x.note || "") + " " + (x.source_post || ""));
+    });
+  }
   return parts.join(" ").toLowerCase();
+}
+
+/** Inject blog macro / defense sleeve rows under Tactical · Gold (after IAU). Data: blog_tickers.json tactical_sleeve. */
+function renderTacticalBlogSleeve(blogRaw) {
+  var anchor = document.getElementById("matrix-tactical-iau");
+  if (!anchor) return;
+  var tbody = anchor.parentNode;
+  if (!tbody) return;
+  tbody.querySelectorAll('tr[data-tactical-blog="1"]').forEach(function (el) {
+    el.remove();
+  });
+  var items = blogRaw && Array.isArray(blogRaw.tactical_sleeve) ? blogRaw.tactical_sleeve : [];
+  var prev = anchor;
+  for (var j = 0; j < items.length; j++) {
+    var it = items[j];
+    if (!it || typeof it !== "object") continue;
+    var tkRaw = it.ticker != null ? String(it.ticker).trim() : "";
+    var nm = String(it.name || tkRaw || "—").trim();
+    var sc = parseInt(it.score, 10);
+    if (isNaN(sc) || sc < 1) sc = 7;
+    if (sc > 10) sc = 10;
+    var godPct = sc * 10;
+    var src = it.source_post || "";
+    var upd = it.updated || "";
+    var note = it.note || "";
+    var tr = document.createElement("tr");
+    tr.setAttribute("data-tactical-blog", "1");
+    tr.className = "mx-row mx-st-watch";
+    if (tkRaw) tr.setAttribute("data-ticker", tkRaw);
+    var titleBits = [];
+    if (src) titleBits.push("Source: " + src);
+    if (upd) titleBits.push("Updated: " + upd);
+    if (note) titleBits.push(note);
+    tr.title = titleBits.join(" · ");
+
+    var tkDisplay = tkRaw ? olyEsc(tkRaw) : "—";
+    var nameDisplay = olyEsc(nm);
+    var priceCell = tkRaw
+      ? '<span class="pnow" id="price-' + olyEsc(tkRaw) + '" data-ticker="' + olyEsc(tkRaw) + '">—</span>'
+      : '<span class="pnow" style="color:var(--es-ink4)">listing TBD</span>';
+
+    var tgt = [src && olyEsc(src.slice(0, 72)), upd && olyEsc(upd)].filter(Boolean).join(" · ") || "Blog macro overlay";
+
+    tr.innerHTML =
+      '<td><span class="mx-badge mx-badge-watch">◎ BLOG K</span><div class="mx-tk">' + tkDisplay + '</div><div class="mx-nm">' + nameDisplay + '</div></td>' +
+      '<td><span class="sec-badge" style="background:var(--exit)">Tactical · Gol</span></td>' +
+      '<td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:' + godPct + '%;background:var(--exit)"></div></div><span class="god-num">' + String(godPct) + '</span></div></td>' +
+      '<td class="mx-eval"><span class="eval-track-b">K</span><div class="eval-gates">' + sc + '/10 blog</div></td>' +
+      '<td class="r mx-entry">—</td>' +
+      '<td class="r mx-today">' + priceCell + '</td>' +
+      '<td class="r mx-vs-today">—</td>' +
+      '<td colspan="5" class="mx-scenarios" data-injected="1" style="padding:4px;color:var(--es-ink4);font-size:10px;text-align:left">' +
+      olyEsc(note || "Kiwoom / macro overlay — exit sleeve watch") +
+      "</td>" +
+      '<td class="mx-soros-gap">—</td>' +
+      '<td><span class="mx-act mx-act-watch">WATCH</span></td>' +
+      '<td class="r mx-tgt">' + tgt + "</td>";
+
+    prev.insertAdjacentElement("afterend", tr);
+    prev = tr;
+  }
 }
 
 function blogRowsFromRaw(raw) {
@@ -2163,7 +2231,10 @@ async function fetchBlogTickersJson() {
 }
 
 async function refreshRadarFromBlog() {
-  renderRadarSector8(await fetchBlogTickersJson());
+  var raw = await fetchBlogTickersJson();
+  renderRadarSector8(raw);
+  renderTacticalBlogSleeve(raw);
+  if (typeof loadLivePrices === "function") loadLivePrices();
 }
 
 async function loadReflexivityPanel() {
@@ -2201,6 +2272,23 @@ const RANTO_RSS_PROXY =
 function rantoBlogMetaLine(raw) {
   if (!raw || typeof raw !== "object") {
     return "8 · RADAR — GOD relevance: cross-check tickers in Master Matrix + §8 RADAR row";
+  }
+  const ts = Array.isArray(raw.tactical_sleeve) ? raw.tactical_sleeve : [];
+  if (ts.length) {
+    var labels = ts.slice(0, 5).map(function (x) {
+      if (!x || typeof x !== "object") return "";
+      var t = (x.ticker && String(x.ticker).trim()) || "";
+      var n = (x.name && String(x.name).trim()) || "";
+      return t ? t + (n ? " (" + n + ")" : "") : n || "—";
+    });
+    var tsUp = raw.tactical_sleeve_updated ? String(raw.tactical_sleeve_updated) : "";
+    return (
+      "Tactical · Gold (blog): " +
+      labels.join(" · ") +
+      (ts.length > 5 ? " …" : "") +
+      (tsUp ? " — updated " + tsUp : "") +
+      " — Kiwoom / macro overlay"
+    );
   }
   const bs = raw.by_sector;
   if (bs && typeof bs === "object") {
@@ -2248,6 +2336,8 @@ async function loadRanto28BlogCard() {
     aEl.href = link;
     aEl.textContent = link;
     renderRadarSector8(blogRaw);
+    renderTacticalBlogSleeve(blogRaw);
+    if (typeof loadLivePrices === "function") loadLivePrices();
   } catch (_) {
     tEl.textContent =
       "ranto28 RSS unavailable in-browser (CORS/network). Open blog.naver.com/ranto28.";
