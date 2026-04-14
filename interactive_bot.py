@@ -100,6 +100,9 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
         "• /score — Portfolio scorecard\n"
         "• /regime — VIX regime\n"
         "• /news — Scan all sources\n"
+        "• /risk — Portfolio risk summary\n"
+        "• /risk PL — Deep risk screen for ticker\n"
+        "• /fund NVDA — Quarterly fundamentals\n"
         "• /reset — Clear conversation memory\n\n"
         "<b>Or just type:</b>\n"
         "\"CRISPR status\" · \"should I buy UEC?\" · \"oil today?\"\n"
@@ -481,6 +484,132 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await em.reply_text(f"⚠️ {str(e)[:200]}")
 
 
+async def cmd_risk(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Run risk screener for a ticker or show portfolio risk summary."""
+    em = update.effective_message
+    if not em:
+        return
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+
+    ticker = context.args[0].upper() if context.args else None
+
+    loop = asyncio.get_event_loop()
+    try:
+        if ticker:
+            await em.reply_text(f"🔱 Screening risk for {ticker}... ~15s")
+            result = await asyncio.wait_for(
+                loop.run_in_executor(None, _sync_risk_single, ticker), timeout=30
+            )
+            lines = [f"🛡 <b>RISK SCREEN: {ticker}</b>\n"]
+            if result.get("error"):
+                lines.append(f"⚠️ {result['error']}")
+            else:
+                lines.append(f"Risk Level: <b>{result.get('risk_level','?')}</b> (avg {result.get('avg_risk','?')}/9)\n")
+                for dim, score in (result.get("scores") or {}).items():
+                    label = dim.replace("_", " ").title()
+                    narr = (result.get("narratives") or {}).get(dim, "")
+                    icon = "🔴" if score >= 7 else "🟡" if score >= 5 else "🟢"
+                    lines.append(f"{icon} <b>{label}</b>: {score}/9\n   {narr}")
+        else:
+            result = await asyncio.wait_for(
+                loop.run_in_executor(None, _sync_risk_latest), timeout=5
+            )
+            lines = ["🛡 <b>PORTFOLIO RISK SUMMARY</b>\n"]
+            if not result:
+                lines.append("No risk data yet. Run /risk <TICKER> or wait for daily pipeline.")
+            else:
+                summary = result.get("summary", {})
+                for level in ["critical", "high", "moderate", "low"]:
+                    items = summary.get(level, [])
+                    if items:
+                        icon = {"critical": "🔴", "high": "🟡", "moderate": "🟠", "low": "🟢"}[level]
+                        lines.append(f"\n{icon} <b>{level.upper()}</b>")
+                        for item in items:
+                            crits = ", ".join(c.replace("_", " ") for c in item.get("critical_risks", []))
+                            extra = f" [{crits}]" if crits else ""
+                            lines.append(f"  {item['ticker']} — avg {item['avg_risk']}/9{extra}")
+
+        lines.append(_footer())
+        await em.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    except asyncio.TimeoutError:
+        await em.reply_text("⚠️ Risk screen timed out.")
+    except Exception as e:
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
+
+
+def _sync_risk_single(ticker):
+    from skills.risk_screener import RiskScreener
+    rs = RiskScreener()
+    return rs.run_single(ticker)
+
+
+def _sync_risk_latest():
+    from skills.base import SkillRunner
+    return SkillRunner.load_latest("risk")
+
+
+async def cmd_fundamentals(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    """Show financial fundamentals for a ticker."""
+    em = update.effective_message
+    if not em:
+        return
+    if not context.args:
+        await em.reply_text("Usage: /fundamentals PLTR  or  /fund UEC")
+        return
+
+    ticker = context.args[0].upper()
+    await em.reply_text(f"🔱 Pulling fundamentals for {ticker}... ~10s")
+    await context.bot.send_chat_action(chat_id=update.effective_chat.id, action=ChatAction.TYPING)
+
+    loop = asyncio.get_event_loop()
+    try:
+        result = await asyncio.wait_for(
+            loop.run_in_executor(None, _sync_fund_single, ticker), timeout=30
+        )
+        if result.get("error"):
+            await em.reply_text(f"⚠️ {result['error']}")
+            return
+
+        rev = result.get("revenue", {})
+        mar = result.get("margins", {})
+        bs = result.get("balance_sheet", {})
+        val = result.get("valuation", {})
+        fcf = result.get("cash_flow", {})
+
+        def _f(v, fmt=",.0f"):
+            if v is None:
+                return "—"
+            if abs(v) >= 1e9:
+                return f"${v/1e9:.1f}B"
+            if abs(v) >= 1e6:
+                return f"${v/1e6:.0f}M"
+            return f"${v:{fmt}}"
+
+        def _p(v):
+            return f"{v:.1f}%" if v is not None else "—"
+
+        lines = [
+            f"📊 <b>FUNDAMENTALS: {ticker}</b>\n",
+            f"<b>Revenue</b>: {_f(rev.get('latest_q'))} (trend: {rev.get('trend','?')})",
+            f"<b>Margins</b>: Gross {_p(mar.get('gross',{}).get('latest'))} | Op {_p(mar.get('operating',{}).get('latest'))} | Net {_p(mar.get('net',{}).get('latest'))}",
+            f"<b>FCF</b>: {_f(fcf.get('latest_fcf'))} (trend: {fcf.get('trend','?')})",
+            f"<b>Balance Sheet</b>: Cash {_f(bs.get('cash'))} | Debt {_f(bs.get('total_debt'))} | D/E {bs.get('de_ratio','—')}",
+            f"<b>Valuation</b>: P/E {val.get('pe_forward') or val.get('pe_trailing') or '—'} | P/S {val.get('ps_ratio') or '—'} | EV/EBITDA {val.get('ev_ebitda') or '—'}",
+        ]
+        lines.append(_footer())
+        await em.reply_text("\n".join(lines), parse_mode=ParseMode.HTML, disable_web_page_preview=True)
+    except asyncio.TimeoutError:
+        await em.reply_text("⚠️ Fundamentals fetch timed out.")
+    except Exception as e:
+        await em.reply_text(f"⚠️ {str(e)[:200]}")
+
+
+def _sync_fund_single(ticker):
+    from skills.financial_analysis import FinancialAnalysis
+    fa = FinancialAnalysis()
+    return fa.run_single(ticker)
+
+
 async def cmd_reset(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Clear conversation history for this chat."""
     em = update.effective_message
@@ -538,6 +667,9 @@ def register_interactive_handlers(app: Application) -> None:
     app.add_handler(CommandHandler("score", cmd_score), group=0)
     app.add_handler(CommandHandler("regime", cmd_regime), group=0)
     app.add_handler(CommandHandler("news", cmd_news), group=0)
+    app.add_handler(CommandHandler("risk", cmd_risk), group=0)
+    app.add_handler(CommandHandler("fundamentals", cmd_fundamentals), group=0)
+    app.add_handler(CommandHandler("fund", cmd_fundamentals), group=0)
     app.add_handler(CommandHandler("reset", cmd_reset), group=0)
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message), group=1)
     app.add_error_handler(_error_handler)

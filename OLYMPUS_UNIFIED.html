@@ -801,6 +801,30 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
   </table>
 </div>
 
+<div id="risk-heatmap-panel" style="padding:12px 40px 8px;background:#fafafa;border-bottom:1px solid #e5e5e5;">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8b6914;margin-bottom:8px;">RISK HEATMAP</div>
+  <div id="risk-heatmap-body" style="overflow-x:auto;">
+    <table id="risk-heatmap-table" style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-size:10px;">
+      <thead><tr style="border-bottom:2px solid #d4af37;">
+        <th style="text-align:left;padding:3px 6px;color:#555;font-size:9px;">TICKER</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;writing-mode:horizontal-tb;" title="Revenue Concentration">REV</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Profitability Trend">PROF</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Balance Sheet Leverage">B/S</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Cash Runway">CASH</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Revenue Volatility">VOL</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Valuation Cushion">VAL</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Liquidity Risk">LIQ</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Sector Cyclicality">SEC</th>
+        <th style="text-align:center;padding:3px 4px;color:#555;font-size:8px;" title="Catalyst Dependency">CAT</th>
+        <th style="text-align:center;padding:3px 6px;color:#555;font-size:9px;font-weight:800;">AVG</th>
+        <th style="text-align:left;padding:3px 6px;color:#555;font-size:9px;">LEVEL</th>
+      </tr></thead>
+      <tbody id="risk-heatmap-rows"><tr><td colspan="12" style="padding:6px;color:#999;font-style:italic">Loading risk data...</td></tr></tbody>
+    </table>
+  </div>
+  <div style="margin-top:4px;font-size:9px;color:#999;">Scores: 0 = no risk, 9 = critical. Hover cells for detail.</div>
+</div>
+
 <div class="soros-wrap">
   <div class="soros-card">
     <div class="soros-h">SOROS REFLEXIVITY PANEL</div>
@@ -1825,8 +1849,7 @@ function genCmds(cls, fsiOverride, net, fsi, layer4Warning, fund, safe){
 // LIVE PRICE LOADER — reads prices.json pushed by Minerva server
 // JSON URL: same repo, prices.json in root
 // ══════════════════════════════════════════════════════════════════
-const PRICES_JSON_URL =
-  "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/prices.json";
+const PRICES_JSON_URL = "/data/prices.json";
 
 async function loadLivePrices() {
   const badge = document.getElementById('live-price-badge');
@@ -1872,17 +1895,12 @@ async function loadLivePrices() {
       updated_count++;
     });
 
-    // Update last-updated badge
     if (badge) {
       badge.textContent = "Live · " + updated;
       badge.style.color = "var(--buy)";
     }
-
-    // Update VIX display if present
-    if (prices["VIX"]) {
-      const vixEl = document.getElementById("ewFsi");
-      // Don't overwrite FSI — VIX is separate
-    }
+    const lastUp = document.getElementById("lastUpdate");
+    if (lastUp) lastUp.textContent = updated;
 
     console.log("Prices loaded: " + updated_count + " tickers @ " + updated);
     if (typeof window.syncPlPortCardFromMatrix === "function") window.syncPlPortCardFromMatrix();
@@ -1897,9 +1915,8 @@ async function loadLivePrices() {
   }
 }
 
-// Load on page open + refresh every 5 minutes
 loadLivePrices();
-setInterval(loadLivePrices, 5 * 60 * 1000);
+setInterval(loadLivePrices, 60 * 1000);
 
 // Dashboard date (local)
 {
@@ -2950,6 +2967,51 @@ function populateGradeSummary() {
   });
   body.innerHTML = html;
 }
+
+function riskCellColor(score) {
+  if (score >= 7) return {bg:'#FCEBEB',fg:'#A32D2D'};
+  if (score >= 5) return {bg:'#FAEEDA',fg:'#854F0B'};
+  if (score >= 3) return {bg:'#FFF8E1',fg:'#8B6914'};
+  return {bg:'#EAF3DE',fg:'#3B6D11'};
+}
+function riskLevelBadge(level) {
+  var m = {CRITICAL:{bg:'#A32D2D',fg:'#fff'},HIGH:{bg:'#EF9F27',fg:'#fff'},MODERATE:{bg:'#D4AF37',fg:'#fff'},LOW:{bg:'#3B6D11',fg:'#fff'}};
+  var c = m[level] || {bg:'#999',fg:'#fff'};
+  return '<span style="background:'+c.bg+';color:'+c.fg+';padding:1px 6px;border-radius:3px;font-size:9px;font-weight:700">'+level+'</span>';
+}
+function loadRiskHeatmap() {
+  fetch('/data/skill_results/risk_latest.json?t=' + Date.now())
+    .then(function(r) { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(function(data) {
+      var tbody = document.getElementById('risk-heatmap-rows');
+      if (!tbody || !data.results) return;
+      var dims = ['revenue_concentration','profitability_trend','balance_sheet_leverage',
+                  'cash_runway','revenue_volatility','valuation_cushion',
+                  'liquidity_risk','sector_cyclicality','catalyst_dependency'];
+      var entries = Object.entries(data.results);
+      entries.sort(function(a,b) { return (b[1].avg_risk||0) - (a[1].avg_risk||0); });
+      var html = '';
+      entries.forEach(function(e, idx) {
+        var tk = e[0], r = e[1];
+        var bg = idx % 2 === 0 ? '' : ' style="background:#f8f9fa"';
+        html += '<tr'+bg+'><td style="padding:2px 6px;font-weight:700;font-size:11px">'+tk+'</td>';
+        dims.forEach(function(d) {
+          var s = (r.scores && r.scores[d] != null) ? r.scores[d] : 5;
+          var c = riskCellColor(s);
+          var tip = (r.narratives && r.narratives[d]) || '';
+          html += '<td style="text-align:center;padding:2px 4px;background:'+c.bg+';color:'+c.fg+';font-weight:700;font-size:10px;cursor:help" title="'+tip.replace(/"/g,'&quot;')+'">'+s+'</td>';
+        });
+        html += '<td style="text-align:center;padding:2px 6px;font-weight:800;font-size:11px">'+(r.avg_risk||'?')+'</td>';
+        html += '<td style="padding:2px 6px">'+riskLevelBadge(r.risk_level||'UNKNOWN')+'</td></tr>';
+      });
+      tbody.innerHTML = html || '<tr><td colspan="12" style="padding:6px;color:#999">No risk data yet</td></tr>';
+    })
+    .catch(function(e) {
+      console.warn('Risk heatmap load failed:', e.message);
+    });
+}
+loadRiskHeatmap();
+setInterval(loadRiskHeatmap, 5 * 60 * 1000);
 
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(injectGemIntoTables, 300);

@@ -1,0 +1,16 @@
+[Unit]
+Description=OLYMPUS Live Price Daemon (60s refresh)
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/gods_plan
+ExecStart=/usr/bin/python3 -u live_prices.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/root/gods_plan/live_prices.log
+StandardError=append:/root/gods_plan/live_prices.log
+
+[Install]
+WantedBy=multi-user.target
