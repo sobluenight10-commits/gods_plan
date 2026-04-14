@@ -788,16 +788,17 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 <div class="tab-panel active" id="tab-matrix" style="padding:0;background:var(--es-paper);">
 
 <div id="grade-summary-panel" style="padding:12px 40px 8px;background:#fafafa;border-bottom:1px solid #e5e5e5;">
-  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8b6914;margin-bottom:8px;">GEM GRADE SUMMARY <span style="font-weight:400;color:#888;font-size:9px;letter-spacing:0">— Precision Tier: <span style="color:#2d7a2d">●</span> I (top) <span style="color:#b8860b">●</span> II (mid) <span style="color:#a32d2d">●</span> III (bottom) within grade</span></div>
-  <table id="grade-summary-table" style="border-collapse:collapse;width:100%;max-width:700px;font-family:'DM Mono',monospace;font-size:11px;">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8b6914;margin-bottom:8px;">GEM GRADE SUMMARY <span style="font-weight:400;color:#888;font-size:9px;letter-spacing:0">— Risk-Integrated v5 · <span style="color:#2d7a2d">●</span> I <span style="color:#b8860b">●</span> II <span style="color:#a32d2d">●</span> III · Downside penalty + 9-dim risk scoring</span></div>
+  <table id="grade-summary-table" style="border-collapse:collapse;width:100%;max-width:800px;font-family:'DM Mono',monospace;font-size:11px;">
     <thead><tr style="border-bottom:2px solid #d4af37;">
       <th style="text-align:left;padding:3px 8px;color:#555;font-size:10px;">TICKER</th>
       <th style="text-align:center;padding:3px 8px;color:#555;font-size:10px;">GRADE</th>
+      <th style="text-align:center;padding:3px 4px;color:#555;font-size:10px;">RISK</th>
       <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">GEM</th>
       <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">1Y EV%</th>
       <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">5Y EV%</th>
     </tr></thead>
-    <tbody id="grade-summary-body"><tr><td colspan="5" style="padding:6px;color:#999;font-style:italic">Loading…</td></tr></tbody>
+    <tbody id="grade-summary-body"><tr><td colspan="6" style="padding:6px;color:#999;font-style:italic">Loading…</td></tr></tbody>
   </table>
 </div>
 
@@ -2929,6 +2930,7 @@ function syncEvalWithGem() {
     "B+":"eval-track-bp",B:"eval-track-b","C+":"eval-track-cp",
     C:"eval-track-c",D:"eval-track-d",F:"eval-track-f"
   };
+  var riskDot = {CRITICAL:'\u26D4',HIGH:'\u26A0',MODERATE:'',LOW:'\u2705',UNKNOWN:''};
   document.querySelectorAll('.mx-row').forEach(function(tr) {
     var ticker = tr.getAttribute('data-ticker');
     if (!ticker) return;
@@ -2937,7 +2939,10 @@ function syncEvalWithGem() {
     var evalCell = tr.querySelector('.mx-eval');
     if (!evalCell) return;
     var cls = gradeClass[d.grade] || 'eval-track-b';
+    var rl = d.risk_level || '';
+    var rIcon = riskDot[rl] || '';
     evalCell.innerHTML = '<span class="' + cls + '">' + d.grade + '</span>' +
+      (rIcon ? '<span style="font-size:8px;margin-left:2px" title="Risk: ' + rl + '">' + rIcon + '</span>' : '') +
       '<div class="eval-gates" style="font-size:9px;color:#888;margin-top:2px">' +
       (d.gem_score ? d.gem_score.toFixed(1) + '/100' : '') + '</div>';
   });
@@ -3005,7 +3010,12 @@ function populateGradeSummary() {
   var rows = [];
   Object.keys(GEM_DATA).forEach(function(tk) {
     var d = GEM_DATA[tk];
-    rows.push({ticker: tk, grade: d.grade, gem: d.gem_score || 0, u1y: d.u1y, u5y: d.u5y});
+    rows.push({
+      ticker: tk, grade: d.grade, gem: d.gem_score || 0,
+      u1y: d.u1y, u5y: d.u5y,
+      risk_avg: d.risk_avg, risk_level: d.risk_level || 'UNKNOWN',
+      pgrade: d.pgrade || d.grade
+    });
   });
 
   computePrecisionTiers(rows);
@@ -3020,6 +3030,8 @@ function populateGradeSummary() {
   var bgMap = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
   var fgMap = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
   var tierDot = {1:'#2d7a2d', 2:'#b8860b', 3:'#a32d2d'};
+  var riskBg = {CRITICAL:'#FCEBEB',HIGH:'#FFF3E0',MODERATE:'#F5F5F5',LOW:'#EAF3DE',UNKNOWN:'#F5F5F5'};
+  var riskFg = {CRITICAL:'#C62828',HIGH:'#E65100',MODERATE:'#616161',LOW:'#2E7D32',UNKNOWN:'#9E9E9E'};
   var html = '';
   rows.forEach(function(r, i) {
     var bg = i % 2 === 0 ? '#fff' : '#f8f9fa';
@@ -3028,9 +3040,13 @@ function populateGradeSummary() {
     var dot = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + (tierDot[r.tier]||'#999') + ';margin-right:3px;vertical-align:middle"></span>';
     var name = TICKER_NAMES[r.ticker] || '';
     var nameHtml = name ? '<span style="color:#888;font-size:10px;font-weight:400;margin-left:4px">' + name + '</span>' : '';
+    var serverPG = r.pgrade || r.grade;
+    var rl = r.risk_level || 'UNKNOWN';
+    var riskBadge = '<span style="background:' + (riskBg[rl]||riskBg.UNKNOWN) + ';color:' + (riskFg[rl]||riskFg.UNKNOWN) + ';font-size:8px;font-weight:600;padding:1px 4px;border-radius:2px;letter-spacing:0.3px">' + rl + '</span>';
     html += '<tr style="background:' + bg + '">' +
       '<td style="padding:3px 8px;font-weight:600">' + r.ticker + nameHtml + '</td>' +
-      '<td style="text-align:center;padding:3px 8px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + r.pgrade + '</span></td>' +
+      '<td style="text-align:center;padding:3px 8px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + serverPG + '</span></td>' +
+      '<td style="text-align:center;padding:3px 4px">' + riskBadge + '</td>' +
       '<td style="text-align:right;padding:3px 8px">' + r.gem.toFixed(1) + '</td>' +
       '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
       '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u5y) + '">' + evFmt(r.u5y) + '</td>' +

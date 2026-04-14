@@ -1,0 +1,17 @@
+[Unit]
+Description=OLYMPUS Correlation Engine (60s cross-referencing)
+After=network.target live_prices.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/gods_plan
+EnvironmentFile=/root/gods_plan/.env
+ExecStart=/usr/bin/python3 -u correlation_engine.py
+Restart=always
+RestartSec=5
+StandardOutput=append:/root/gods_plan/correlation_engine.log
+StandardError=append:/root/gods_plan/correlation_engine.log
+
+[Install]
+WantedBy=multi-user.target

@@ -201,22 +201,37 @@ GRADE_THRESHOLDS = [
 ]
 
 
-def _gem_score(u1, u5, d1, b1_gain):
+def _gem_score(u1, u5, d1, b1_gain, risk_avg=None):
     """
     Multi-factor GEM Score (0-100) → 9-tier letter grade.
 
-    Components (sum to 100 max):
+    Components (sum to 100 max before risk penalty):
       5Y upside   (0-35):  long-term compounding value
       1Y upside   (0-25):  near-term thesis validation
-      Downside    (0-20):  1Y worst-drop risk management
-      Asymmetry   (0-20):  bull-gain / worst-drop ratio (fat-tailed upside)
+      Downside  (-15..20): 1Y worst-drop (PENALTY for extreme drawdowns)
+      Asymmetry   (0-20):  bull-gain / worst-drop ratio (capped if downside extreme)
+      Risk adj  (-15..+3): integrated risk screener penalty/bonus
     """
     s5 = _lerp(u5, [-50, 0, 25, 50, 100, 200], [0, 10, 18, 24, 30, 35])
     s1 = _lerp(u1, [-30, -15, 0, 10, 25], [0, 5, 12, 18, 25])
-    sd = _lerp(d1, [-70, -50, -30, -15, -5], [0, 5, 10, 15, 20])
+
+    # Downside: now PENALIZES extreme drawdowns (negative contribution below -50%)
+    sd = _lerp(d1, [-90, -70, -50, -30, -15, -5], [-15, -8, 2, 10, 15, 20])
+
     ratio = b1_gain / max(abs(d1), 1) if d1 < -1 else 3.0
     sa = _lerp(ratio, [0.3, 1.0, 2.0, 3.5], [0, 5, 12, 20])
-    raw = s5 + s1 + sd + sa
+
+    # Cap asymmetry bonus when downside is catastrophic (prevents lottery-ticket inflation)
+    if d1 < -60:
+        sa = min(sa, 8)
+
+    # Risk screener integration: CRITICAL=-15, HIGH=-8, MODERATE=0, LOW=+3
+    risk_adj = 0.0
+    if risk_avg is not None:
+        risk_adj = _lerp(risk_avg, [1.5, 3.0, 4.5, 6.0, 7.5],
+                                    [3,   0,   -4,  -10, -15])
+
+    raw = s5 + s1 + sd + sa + risk_adj
     return round(min(100, max(0, raw)), 1)
 
 
@@ -373,7 +388,10 @@ def evaluate(data):
     thesis = data.get("thesis_status", "intact")
     macro  = data.get("macro_status",  "neutral")
 
-    raw_score = _gem_score(u1, u5, d1, b1)
+    # Risk screener integration (injected by run_gem_daily or passed in data)
+    risk_avg = data.get("_risk_avg")
+
+    raw_score = _gem_score(u1, u5, d1, b1, risk_avg=risk_avg)
     grade = _score_to_grade(raw_score)
 
     if thesis == "dead":
@@ -432,6 +450,8 @@ def evaluate(data):
         f"Monitor {cadence}."
     )
 
+    risk_level = data.get("_risk_level", "UNKNOWN")
+
     return {
         "ticker":         data["ticker"],
         "sector":         data.get("sector", ""),
@@ -455,6 +475,9 @@ def evaluate(data):
             "gem_portfolio":     gem_p,
             "god_score_warning": warn,
             "reason":            reason,
+            "risk_integrated":   risk_avg is not None,
+            "risk_avg":          _r(risk_avg, 1) if risk_avg is not None else None,
+            "risk_level":        risk_level,
         },
         "so_what": {
             "action":    action_word,

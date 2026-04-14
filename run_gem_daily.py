@@ -13,6 +13,7 @@ from minerva_gem import evaluate
 
 INPUT_FILE  = os.path.join(os.path.dirname(__file__), "gem_inputs", "portfolio_all.json")
 OUTPUT_DIR  = os.path.join(os.path.dirname(__file__), "gem_results")
+RISK_DIR    = os.path.join(os.path.dirname(__file__), "data", "skill_results")
 
 TIER_LABELS = {1: "I", 2: "II", 3: "III"}
 
@@ -85,11 +86,45 @@ def fetch_live_prices(tickers):
         print("[GEM] WARNING: yfinance not installed")
     return prices
 
+def _load_risk_scores():
+    """Load latest risk screener results. Returns {ticker: {avg_risk, risk_level, critical_risks}}."""
+    risk_map = {}
+    try:
+        candidates = sorted(
+            [f for f in os.listdir(RISK_DIR) if f.startswith("risk_") and f.endswith(".json")],
+            reverse=True
+        )
+        if not candidates:
+            print("[GEM] No risk screener results found — running without risk integration")
+            return risk_map
+        path = os.path.join(RISK_DIR, candidates[0])
+        with open(path) as f:
+            data = json.load(f)
+        for tk, rd in data.get("results", {}).items():
+            risk_map[tk] = {
+                "avg_risk": rd.get("avg_risk", 5.0),
+                "risk_level": rd.get("risk_level", "UNKNOWN"),
+                "critical_risks": rd.get("critical_risks", []),
+            }
+        print(f"[GEM] Loaded risk scores from {candidates[0]} ({len(risk_map)} tickers)")
+    except Exception as e:
+        print(f"[GEM] Risk score load failed: {e}")
+    return risk_map
+
+
 def run():
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
     with open(INPUT_FILE, "r") as f:
         positions = json.load(f)
+
+    # RISK INTEGRATION — load latest risk screener scores
+    risk_map = _load_risk_scores()
+    for p in positions:
+        tk = p["ticker"]
+        if tk in risk_map:
+            p["_risk_avg"] = risk_map[tk]["avg_risk"]
+            p["_risk_level"] = risk_map[tk]["risk_level"]
 
     # LIVE PRICE OVERRIDE — always use freshest yfinance prices
     all_tickers = [p["ticker"] for p in positions]
