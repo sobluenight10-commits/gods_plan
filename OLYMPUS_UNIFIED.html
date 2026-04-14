@@ -2480,20 +2480,26 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     return _fmtCur(v, 'USD');
   }
 
-  // For current price: dual display (primary + secondary in parentheses)
+  // Dual display: primary + secondary (plain text, for tooltips)
+  function fmtDualPlain(v, ticker) {
+    if (v == null || v === 0) return '\u2014';
+    var localCur = USD_LISTED_LOCAL[ticker];
+    if (localCur) return _fmtCur(v, 'USD') + ' (' + _fmtCur(v * FX[localCur], localCur) + ')';
+    var foreignCur = FOREIGN_LISTED[ticker];
+    if (foreignCur) return _fmtCur(v, foreignCur) + ' (' + _fmtCur(v / FX[foreignCur], 'USD') + ')';
+    return _fmtCur(v, 'USD');
+  }
+
+  // Dual display: HTML version with styled secondary currency
   function fmtDual(v, ticker) {
     if (v == null || v === 0) return '\u2014';
     var localCur = USD_LISTED_LOCAL[ticker];
     if (localCur) {
-      var usd = _fmtCur(v, 'USD');
-      var local = _fmtCur(v * FX[localCur], localCur);
-      return usd + ' <span style="color:#888;font-size:9px">(' + local + ')</span>';
+      return _fmtCur(v, 'USD') + ' <span style="color:#888;font-size:9px">(' + _fmtCur(v * FX[localCur], localCur) + ')</span>';
     }
     var foreignCur = FOREIGN_LISTED[ticker];
     if (foreignCur) {
-      var native = _fmtCur(v, foreignCur);
-      var usdEquiv = _fmtCur(v / FX[foreignCur], 'USD');
-      return native + ' <span style="color:#888;font-size:9px">(' + usdEquiv + ')</span>';
+      return _fmtCur(v, foreignCur) + ' <span style="color:#888;font-size:9px">(' + _fmtCur(v / FX[foreignCur], 'USD') + ')</span>';
     }
     return _fmtCur(v, 'USD');
   }
@@ -2522,7 +2528,7 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     var long = longUp > 15 ? 'LONG-TERM UNDERVALUED' : longUp < -10 ? 'LONG-TERM OVERVALUED' : 'LONG-TERM FAIR';
     var gapNote = gap >= 30 ? ' (+' + gap + '% gap)' : '';
 
-    var t = ticker + ' ' + fmtDual(price,ticker) + '  |  Grade: ' + grade + '  |  Conv: ' + conv + '/10';
+    var t = ticker + ' ' + fmtDualPlain(price,ticker) + '  |  Grade: ' + grade + '  |  Conv: ' + conv + '/10';
     t += '\n' + near + '  \u2022  ' + long + gapNote;
 
     t += '\n\nSCENARIO DEFINITIONS';
@@ -2532,15 +2538,15 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
 
     var hl = ['1m','6m','1y','3y','5y'];
     var labels = ['1M','6M','1Y','3Y','5Y'];
-    var evLine = '\n\nEV vs Current Price';
+    var evParts = [];
     for (var i = 0; i < hl.length; i++) {
       var p = proj[hl[i]];
       if (p && p.upside_pct != null) {
         var s = p.upside_pct >= 0 ? '+' : '';
-        evLine += '\n' + labels[i] + ': ' + s + p.upside_pct.toFixed(0) + '%';
+        evParts.push(labels[i] + ': ' + s + p.upside_pct.toFixed(0) + '%');
       }
     }
-    t += evLine;
+    if (evParts.length) t += '\n\nEV vs Current Price\n' + evParts.join('   ');
 
     var action = pos.action || 'HOLD';
     t += '\n\nSO WHAT';
