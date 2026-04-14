@@ -31,6 +31,11 @@ UNIVERSE = {
     "FCX":       {"entry":52.0,  "stop":54.5,"soros_gap":32,"soros_type":"narrative","ez_low":52,"ez_high":58,"thesis":"intact","macro":"neutral","conviction":6, "sector":"Global",      "status":"portfolio"},
     "CWEN":      {"entry":29.32, "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"neutral", "conviction":6, "sector":"Energy",      "status":"portfolio"},
     "UUUU":      {"entry":18.21, "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"tailwind","conviction":6, "sector":"Energy",      "status":"portfolio"},
+    "CRSP":      {"entry":0,     "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":40, "ez_high":55, "thesis":"wounded","macro":"neutral", "conviction":5, "sector":"Bio",         "status":"watchlist"},
+    "ARKQ":      {"entry":55.0,  "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"tailwind","conviction":6, "sector":"Robotics",    "status":"portfolio"},
+    "BOTZ":      {"entry":23.0,  "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"tailwind","conviction":6, "sector":"Robotics",    "status":"portfolio"},
+    "MC.PA":     {"entry":0,     "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"neutral", "conviction":8, "sector":"Locked",      "status":"locked",  "currency":"EUR"},
+    "IAU":       {"entry":0,     "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"neutral", "conviction":3, "sector":"Tactical",    "status":"portfolio"},
 }
 
 def get_live_prices():

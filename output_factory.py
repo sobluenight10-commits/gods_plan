@@ -58,18 +58,34 @@ def build_brief(state):
     verdicts = ""
     for score, t in portfolio:
         r = results[t]
-        p = fmt_price(r["price"])
+        p = fmt_price(r["price"], r.get("currency","USD"))
         pnl = fmt_pct(r["pnl_pct"])
         u1y = fmt_pct(r["gem_u1y"])
-        verdicts += f"{t} → {r['action']['display']} @ {p} · P&L {pnl} · 1y EV {u1y} · {r['conviction']}/10\n"
+        verdicts += f"{t} \u2192 {r['action']['display']} @ {p} \u00b7 P&L {pnl} \u00b7 1y EV {u1y} \u00b7 {r['conviction']}/10\n"
 
-    # RANTO section
-    ranto_block = "• No new signals last 48h\n"
+    # RANTO section — try blog_signals, then blog_tickers as fallback
+    ranto_block = ""
     if ranto:
-        ranto_block = ""
         for p in ranto[:4]:
-            ranto_block += f"• {p['summary'][:80]} → {p['action']} ({','.join(p['tickers'])})\n"
-
+            ranto_block += f"\u2022 {p['summary'][:80]} \u2192 {p['action']} ({','.join(p['tickers'])})\n"
+    if not ranto_block:
+        try:
+            bt_path = os.path.join(BASE, "data", "blog_tickers.json")
+            if os.path.exists(bt_path):
+                import time as _time
+                age_h = (_time.time() - os.path.getmtime(bt_path)) / 3600
+                with open(bt_path) as f:
+                    bt = json.load(f)
+                tickers_found = bt if isinstance(bt, list) else bt.get("tickers", [])
+                if tickers_found and age_h < 72:
+                    ranto_block = f"\u2022 {len(tickers_found)} signals detected in blog (updated {age_h:.0f}h ago)\n"
+                    for sig in tickers_found[:4]:
+                        name = sig if isinstance(sig, str) else sig.get("ticker", sig.get("name","?"))
+                        ranto_block += f"  \u2192 {name}\n"
+        except Exception:
+            pass
+    if not ranto_block:
+        ranto_block = "\u2022 Blog data unavailable \u2014 check blog_monitor service\n"
     # MACRO → PORTFOLIO (top 3 moves)
     moves = ""
     for score, t in state["scored_tickers"][:5]:
@@ -115,12 +131,19 @@ def build_dashboard_state(state):
         out["positions"][t] = {
             "price":       r["price"],
             "entry":       r["entry"],
+            "currency":    r.get("currency","USD"),
             "pnl_pct":     r["pnl_pct"],
             "gem_grade":   r["gem_grade"],
             "gem_u1y":     r["gem_u1y"],
             "gem_u5y":     r["gem_u5y"],
+            "god_score":   r.get("god_score",0),
+            "conviction":  r.get("conviction",7),
+            "ez_low":      r.get("ez_low",0),
+            "ez_high":     r.get("ez_high",0),
+            "soros_type":  r.get("soros_type",""),
             "action":      r["action"]["display"],
             "action_code": r["action"]["action"],
+            "action_reason": r["action"].get("reason",""),
             "score":       r["score"],
             "projections": r["projections"],
             "soros_gap":   r["soros_gap"],

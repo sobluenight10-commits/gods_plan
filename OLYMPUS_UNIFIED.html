@@ -707,41 +707,44 @@ td.mx-soros-gap.soros-cell:hover .soros-tooltip{display:block;}
 
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--es-paper)}::-webkit-scrollbar-thumb{background:var(--es-rule)}
 
-/* Scenario table */
-.mx-scenarios { padding: 3px 6px; vertical-align: top; min-width: 320px; }
-.scenario-tbl { border-collapse: collapse; width: 100%; font-family: monospace; font-size: 11px; table-layout: fixed; }
-.scenario-tbl td, .scenario-tbl th { text-align: right; padding: 2px 6px; white-space: nowrap; overflow: hidden; }
-.scenario-tbl td:first-child { text-align: left; font-weight: 700; min-width: 20px; max-width: 20px; }
-.scenario-tbl th { color: #aaa; font-weight: 400; font-size: 10px; }
+/* Scenario table — CORE INFO, must be large and readable */
+.mx-scenarios { padding: 4px 8px; vertical-align: top; min-width: 420px; }
+.scenario-tbl { border-collapse: collapse; width: 100%; font-family: 'DM Mono', monospace; font-size: 12px; table-layout: fixed; }
+.scenario-tbl td, .scenario-tbl th { text-align: right; padding: 3px 8px; white-space: nowrap; overflow: hidden; }
+.scenario-tbl td:first-child { text-align: left; font-weight: 700; min-width: 26px; max-width: 26px; }
+.scenario-tbl th { color: #999; font-weight: 500; font-size: 11px; border-bottom: 1px solid #e5e5e5; }
 .scenario-tbl .sc-worst td { color: #c0392b; }
 .scenario-tbl .sc-normal td { color: #444; }
 .scenario-tbl .sc-bull   td { color: #2d7a2d; }
-.scenario-tbl .sc-ev     td { color: #2a6e2a; font-weight: 600; background: #f0f8f0; }
-.scenario-tbl .sc-vs     td { font-size: 9px; background: #fafafa; border-top: 1px solid #eee; }
-.mx-versus { padding: 2px 6px 4px; display: flex; gap: 12px; flex-wrap: wrap; border-top: 1px solid #eee; background: #fefefe; font-size: 10px; }
+.scenario-tbl .sc-ev     td { color: #2a6e2a; font-weight: 700; background: #f0f8f0; font-size: 13px; }
+.scenario-tbl .sc-vs     td { font-size: 10px; background: #fafafa; border-top: 1px solid #eee; }
+.mx-versus { padding: 3px 8px 5px; display: flex; gap: 14px; flex-wrap: wrap; border-top: 1px solid #eee; background: #fefefe; font-size: 11px; }
+.mx-scen-summary { padding: 4px 8px 2px; font-size: 11px; color: #555; border-top: 1px solid #eee; background: #f9f9f9; line-height: 1.4; }
+.mx-scen-summary strong { color: #1a1a2e; }
 
-/* Soros gap column — fixed width, no overflow */
-.soros-cell { max-width: 155px; min-width: 120px; overflow: hidden; }
-.mx-soros-hot { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; }
+/* Soros gap column — stacked above action, not side by side */
+.mx-soros-gap { max-width: 200px; min-width: 120px; overflow: visible !important; white-space: normal !important; line-height: 1.35; }
+.mx-soros-hot { display: block; overflow: visible; white-space: normal; font-size: 11px; line-height: 1.3; word-wrap: break-word; }
 
-/* Action column — fixed width */
-td:has(.mx-act) { min-width: 95px; white-space: nowrap; }
+/* Action column — fixed width, vertical center */
+td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle; }
 
-/* Universal tooltip */
+/* Universal tooltip — larger, richer */
 .oly-tip { position: relative; cursor: help; }
 .oly-tip::after {
   content: attr(data-tip);
   position: absolute; bottom: calc(100% + 8px); left: 50%;
   transform: translateX(-50%);
   background: #1a1a2e; color: #e8e8f0;
-  font-size: 11px; font-family: sans-serif; font-weight: 400; line-height: 1.5;
-  padding: 8px 12px; border-radius: 6px; white-space: pre-line;
-  min-width: 220px; max-width: 320px;
+  font-size: 12px; font-family: 'DM Sans', sans-serif; font-weight: 400; line-height: 1.6;
+  padding: 12px 16px; border-radius: 8px; white-space: pre-line;
+  min-width: 280px; max-width: 420px;
   z-index: 9999; pointer-events: none;
-  opacity: 0; transition: opacity 0.15s;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  opacity: 0; transition: opacity 0.18s;
+  box-shadow: 0 6px 28px rgba(0,0,0,0.5);
 }
 .oly-tip:hover::after { opacity: 1; }
+.scenario-tbl td.oly-tip::after { left: 0; transform: none; }
 
 </style>
 </head>
@@ -2447,127 +2450,173 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
 (function() {
   'use strict';
 
+  /* ── Currency formatter ── */
   function fmt(v, ticker) {
-    if (v == null || v === 0) return '—';
+    if (v == null || v === 0) return '\u2014';
     var kr = ['000660.KS','272210.KS'];
     var hk = ['1810.HK'];
     var eu = ['ASML','MC.PA'];
     if (kr.indexOf(ticker) >= 0) {
-      if (v >= 1e6) return '₩' + (v/1e6).toFixed(1) + 'M';
-      if (v >= 1e3) return '₩' + Math.round(v/1e3) + 'K';
-      return '₩' + Math.round(v);
+      if (v >= 1e6) return '\u20A9' + (v/1e6).toFixed(1) + 'M';
+      if (v >= 1e3) return '\u20A9' + Math.round(v/1e3) + 'K';
+      return '\u20A9' + Math.round(v);
     }
     if (hk.indexOf(ticker) >= 0) return 'HK$' + v.toFixed(1);
-    if (eu.indexOf(ticker) >= 0) return v >= 1000 ? '€' + Math.round(v).toLocaleString() : '€' + v.toFixed(0);
+    if (eu.indexOf(ticker) >= 0) return v >= 1000 ? '\u20AC' + Math.round(v).toLocaleString() : '\u20AC' + v.toFixed(0);
     if (v >= 1000) return '$' + Math.round(v).toLocaleString();
     if (v >= 10)   return '$' + v.toFixed(1);
     return '$' + v.toFixed(2);
   }
 
   function pct(v, size) {
-    if (v == null) return '<span style="color:#ccc;font-size:'+(size||10)+'px">—</span>';
+    if (v == null) return '<span style="color:#ccc;font-size:'+(size||11)+'px">\u2014</span>';
     var c = v >= 0 ? '#2d7a2d' : '#c0392b';
     var s = v >= 0 ? '+' : '';
-    return '<span style="color:'+c+';font-size:'+(size||10)+'px;font-weight:500">'+s+v.toFixed(1)+'%</span>';
+    return '<span style="color:'+c+';font-size:'+(size||11)+'px;font-weight:600">'+s+v.toFixed(1)+'%</span>';
   }
 
-  function buildScenarioTD(ticker, proj, pnl, u1y) {
+  /* ── Two-layer verdict for tooltip ── */
+  function twoLayerVerdict(ticker, pos, proj) {
+    var u1y = pos.gem_u1y;
+    var gap = pos.soros_gap || 0;
+    var action = pos.action || 'HOLD';
+    var grade = pos.gem_grade || '?';
+    var price = pos.price || 0;
+    var conv = pos.conviction || 0;
+
+    var near = (u1y != null && u1y < -5) ? 'NEAR-TERM OVERVALUED' : (u1y != null && u1y > 10) ? 'NEAR-TERM UNDERVALUED' : 'NEAR-TERM FAIR';
+    var longUp = 0;
+    if (proj['5y'] && proj['5y'].upside_pct != null) longUp = proj['5y'].upside_pct;
+    else if (proj['3y'] && proj['3y'].upside_pct != null) longUp = proj['3y'].upside_pct;
+    var long = longUp > 15 ? 'LONG-TERM UNDERVALUED' : longUp < -10 ? 'LONG-TERM OVERVALUED' : 'LONG-TERM FAIR';
+
+    var gapNote = gap >= 30 ? ' (+' + gap + '% narrative gap)' : '';
+    var line1 = ticker + '  $' + Math.round(price) + '  Grade: ' + grade + '  GOD: ' + (pos.god_score||'?') + '  Conv: ' + conv + '/10';
+    var line2 = near + ' \u00B7 ' + long + gapNote;
+
+    var soWhat = '';
+    if (action === 'DIP_WATCH' || action === 'DIP WATCH') {
+      var ezl = pos.ez_low || 0; var ezh = pos.ez_high || 0;
+      soWhat = '\n\nSO WHAT: Do NOT buy at $' + Math.round(price) + '.\nEntry zone $' + ezl + '\u2013$' + ezh + '.\nSet limit alert. When price enters zone \u2192 ARMED.';
+    } else if (action === 'HOLD') {
+      soWhat = '\n\nSO WHAT: Do nothing. Thesis intact.\nMonitor weekly. No action required.';
+    } else if (action === 'ARMED' || action.indexOf('ARMED') >= 0) {
+      soWhat = '\n\nSO WHAT: Limit order is LIVE in broker.\nDo nothing. Wait for fill.\nIf filled \u2192 you own it at thesis price.';
+    } else if (action === 'ADD') {
+      soWhat = '\n\nSO WHAT: Price is IN entry zone NOW.\nGEM + Soros aligned. BUY HERE.';
+    } else if (action === 'EXIT' || action === 'EXIT NOW') {
+      soWhat = '\n\nSO WHAT: Thesis DEAD. Exit immediately.\nNo hoping for bounce.';
+    } else if (action === 'BUY') {
+      soWhat = '\n\nSO WHAT: Buy signal active.\nCheck entry zone and set limit.';
+    }
+
+    return line1 + '\n' + line2 + soWhat;
+  }
+
+  /* ── Build the scenario table HTML ── */
+  function buildScenarioTD(ticker, proj, pnl, u1y, pos) {
     var h  = ['1m','6m','1y','3y','5y'];
     var hl = ['1M','6M','1Y','3Y','5Y'];
+    var hasData = false;
 
-    // Tooltip for each horizon
-    var horizonTips = {
-      '1m': 'Heston Stochastic Volatility MC\n10,000 paths · ρ=−0.7\nShort-term noise dominates',
-      '6m': 'Heston MC blended with\nearly fundamental signals\nVolatility mean-reversion kicks in',
-      '1y': 'EPS × PE fundamental model\nBear/Base/Bull EPS scenarios\nMacro cycle matters most here',
-      '3y': 'DCF-based fundamental model\nRevenue growth + margin expansion\nCompounding starts to show',
-      '5y': 'Terminal value DCF\nFull thesis realisation horizon\nNarrative gap resolves here'
+    var horizonModel = {
+      '1m': 'Heston MC P10 (10K paths, \u03C1=-0.7)',
+      '6m': 'Heston MC + early fundamental blend',
+      '1y': 'EPS \u00D7 PE fundamental (bear/base/bull)',
+      '3y': 'DCF: revenue growth + margin expansion',
+      '5y': 'Terminal DCF: full thesis realisation'
     };
 
-    function makeRow(cls, label, key, tipPrefix) {
+    function makeRow(cls, label, key, tipLabel) {
       var cells = hl.map(function(lbl, i) {
         var hkey = h[i];
         var val = proj[hkey] ? proj[hkey][key] : null;
-        var tip = tipPrefix + '\nHorizon: ' + lbl + '\n' + (horizonTips[hkey] || '');
-        return '<td class="oly-tip" data-tip=\"'+tip.replace(/\"/g,'&quot;')+'\" style=\"text-align:right;padding:2px 6px\">'+fmt(val, ticker)+'</td>';
+        if (val != null) hasData = true;
+        var tip = lbl + ' ' + tipLabel + ': ' + fmt(val, ticker) + '\nModel: ' + horizonModel[hkey] + '\nAssumption: ' + (key === 'worst' ? 'Everything goes wrong. Recession + thesis stress.' : key === 'normal' ? 'Base case. Current trajectory continues.' : 'Thesis fully realised. Bull catalysts hit.');
+        return '<td class="oly-tip" data-tip="' + tip.replace(/"/g,'&quot;') + '">' + fmt(val, ticker) + '</td>';
       }).join('');
-      return '<tr class=\"'+cls+'\"><td>'+label+'</td>'+cells+'</tr>';
+      return '<tr class="' + cls + '"><td>' + label + '</td>' + cells + '</tr>';
     }
 
     function evRow() {
       var cells = hl.map(function(lbl, i) {
         var hkey = h[i];
-        var p    = proj[hkey] || {};
-        var ev   = p.ev;
-        var up   = p.upside_pct;
-        if (ev == null || ev === 0) return '<td style=\"text-align:right;padding:2px 6px;color:#ccc\">—</td>';
-        var c    = (up||0) >= 0 ? '#2d7a2d' : '#c0392b';
-        var s    = (up||0) >= 0 ? '+' : '';
-        var pks  = up != null ? '<br><span style=\"font-size:8px\">'+s+up.toFixed(0)+'%</span>' : '';
-        var tip  = 'Expected Value = 50%×Worst + 30%×Normal + 20%×Bull\nHorizon: '+lbl+'\n'+up.toFixed(1)+'% vs current price\nPositive = buy signal at this horizon';
-        return '<td class=\"oly-tip\" data-tip=\"'+tip.replace(/\"/g,'&quot;')+'\" style=\"text-align:right;padding:2px 6px;font-weight:600;color:'+c+'\">'+fmt(ev,ticker)+pks+'</td>';
+        var p = proj[hkey] || {};
+        var ev = p.ev; var up = p.upside_pct;
+        if (ev != null && ev !== 0) hasData = true;
+        if (ev == null || ev === 0) return '<td style="color:#ccc">\u2014</td>';
+        var c = (up||0) >= 0 ? '#2d7a2d' : '#c0392b';
+        var s = (up||0) >= 0 ? '+' : '';
+        var tip = 'EV at ' + lbl + ' = 50%\u00D7Worst + 30%\u00D7Normal + 20%\u00D7Bull\n= ' + fmt(ev,ticker) + ' (' + s + (up||0).toFixed(1) + '% vs now)\n\nWeights are pessimistic by design.\nPositive = buy signal at this horizon.';
+        return '<td class="oly-tip" data-tip="' + tip.replace(/"/g,'&quot;') + '" style="font-weight:700;color:'+c+'">' + fmt(ev,ticker) + '<br><span style="font-size:9px">' + s + (up||0).toFixed(0) + '%</span></td>';
       }).join('');
-      return '<tr class=\"sc-ev\"><td>EV</td>'+cells+'</tr>';
+      return '<tr class="sc-ev"><td>EV</td>' + cells + '</tr>';
     }
 
     function vsRow() {
       var cells = hl.map(function(lbl, i) {
         var hkey = h[i];
-        var up   = proj[hkey] ? proj[hkey].upside_pct : null;
-        var tip  = 'EV vs current price at '+lbl+'\nPositive = GEM says buy at this horizon\nNegative = GEM says overvalued at this horizon';
-        return '<td class=\"oly-tip\" data-tip=\"'+tip.replace(/\"/g,'&quot;')+'\" style=\"text-align:right;padding:2px 4px\">'+pct(up,9)+'</td>';
+        var up = proj[hkey] ? proj[hkey].upside_pct : null;
+        return '<td>' + pct(up, 10) + '</td>';
       }).join('');
-      return '<tr class=\"sc-vs\"><td style=\"font-size:9px;color:#aaa\">vs%</td>'+cells+'</tr>';
+      return '<tr class="sc-vs"><td style="font-size:10px;color:#aaa">vs%</td>' + cells + '</tr>';
     }
 
-    var header = '<tr><td></td>'+hl.map(function(l){ return '<th>'+l+'</th>'; }).join('')+'</tr>';
-
-    var scenTip = 'W = Worst case (Heston P10 / EPS bear)\nN = Normal case (P50 / EPS base)\nB = Bull case (P90 / EPS bull)\nEV = 50%W + 30%N + 20%B (pessimistic weights)\nvs% = EV discount/premium to current price';
-
-    var table = '<table class=\"scenario-tbl\" title=\"'+scenTip+'\">'
+    var header = '<tr><td></td>' + hl.map(function(l){ return '<th>'+l+'</th>'; }).join('') + '</tr>';
+    var table = '<table class="scenario-tbl">'
       + header
-      + makeRow('sc-worst','W','worst','Worst case scenario (P10 Heston / EPS bear)')
-      + makeRow('sc-normal','N','normal','Base case scenario (P50 / EPS base)')
-      + makeRow('sc-bull','B','bull','Bull case scenario (P90 / EPS bull)')
+      + makeRow('sc-worst','W','worst','Worst')
+      + makeRow('sc-normal','N','normal','Normal')
+      + makeRow('sc-bull','B','bull','Bull')
       + evRow()
       + vsRow()
       + '</table>';
 
-    // Versus line
-    var vparts = [];
-    if (pnl  != null) vparts.push('<span style=\"color:#888\">P&L: </span>'+pct(pnl));
-    if (u1y  != null) vparts.push('<span style=\"color:#888\">vs1y: </span>'+pct(u1y));
-    var p5y = proj['5y'] ? proj['5y'].upside_pct : null;
-    if (p5y  != null) vparts.push('<span style=\"color:#888\">entry→5y: </span>'+pct(p5y));
-    var versus = vparts.length ? '<div class=\"mx-versus\">'+vparts.join('')+'</div>' : '';
-
-    return table + versus;
-  }
-
-  function applyGodScoreTip(tr, godScore) {
-    var godCell = tr.querySelector('.god-cell');
-    if (godCell && !godCell.dataset.tip) {
-      var grade = godScore >= 80 ? 'Track A — Portfolio grade' : godScore >= 60 ? 'Track B — Watchlist grade' : 'Below threshold';
-      godCell.classList.add('oly-tip');
-      godCell.dataset.tip = 'GOD Score: '+godScore+'/100\n'+grade+'\n\nFormula:\nParadigm Fit    × 0.30\nCapital Quality × 0.25\nPrice vs Value  × 0.20\nThesis Clarity  × 0.15\nBalance Sheet   × 0.10\n\n≥80 = conviction hold\n60–79 = watchlist\n<60 = review exit';
+    // Two-layer summary line
+    var verdict = twoLayerVerdict(ticker, pos || {}, proj);
+    var verdictShort = '';
+    if (pos) {
+      var u = pos.gem_u1y;
+      var gap = pos.soros_gap || 0;
+      var near = (u != null && u < -5) ? '<span style="color:#c0392b">NEAR: OVERVALUED</span>' : (u != null && u > 10) ? '<span style="color:#2d7a2d">NEAR: UNDERVALUED</span>' : '<span style="color:#888">NEAR: FAIR</span>';
+      var longUp = 0;
+      if (proj['5y'] && proj['5y'].upside_pct != null) longUp = proj['5y'].upside_pct;
+      else if (proj['3y'] && proj['3y'].upside_pct != null) longUp = proj['3y'].upside_pct;
+      var long = longUp > 15 ? '<span style="color:#2d7a2d">LONG: UNDERVALUED</span>' : longUp < -10 ? '<span style="color:#c0392b">LONG: OVERVALUED</span>' : '<span style="color:#888">LONG: FAIR</span>';
+      var gapTag = gap >= 25 ? ' \u00B7 <strong>' + gap + '% gap</strong>' : '';
+      verdictShort = '<div class="mx-scen-summary">' + near + ' \u00B7 ' + long + gapTag + '</div>';
     }
+
+    // Versus metrics
+    var vparts = [];
+    if (pnl != null) vparts.push('<span style="color:#888">P&L:</span> ' + pct(pnl));
+    if (u1y != null) vparts.push('<span style="color:#888">vs1y:</span> ' + pct(u1y));
+    var p5y = proj['5y'] ? proj['5y'].upside_pct : null;
+    if (p5y != null) vparts.push('<span style="color:#888">entry\u21925y:</span> ' + pct(p5y));
+    var versus = vparts.length ? '<div class="mx-versus">' + vparts.join('') + '</div>' : '';
+
+    if (!hasData) {
+      return '<div style="padding:8px;color:#999;font-size:11px;text-align:center;font-style:italic">GEM projections loading\u2026<br>Run olympus_daily.py</div>';
+    }
+
+    return table + verdictShort + versus;
   }
 
+  /* ── Tooltip helpers ── */
   function applyEvalTip(tr) {
     var evalCell = tr.querySelector('.mx-eval');
     if (evalCell && !evalCell.dataset.tipped) {
       evalCell.dataset.tipped = '1';
-      var trackEl = evalCell.querySelector('[class*=\"eval-track\"]');
-      var grade   = trackEl ? trackEl.textContent.trim() : '—';
+      var trackEl = evalCell.querySelector('[class*="eval-track"]');
       var gatesEl = evalCell.querySelector('.eval-gates');
-      var gates   = gatesEl ? gatesEl.textContent.trim() : '';
-      trackEl && trackEl.classList.add('oly-tip');
       if (trackEl) {
-        trackEl.dataset.tip = 'GEM Grade: '+grade+'\n\nA = 1y EV ≥+20% + 5y EV ≥+100% + worst >−60%\nB = 1y EV ≥+10% + 5y EV ≥+50%\nC = Marginal upside\nD = Fails all thresholds\n\nGrade A = GEM Portfolio (buy signal)\nGrade B = GEM Universe (hold/watch)\nGrade C/D = No add signal from GEM';
+        trackEl.classList.add('oly-tip');
+        var g = trackEl.textContent.trim();
+        trackEl.dataset.tip = 'GEM Grade: ' + g + '\n\nA = 1y EV \u2265+20% + 5y EV \u2265+100% + worst >\u221260%\nB = 1y EV \u2265+10% + 5y EV \u2265+50%\nC = Marginal upside\nD = Fails all thresholds\n\nA = Buy signal | B = Hold/watch | C/D = No add';
       }
-      gatesEl && gatesEl.classList.add('oly-tip');
       if (gatesEl) {
-        gatesEl.dataset.tip = 'Investment Thesis Gates\n\n'+gates+'\n\nP1 = Paradigm fit confirmed (Earth Shifter)\nP2 = Capital quality verified (cash flow positive)\nP3 = Price vs value attractive (MoS exists)\nP4 = Thesis clarity proven (catalyst identified)\n\nAll gates = maximum conviction entry\nMissing gates = position sizing reduced';
+        gatesEl.classList.add('oly-tip');
+        gatesEl.dataset.tip = 'Thesis Gates: ' + gatesEl.textContent.trim() + '\n\nP1 = Paradigm fit (Earth Shifter)\nP2 = Capital quality (CF+)\nP3 = Price vs value (MoS)\nP4 = Thesis clarity (catalyst)\n\nAll gates = max conviction\nMissing = sizing reduced';
       }
     }
   }
@@ -2576,62 +2625,82 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     var actEl = tr.querySelector('.mx-act');
     if (actEl && !actEl.dataset.tip) {
       var tips = {
-        'HOLD':           'HOLD\n\nThesis intact. Price not in entry zone.\nDo nothing. Monitor weekly.',
-        'DIP WATCH':      'DIP WATCH\n\nNarrative gap detected.\nPrice above entry zone — do not chase.\nSet limit when price approaches entry zone.\nDo not buy at current price.',
-        'ARMED':          'ARMED\n\nLimit order placed in broker.\nDo nothing. Wait for fill.\nOne shot — thesis + price aligned at limit.',
-        'ADD':            'ADD\n\nPrice in entry zone now.\nThesis intact. GEM + Soros aligned.\nBuy here.',
-        'ARMED · ONE SHOT': 'ARMED · ONE SHOT\n\nStop breach + thesis INTACT.\nThis is the maximum conviction entry point.\nNarrative gap just widened further.\nSet limit at current dip price immediately.\nMissing this fill = missing the best entry.',
-        'EXIT REVIEW':    'EXIT REVIEW\n\nThesis wounded.\nQuantify damage before deciding.\nApply Contract Size Rule:\n<5% revenue = MINOR = hold\n>30% revenue = CRITICAL = exit',
-        'EXIT NOW':       'EXIT NOW\n\nThesis dead.\nExit regardless of price.\nNo hoping for bounce. Lesson #02.'
+        'HOLD': 'HOLD\n\nThesis intact. Price not in entry zone.\nDo nothing. Monitor weekly.',
+        'DIP WATCH': 'DIP WATCH\n\nNarrative gap detected.\nPrice above entry zone \u2014 do not chase.\nSet alert. When price enters zone \u2192 ARMED.',
+        'ARMED': 'ARMED\n\nLimit order placed in broker.\nDo nothing. Wait for fill.\nOne shot \u2014 thesis + price aligned.',
+        'ADD': 'ADD\n\nPrice in entry zone NOW.\nThesis intact. GEM + Soros aligned.\nBuy here.',
+        'BUY': 'BUY\n\nActive buy signal.\nCheck entry zone. Set limit.',
+        'EXIT REVIEW': 'EXIT REVIEW\n\nThesis wounded.\nQuantify damage before deciding.',
+        'EXIT NOW': 'EXIT NOW\n\nThesis dead. Exit regardless of price.',
+        'WATCH': 'WATCH\n\nOn radar. No position yet.\nWait for catalyst or entry zone.',
+        'IPO': 'IPO\n\nPrepare capital for listing window.',
+        'WAIT': 'WAIT\n\nToo early or thesis unclear.\nDo not act yet.'
       };
       actEl.classList.add('oly-tip');
-      actEl.dataset.tip = tips[action] || 'Action: '+action;
+      actEl.dataset.tip = tips[action] || 'Action: ' + action;
     }
   }
 
+  /* ── Main injection ── */
   function injectAll(positions) {
-    Object.keys(positions).forEach(function(ticker) {
-      var pos   = positions[ticker];
-      var proj  = pos.projections || {};
-      var tr    = document.querySelector('[data-ticker=\"'+ticker+'\"]');
-      if (!tr) return;
+    // Process EVERY mx-row, not just ones in dashboard_state
+    var allRows = document.querySelectorAll('.mx-row');
+    allRows.forEach(function(tr) {
+      var ticker = tr.getAttribute('data-ticker');
+      if (!ticker) return;
 
-      // Replace 5 mx-pt cells with one scenario td
+      var pos = positions[ticker] || {};
+      var proj = pos.projections || {};
+
+      // Always inject scenario table — replace mx-pt cells or existing mx-scenarios
+      var existing = tr.querySelector('.mx-scenarios');
       var mxPts = tr.querySelectorAll('.mx-pt');
+
       if (mxPts.length === 5) {
         var firstPt = mxPts[0];
-        var parent  = firstPt.parentNode;
-
+        var parent = firstPt.parentNode;
         var td = document.createElement('td');
-        td.setAttribute('colspan','5');
+        td.setAttribute('colspan', '5');
         td.className = 'mx-scenarios';
-        td.setAttribute('data-injected','1');
-        td.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y);
+        td.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y, pos);
+
+        // Make the whole scenario cell a tooltip target
+        var verdict = twoLayerVerdict(ticker, pos, proj);
+        td.classList.add('oly-tip');
+        td.dataset.tip = verdict;
+
         parent.insertBefore(td, firstPt);
-        mxPts.forEach(function(pt){ parent.removeChild(pt); });
+        mxPts.forEach(function(pt) { parent.removeChild(pt); });
+      } else if (existing) {
+        // Re-inject into existing scenario cell
+        existing.innerHTML = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y, pos);
+        var verdict2 = twoLayerVerdict(ticker, pos, proj);
+        existing.classList.add('oly-tip');
+        existing.dataset.tip = verdict2;
       }
 
-      // Apply tooltips
-      applyGodScoreTip(tr, pos.god_score || 0);
+      // Apply tooltips to eval and action
       applyEvalTip(tr);
-      applyActionTip(tr, pos.action || 'HOLD');
+      var actionText = pos.action || (tr.querySelector('.mx-act') ? tr.querySelector('.mx-act').textContent.trim() : 'HOLD');
+      applyActionTip(tr, actionText);
     });
   }
 
-  // Load dashboard_state.json and inject
+  // Load and inject
   fetch('/data/dashboard_state.json?t=' + Date.now())
-    .then(function(r){ return r.json(); })
-    .then(function(state){
+    .then(function(r) { return r.json(); })
+    .then(function(state) {
       var positions = state.positions || {};
+      function run() { injectAll(positions); }
       if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function(){ injectAll(positions); });
+        document.addEventListener('DOMContentLoaded', run);
       } else {
-        injectAll(positions);
+        run();
       }
-      // Re-run after prices load (prices update DOM after 3s)
-      setTimeout(function(){ injectAll(positions); }, 3500);
+      setTimeout(run, 3500);
+      setTimeout(run, 8000);
     })
-    .catch(function(e){ console.warn('dashboard_state.json load failed:', e); });
+    .catch(function(e) { console.warn('dashboard_state.json load failed:', e); });
 
 })();
 </script>
