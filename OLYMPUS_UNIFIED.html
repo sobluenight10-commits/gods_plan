@@ -3252,12 +3252,38 @@ function updateGemGradeBar() {
 }
 
 /** Heuristic action line from grade + integrated risk + 1Y EV (dashboard hint only). */
-function soWhatToDo(grade, riskLevel, u1y) {
+function soWhatToDo(grade, riskLevel, u1y, gem, pgrade) {
   var risk = String(riskLevel || 'UNKNOWN').toUpperCase();
   var g = String(grade || 'F');
   var ev = (u1y == null || isNaN(u1y)) ? null : Number(u1y);
+  var gemN = (gem != null && !isNaN(Number(gem))) ? Number(gem) : null;
+  var tierStr = (pgrade && String(pgrade).indexOf('.') > 0) ? String(pgrade).split('.').pop() : '';
   if (risk === 'UNKNOWN') {
-    return { line: 'Confirm risk file', tip: 'Run / refresh risk screener on server so risk_level merges into GEM.' };
+    if (ev != null && ev < -12) {
+      return { line: '1Y EV headwind — revisit thesis', tip: 'Modeled year-one is negative; stress-test inputs. 9-dim risk band not merged yet.' };
+    }
+    if (ev != null && ev > 22) {
+      return { line: 'Strong modeled 1Y — mind size', tip: 'GEM shows high 1Y EV; still merge risk file before sizing up.' };
+    }
+    if (g === 'A+' || g === 'A') {
+      return { line: 'Top letter — map risk next', tip: 'Grade is strong; run/refresh risk screener so LOW/MOD/HIGH populates here.' };
+    }
+    if (g === 'B+' || g === 'B') {
+      return { line: 'Mid tier — stay in band', tip: 'Default to allocation rules until risk_level syncs from heatmap file.' };
+    }
+    if (g === 'C+' || g === 'C' || g === 'D' || g === 'F') {
+      return { line: 'Weaker letter — keep small', tip: 'Lower grade bucket; satellite sizing until risk + GEM align.' };
+    }
+    if (gemN != null && gemN < 38) {
+      return { line: 'GEM rank soft vs book', tip: 'Score is toward the bottom of the stack; prioritize better setups or wait.' };
+    }
+    if (tierStr === 'III') {
+      return { line: 'Tier III in letter — last in queue', tip: 'Precision tier is third; favor higher-tier names first unless thesis-specific.' };
+    }
+    if (tierStr === 'I') {
+      return { line: 'Tier I in letter — priority within band', tip: 'Relative strength within same letter; still confirm risk when file updates.' };
+    }
+    return { line: 'Risk file pending — use grade+EV', tip: '9-dim risk not merged into GEM row; heatmap file fills this column when synced.' };
   }
   if (risk === 'CRITICAL' || risk === 'HIGH') {
     if (g === 'F' || g === 'D' || g === 'C' || g === 'C+') {
@@ -3321,10 +3347,39 @@ function computePrecisionTiers(rows) {
   });
 }
 
+/** Merge /data/skill_results/risk_latest.json over GEM row risk_level for display. */
+function _fetchRiskLevelMap() {
+  var origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
+  var riskUrl = origin + '/data/skill_results/risk_latest.json?t=' + Date.now();
+  return fetch(riskUrl)
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(function(data) {
+      var map = {};
+      if (data && data.results && typeof data.results === 'object') {
+        Object.keys(data.results).forEach(function(tk) {
+          var rr = data.results[tk];
+          if (rr && rr.risk_level) map[tk] = String(rr.risk_level).toUpperCase().trim();
+        });
+      }
+      return map;
+    })
+    .catch(function() { return {}; });
+}
+
 function populateGradeSummary() {
   var body = document.getElementById('grade-summary-body');
   if (!body) return;
-  try {
+  _fetchRiskLevelMap().then(function(riskMap) {
+    try {
+      _renderGradeSummaryTable(body, riskMap);
+    } catch (err) {
+      console.error('populateGradeSummary', err);
+      body.innerHTML = '<tr><td colspan="7" style="padding:10px;color:#a32d2d;font-size:13px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
+    }
+  });
+}
+
+function _renderGradeSummaryTable(body, riskMap) {
   var gradeRank = {S:0,"A+":1,A:2,"B+":3,B:4,"C+":5,C:6,D:7,F:8};
   var rows = [];
   Object.keys(GEM_DATA).forEach(function(tk) {
@@ -3350,7 +3405,7 @@ function populateGradeSummary() {
   var bgMap = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
   var fgMap = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
   var tierDot = {1:'#2d7a2d', 2:'#b8860b', 3:'#a32d2d'};
-  var riskBg = {CRITICAL:'#FCEBEB',HIGH:'#FFF3E0',MODERATE:'#F5F5F5',LOW:'#EAF3DE',UNKNOWN:'#F5F5F5'};
+  var riskBg = {CRITICAL:'#FCEBEB',HIGH:'#FFF3E0',MODERATE:'#E8E0D6',LOW:'#EAF3DE',UNKNOWN:'#F5F5F5'};
   var riskFg = {CRITICAL:'#B71C1C',HIGH:'#E65100',MODERATE:'#424242',LOW:'#2E7D32',UNKNOWN:'#4a4a4a'};
   var html = '';
   rows.forEach(function(r, i) {
@@ -3361,9 +3416,9 @@ function populateGradeSummary() {
     var name = TICKER_NAMES[r.ticker] || '';
     var nameHtml = name ? '<span style="color:#5a5347;font-size:12px;font-weight:500;margin-left:6px">' + name + '</span>' : '';
     var serverPG = r.pgrade || r.grade;
-    var rl = r.risk_level || 'UNKNOWN';
+    var rl = (riskMap && riskMap[r.ticker]) ? riskMap[r.ticker] : (r.risk_level || 'UNKNOWN');
     var riskBadge = '<span style="display:inline-block;min-width:4.5em;background:' + (riskBg[rl]||riskBg.UNKNOWN) + ';color:' + (riskFg[rl]||riskFg.UNKNOWN) + ';font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px;letter-spacing:0.04em;border:1px solid rgba(0,0,0,0.06)">' + rl + '</span>';
-    var sow = soWhatToDo(r.grade, r.risk_level, r.u1yNum);
+    var sow = soWhatToDo(r.grade, rl, r.u1yNum, r.gem, serverPG);
     var sowTip = (sow.tip || '').replace(/"/g, '&quot;');
     var sowLine = (sow.line || '—').replace(/</g, '&lt;');
     html += '<tr style="background:' + bg + '">' +
@@ -3377,10 +3432,6 @@ function populateGradeSummary() {
       '</tr>';
   });
   body.innerHTML = html;
-  } catch (err) {
-    console.error('populateGradeSummary', err);
-    body.innerHTML = '<tr><td colspan="7" style="padding:6px;color:#a32d2d;font-size:11px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
-  }
 }
 
 function riskCellColor(score) {
@@ -3426,6 +3477,7 @@ function loadRiskHeatmap() {
         html += '<td style="padding:2px 6px">'+riskLevelBadge(r.risk_level||'UNKNOWN')+'</td></tr>';
       });
       tbody.innerHTML = html || '<tr><td colspan="12" style="padding:6px;color:#999">No risk data yet</td></tr>';
+      if (typeof populateGradeSummary === 'function') populateGradeSummary();
     })
     .catch(function(e) {
       console.warn('Risk heatmap load failed:', e.message);
