@@ -2417,7 +2417,6 @@ async function loadDecisionEngine() {
       '<div class="soros-line"><span class="sl-sub">\u23F3 Awaiting next brief — 07:00 Berlin</span></div>';
     cmdEl.textContent = "\u2694 ONE COMMAND: \u2014";
     updEl.textContent = "";
-    if (lastUp) lastUp.textContent = "2026-04-12";
     return;
   }
 
@@ -2460,7 +2459,6 @@ async function loadDecisionEngine() {
 
   const lu = data.last_updated != null ? String(data.last_updated) : "";
   updEl.textContent = lu ? "Last updated: " + lu : "";
-  if (lastUp) lastUp.textContent = lu || "2026-04-12";
 
   const vixEl = document.getElementById("hdr-vix-num");
   if (vixEl != null && data.vix != null && data.vix !== "") {
