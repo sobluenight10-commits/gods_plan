@@ -187,6 +187,12 @@ def evaluate(data):
     if w6m is None:
         w6m, n6m, b6m = _lognorm_fallback(P0, vol, 0.5)
 
+    # SANITY: MC normal should cluster around P0, bull must exceed P0
+    if n1m < P0 * 0.85: n1m = P0 * 0.98  # market efficiency
+    if b1m < P0:         b1m = P0 * (1 + 0.5 * vol * math.sqrt(1/12))
+    if n6m < P0 * 0.70: n6m = P0 * 0.95
+    if b6m < P0 * 0.90: b6m = P0 * (1 + 0.5 * vol * math.sqrt(0.5))
+
     p1m = _proj(P0, w1m, n1m, b1m, adj)
     p6m = _proj(P0, w6m, n6m, b6m, adj)
 
@@ -218,7 +224,9 @@ def evaluate(data):
         hb_bear, _, hb_bull = _lognorm_fallback(P0, vol, 1.0, K_FUND)
         w1y = max(f1b*(1-vb) + hb_bear*vb, P0*FLOOR_PCT)
         b1y = f1u*(1-vb) + hb_bull*vb
-        p1y = _proj(P0, w1y, f1n, b1y, adj)
+        f1n_anchored = max(f1n, P0 * 0.70)
+        b1y_anchored = max(b1y, P0 * 1.05)
+        p1y = _proj(P0, w1y, f1n_anchored, b1y_anchored, adj)
 
         p3y = _proj(P0,
             max(rb*(1+gb)**2*psb/sh, P0*FLOOR_PCT),
@@ -242,7 +250,10 @@ def evaluate(data):
         hb_bear, _, hb_bull = _lognorm_fallback(P0, vol, 1.0, K_FUND)
         w1y = max(f1b*(1-vb) + hb_bear*vb, P0*FLOOR_PCT)
         b1y = f1u*(1-vb) + hb_bull*vb
-        p1y = _proj(P0, w1y, f1n, b1y, adj)
+        # SANITY: Normal 1Y should reflect market consensus (~P0), not pure EPS*PE
+        f1n_anchored = max(f1n, P0 * 0.70)
+        b1y_anchored = max(b1y, P0 * 1.05)
+        p1y = _proj(P0, w1y, f1n_anchored, b1y_anchored, adj)
 
         e3b, e3n, e3u = eb*(1+gb)**2, en*(1+gn)**2, eu*(1+gu)**2
         p3y = _proj(P0,

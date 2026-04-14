@@ -708,7 +708,7 @@ td.mx-soros-gap.soros-cell:hover .soros-tooltip{display:block;}
 ::-webkit-scrollbar{width:3px;height:3px}::-webkit-scrollbar-track{background:var(--es-paper)}::-webkit-scrollbar-thumb{background:var(--es-rule)}
 
 /* Scenario table — CORE INFO, must be large and readable */
-.mx-scenarios { padding: 6px 10px; vertical-align: top; min-width: 520px; max-width: 680px; }
+.mx-scenarios { padding: 6px 10px; vertical-align: top; min-width: 560px; }
 .scenario-tbl { border-collapse: collapse; width: 100%; font-family: 'DM Mono', monospace; font-size: 13px; table-layout: auto; }
 .scenario-tbl td, .scenario-tbl th { text-align: right; padding: 4px 10px; white-space: nowrap; }
 .scenario-tbl td:first-child { text-align: left; font-weight: 700; min-width: 26px; max-width: 26px; }
@@ -2452,8 +2452,6 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
 
   var FX = {EUR: 0.88, KRW: 1350, HKD: 7.78};
 
-  // US-listed tickers where yfinance returns USD but we display in local currency
-  var USD_LISTED_LOCAL = {'ASML': 'EUR'};
   // Foreign-listed tickers where yfinance already returns native currency
   var FOREIGN_LISTED = {'000660.KS':'KRW','272210.KS':'KRW','1810.HK':'HKD','MC.PA':'EUR'};
 
@@ -2470,24 +2468,25 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     return '$' + v.toFixed(2);
   }
 
-  // For projection prices: single currency, native to stock exchange
+  // Projection prices: stock exchange's native currency
+  // ASML: yfinance gives USD (NASDAQ), display EUR
+  var USD_SHOW_LOCAL = {'ASML': 'EUR'};
+
   function fmtNative(v, ticker) {
     if (v == null || v === 0) return '\u2014';
-    var localCur = USD_LISTED_LOCAL[ticker];
-    if (localCur) return _fmtCur(v * FX[localCur], localCur);
+    var conv = USD_SHOW_LOCAL[ticker];
+    if (conv) return _fmtCur(v * FX[conv], conv);
     var foreignCur = FOREIGN_LISTED[ticker];
     if (foreignCur) return _fmtCur(v, foreignCur);
     return _fmtCur(v, 'USD');
   }
 
-  // Dual display: primary + secondary (plain text, for tooltips)
+  // Dual display: plain text — ALL USD stocks show EUR secondary
   function fmtDualPlain(v, ticker) {
     if (v == null || v === 0) return '\u2014';
-    var localCur = USD_LISTED_LOCAL[ticker];
-    if (localCur) return _fmtCur(v, 'USD') + ' (' + _fmtCur(v * FX[localCur], localCur) + ')';
     var foreignCur = FOREIGN_LISTED[ticker];
     if (foreignCur) return _fmtCur(v, foreignCur) + ' (' + _fmtCur(v / FX[foreignCur], 'USD') + ')';
-    return _fmtCur(v, 'USD');
+    return _fmtCur(v, 'USD') + ' (' + _fmtCur(v * FX.EUR, 'EUR') + ')';
   }
 
   // Dual display: HTML version with styled secondary currency

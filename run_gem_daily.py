@@ -35,6 +35,26 @@ def run():
         except Exception:
             pass
 
+    # LIVE PRICE OVERRIDE — always use freshest yfinance prices
+    try:
+        import yfinance as yf
+        print(f"Fetching live prices for {len(positions)} tickers...")
+        for p in positions:
+            try:
+                h = yf.Ticker(p["ticker"]).history(period="2d")
+                if not h.empty:
+                    live = round(float(h["Close"].iloc[-1]), 4)
+                    if live > 0:
+                        old = p.get("current_price", 0)
+                        p["current_price"] = live
+                        if abs(live - old) / max(old, 1) > 0.05:
+                            print(f"  {p['ticker']}: {old} -> {live} (UPDATED)")
+            except Exception as e:
+                print(f"  {p['ticker']}: yfinance failed: {e}")
+        print("Live prices fetched")
+    except ImportError:
+        print("WARNING: yfinance not available")
+
     for pos in positions:
         result = evaluate(pos)
         new_grade = result["grading"]["grade"]
