@@ -39,11 +39,17 @@ def load_latest_gem():
         return json.load(f), latest.name
 
 
+GRADE_FG = {"S":"#B8860B","A+":"#3B6D11","A":"#3B6D11","B+":"#185FA5","B":"#185FA5",
+            "C+":"#854F0B","C":"#854F0B","D":"#A32D2D","F":"#A32D2D"}
+GRADE_BG = {"S":"#FFF8E1","A+":"#EAF3DE","A":"#EAF3DE","B+":"#E6F1FB","B":"#E6F1FB",
+            "C+":"#FAEEDA","C":"#FAEEDA","D":"#FCEBEB","F":"#FCEBEB"}
+GRADE_ORDER = ["S","A+","A","B+","B","C+","C","D","F"]
+
 def grade_color(grade):
-    return {"A": "#3B6D11", "B": "#185FA5", "C": "#854F0B", "D": "#A32D2D"}.get(grade, "#888")
+    return GRADE_FG.get(grade, "#888")
 
 def grade_bg(grade):
-    return {"A": "#EAF3DE", "B": "#E6F1FB", "C": "#FAEEDA", "D": "#FCEBEB"}.get(grade, "#f5f5f5")
+    return GRADE_BG.get(grade, "#f5f5f5")
 
 
 def build_inject_block(gem_data: dict, filename: str) -> str:
@@ -59,9 +65,11 @@ def build_inject_block(gem_data: dict, filename: str) -> str:
         g  = r["grading"]
         vs = r["versus"]
         ticker = r["ticker"].replace('"', '\\"')
+        gem_score = g.get("gem_score", 0)
         entry = (
             f'  "{ticker}": {{'
             f'grade:"{g["grade"]}",'
+            f'gem_score:{gem_score},'
             f'u1y:{g["upside_1y_pct"]},'
             f'u5y:{g["upside_5y_pct"]},'
             f'worst1y:{g["worst_drop_1y_pct"]},'
@@ -75,13 +83,17 @@ def build_inject_block(gem_data: dict, filename: str) -> str:
 
     gem_data_js = "{\n" + ",\n".join(js_entries) + "\n}"
 
-    # ── Grade summary badges ──────────────────────────────────────────────────
-    summary_badges = " &nbsp; ".join(
-        f'<span style="background:{grade_bg(g)};color:{grade_color(g)};'
-        f'font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">'
-        f'{g}: {n}</span>'
-        for g, n in summary.items()
-    )
+    # ── Grade summary badges (9-tier, skip zeros) ────────────────────────────
+    summary_badges_parts = []
+    for g in GRADE_ORDER:
+        n = summary.get(g, 0)
+        if n > 0:
+            summary_badges_parts.append(
+                f'<span style="background:{grade_bg(g)};color:{grade_color(g)};'
+                f'font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">'
+                f'{g}: {n}</span>'
+            )
+    summary_badges = " &nbsp; ".join(summary_badges_parts)
 
     # ── Grade change alerts ───────────────────────────────────────────────────
     change_html = ""
@@ -111,8 +123,8 @@ window._GEM_META = {{
 }};
 
 function gemBadge(grade) {{
-  const bg = {{A:"#EAF3DE",B:"#E6F1FB",C:"#FAEEDA",D:"#FCEBEB"}};
-  const fg = {{A:"#3B6D11",B:"#185FA5",C:"#854F0B",D:"#A32D2D"}};
+  const bg = {{S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"}};
+  const fg = {{S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"}};
   return `<span style="background:${{bg[grade]||bg.D}};color:${{fg[grade]||fg.D}};font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px">${{grade}}</span>`;
 }}
 
@@ -185,8 +197,65 @@ function injectGemIntoTables() {{
   }});
 }}
 
+function updateGemGradeBar() {{
+  var bar = document.getElementById('gem-grade-bar');
+  if (!bar) return;
+  var counts = {{}};
+  var tiers = ['S','A+','A','B+','B','C+','C','D','F'];
+  tiers.forEach(function(t){{ counts[t] = 0; }});
+  Object.keys(GEM_DATA).forEach(function(k) {{
+    var g = GEM_DATA[k].grade;
+    if (counts[g] != null) counts[g]++;
+    else counts[g] = 1;
+  }});
+  var bgMap = {{S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"}};
+  var fgMap = {{S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"}};
+  var html = '';
+  tiers.forEach(function(t) {{
+    if (counts[t] > 0) {{
+      html += '<span style="background:' + bgMap[t] + ';color:' + fgMap[t] + ';font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">' + t + ': ' + counts[t] + '</span> &nbsp; ';
+    }}
+  }});
+  bar.innerHTML = html;
+}}
+
+function populateGradeSummary() {{
+  var body = document.getElementById('grade-summary-body');
+  if (!body) return;
+  var rows = [];
+  var godScores = {{}};
+  document.querySelectorAll('.mx-row[data-ticker]').forEach(function(tr) {{
+    var tk = tr.getAttribute('data-ticker');
+    var gn = tr.querySelector('.god-num');
+    if (tk && gn) godScores[tk] = parseFloat(gn.textContent) || 0;
+  }});
+  Object.keys(GEM_DATA).forEach(function(tk) {{
+    var d = GEM_DATA[tk];
+    rows.push({{ticker: tk, grade: d.grade, gem: godScores[tk] || 0, u1y: d.u1y, u5y: d.u5y}});
+  }});
+  rows.sort(function(a, b) {{ return b.gem - a.gem; }});
+  var bgMap = {{S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"}};
+  var fgMap = {{S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"}};
+  var html = '';
+  rows.forEach(function(r, i) {{
+    var bg = i % 2 === 0 ? '#fff' : '#f8f9fa';
+    var evColor = function(v) {{ return v == null ? '#888' : v > 0 ? '#3B6D11' : '#A32D2D'; }};
+    var evFmt = function(v) {{ return v == null ? '\u2014' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'; }};
+    html += '<tr style="background:' + bg + '">' +
+      '<td style="padding:3px 8px;font-weight:600">' + r.ticker + '</td>' +
+      '<td style="text-align:center;padding:3px 8px"><span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + r.grade + '</span></td>' +
+      '<td style="text-align:right;padding:3px 8px">' + r.gem.toFixed(1) + '</td>' +
+      '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
+      '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u5y) + '">' + evFmt(r.u5y) + '</td>' +
+      '</tr>';
+  }});
+  body.innerHTML = html;
+}}
+
 document.addEventListener('DOMContentLoaded', function() {{
   setTimeout(injectGemIntoTables, 300);
+  setTimeout(updateGemGradeBar, 400);
+  setTimeout(populateGradeSummary, 500);
 }});
 </script>
 
@@ -195,7 +264,7 @@ document.addEventListener('DOMContentLoaded', function() {{
     <div>
       <span style="font-weight:600;color:#333">MINERVA_GEM</span>
       <span style="color:#888;margin:0 6px">·</span>
-      {summary_badges}
+      <span id="gem-grade-bar">{summary_badges}</span>
     </div>
     <div style="color:#888;font-size:11px">
       Last run: {run_date} {run_time}
@@ -204,7 +273,7 @@ document.addEventListener('DOMContentLoaded', function() {{
   </div>
   {change_html}
   <div style="margin-top:6px;font-size:11px;color:#888">
-    Columns injected on all [data-ticker] elements · Grade = 5/3/2 Worst/Normal/Bull weighted EV
+    Columns injected on all [data-ticker] elements · Grade = 40/40/20 Worst/Normal/Bull weighted GEM Score
   </div>
 </div>
 <!-- GEM_INJECT_END -->"""
@@ -242,7 +311,8 @@ def run():
     new_html = inject_into_html(html, block)
 
     HTML_SRC.write_text(new_html, encoding="utf-8")
-    shutil.copy2(HTML_SRC, HTML_DEST)
+    if HTML_DEST.parent.exists():
+        shutil.copy2(HTML_SRC, HTML_DEST)
 
     changes = gem_data.get("grade_changes", [])
     print(f"  Grade summary: {gem_data['grade_summary']}")

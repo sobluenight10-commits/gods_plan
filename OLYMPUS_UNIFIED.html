@@ -1014,28 +1014,28 @@ MINERVA ACTION CHANGE RULE (permanent):
         return;
       }
 
-      if (mode === "eur_from_usd") {
-        const usd = firstNum(pEl);
-        if (Number.isNaN(usd)) {
-          vsEl.innerHTML = "";
-          return;
+      if (mode === "eur_from_usd" || mode === "eur_from_hkd") {
+        var entryCell = tr.querySelector(".mx-entry");
+        var entryEur = NaN;
+        if (entryCell) {
+          var etxt = entryCell.textContent.replace(/[^0-9.\-]/g, "");
+          entryEur = parseFloat(etxt);
         }
-        const eurLive = usd / EURUSD;
-        const entryEur = en / EURUSD;
-        const pct = ((eurLive - entryEur) / entryEur) * 100;
-        vsEl.innerHTML = fmtVsTodayPct(pct);
-        return;
-      }
-
-      if (mode === "eur_from_hkd") {
-        const hkd = firstNum(pEl);
-        if (Number.isNaN(hkd)) {
-          vsEl.innerHTML = "";
-          return;
+        if (Number.isNaN(entryEur) || entryEur <= 0) return;
+        var todayCell = tr.querySelector(".mx-today");
+        var eurSubEl = todayCell ? todayCell.querySelector(".eur-sub") : null;
+        var eurLive = NaN;
+        if (eurSubEl) {
+          var stxt = eurSubEl.textContent.replace(/[^0-9.\-]/g, "");
+          eurLive = parseFloat(stxt);
         }
-        const eurLive = hkd / HKD_PER_EUR;
-        const entryEur = en / HKD_PER_EUR;
-        const pct = ((eurLive - entryEur) / entryEur) * 100;
+        if (Number.isNaN(eurLive) || eurLive <= 0) {
+          var liveNative = firstNum(pEl);
+          if (Number.isNaN(liveNative)) { vsEl.innerHTML = ""; return; }
+          var fxDiv = mode === "eur_from_hkd" ? HKD_PER_EUR : EURUSD;
+          eurLive = liveNative / fxDiv;
+        }
+        var pct = ((eurLive - entryEur) / entryEur) * 100;
         vsEl.innerHTML = fmtVsTodayPct(pct);
         return;
       }
@@ -2696,7 +2696,8 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
       trackEl.textContent = g;
       trackEl.className = 'eval-track-' + g.replace('+','p').toLowerCase();
       trackEl.classList.add('oly-tip');
-      trackEl.dataset.tip = 'GEM Grade: ' + g + '\n\nA = 1y EV \u2265+20% AND 5y \u2265+100%\nB = 1y \u2265+10% AND 5y \u2265+50%\nC = Marginal | D = Fails\n\nActual: 1y=' + (pos.gem_u1y != null ? pos.gem_u1y.toFixed(1)+'%' : '?') + ' 5y=' + (pos.gem_u5y != null ? pos.gem_u5y.toFixed(1)+'%' : '?');
+      var gemScoreTxt = pos.gem_score != null ? ' (GEM ' + pos.gem_score + '/100)' : '';
+      trackEl.dataset.tip = 'GEM Grade: ' + g + gemScoreTxt + '\n\nS \u226580 | A+ \u226570 | A \u226560 | B+ \u226550\nB \u226540 | C+ \u226530 | C \u226520 | D \u226510 | F <10\n\n1y EV: ' + (pos.gem_u1y != null ? pos.gem_u1y.toFixed(1)+'%' : '?') + '  5y EV: ' + (pos.gem_u5y != null ? pos.gem_u5y.toFixed(1)+'%' : '?');
     }
     var gatesEl = evalCell.querySelector('.eval-gates');
     if (gatesEl && !gatesEl.dataset.tipped) {
@@ -2799,32 +2800,46 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
 
 <!-- GEM_INJECT_START -->
 <script>
-/* MINERVA_GEM · Auto-injected 2026-04-13 23:36 from gem_20260413.json */
+/* MINERVA_GEM · Auto-injected 2026-04-14 18:06 from gem_20260414.json */
 const GEM_DATA = {
-  "VRT": {grade:"C",u1y:16.45,u5y:87.87,worst1y:-59.36,unreal:0.0,cur_vs_1y:16.45,mos:37.85,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "000660.KS": {grade:"C",u1y:5.35,u5y:63.39,worst1y:-56.29,unreal:11.76,cur_vs_1y:5.35,mos:30.87,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "272210.KS": {grade:"C",u1y:15.52,u5y:55.52,worst1y:-54.79,unreal:11.11,cur_vs_1y:15.52,mos:44.2,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "PL": {grade:"D",u1y:-41.09,u5y:585.66,worst1y:-78.44,unreal:-80.65,cur_vs_1y:-41.15,mos:-91.44,mode:"heston_1m6m + rev_ps_1y3y5y"},
-  "RKLB": {grade:"D",u1y:-42.07,u5y:215.02,worst1y:-79.84,unreal:-69.83,cur_vs_1y:-42.06,mos:-86.66,mode:"heston_1m6m + rev_ps_1y3y5y"},
-  "OKLO": {grade:"D",u1y:-52.04,u5y:179.24,worst1y:-91.32,unreal:null,cur_vs_1y:-52.04,mos:null,mode:"heston_1m6m + rev_ps_1y3y5y"},
-  "COHR": {grade:"D",u1y:-7.2,u5y:34.12,worst1y:-70.77,unreal:-74.32,cur_vs_1y:-7.2,mos:-74.79,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "TSM": {grade:"D",u1y:-0.94,u5y:21.82,worst1y:-46.02,unreal:-40.85,cur_vs_1y:-0.94,mos:-32.98,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "UUUU": {grade:"D",u1y:-14.35,u5y:10.81,worst1y:-72.19,unreal:-3.9,cur_vs_1y:-14.34,mos:-12.14,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "URNM": {grade:"D",u1y:1.33,u5y:-4.4,worst1y:-57.46,unreal:159.39,cur_vs_1y:1.34,mos:200.34,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "ASML": {grade:"D",u1y:-15.09,u5y:-9.21,worst1y:-55.8,unreal:null,cur_vs_1y:-15.09,mos:null,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "KTOS": {grade:"D",u1y:-22.43,u5y:-9.68,worst1y:-70.95,unreal:-13.75,cur_vs_1y:-22.43,mos:-32.5,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "TMO": {grade:"D",u1y:11.95,u5y:-10.54,worst1y:-36.35,unreal:-13.37,cur_vs_1y:11.95,mos:10.34,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "UEC": {grade:"D",u1y:-26.74,u5y:-21.96,worst1y:-69.11,unreal:-4.02,cur_vs_1y:-26.75,mos:-26.17,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "NTR": {grade:"D",u1y:-9.11,u5y:-26.22,worst1y:-57.35,unreal:-31.76,cur_vs_1y:-9.11,mos:-32.06,mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "PLTR": {grade:"D",u1y:-29.36,u5y:-37.05,worst1y:-76.93,unreal:18.92,cur_vs_1y:-29.36,mos:-22.26,mode:"heston_1m6m + eps_pe_1y3y5y"}
+  "BEAM": {grade:"A+",gem_score:72.1,u1y:10.32,u5y:1165.76,worst1y:-85.28,unreal:null,cur_vs_1y:10.33,mos:null,mode:"heston_1m6m + rev_ps_1y3y5y"},
+  "UEC": {grade:"A",gem_score:65.9,u1y:7.92,u5y:266.15,worst1y:-71.7,unreal:15.34,cur_vs_1y:7.89,mos:21.82,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "NVDA": {grade:"A",gem_score:65.2,u1y:4.0,u5y:254.58,worst1y:-58.62,unreal:null,cur_vs_1y:3.99,mos:null,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "272210.KS": {grade:"A",gem_score:68.7,u1y:9.42,u5y:178.94,worst1y:-60.36,unreal:195.78,cur_vs_1y:9.42,mos:220.44,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "1810.HK": {grade:"A",gem_score:69.9,u1y:9.8,u5y:172.39,worst1y:-56.81,unreal:695.88,cur_vs_1y:9.81,mos:760.05,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "UUUU": {grade:"A",gem_score:62.1,u1y:5.05,u5y:168.39,worst1y:-74.46,unreal:7.91,cur_vs_1y:5.04,mos:8.73,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "URNM": {grade:"A",gem_score:61.0,u1y:3.78,u5y:122.87,worst1y:-58.51,unreal:351.88,cur_vs_1y:3.78,mos:377.82,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "CCJ": {grade:"A",gem_score:63.3,u1y:9.61,u5y:76.47,worst1y:-56.26,unreal:null,cur_vs_1y:9.61,mos:null,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "ARKQ": {grade:"A",gem_score:60.4,u1y:5.12,u5y:66.02,worst1y:-44.8,unreal:124.33,cur_vs_1y:5.12,mos:142.71,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "VRT": {grade:"B+",gem_score:57.6,u1y:-2.06,u5y:150.39,worst1y:-55.33,unreal:378.22,cur_vs_1y:-2.06,mos:384.62,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "PLTR": {grade:"B+",gem_score:59.2,u1y:3.89,u5y:145.3,worst1y:-70.99,unreal:24.78,cur_vs_1y:3.88,mos:31.91,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "PL": {grade:"B+",gem_score:55.5,u1y:-0.53,u5y:130.3,worst1y:-72.67,unreal:21.45,cur_vs_1y:-0.54,mos:17.82,mode:"heston_1m6m + rev_ps_1y3y5y"},
+  "RKLB": {grade:"B+",gem_score:50.2,u1y:-7.78,u5y:125.61,worst1y:-74.58,unreal:21.77,cur_vs_1y:-7.78,mos:7.74,mode:"heston_1m6m + rev_ps_1y3y5y"},
+  "KTOS": {grade:"B+",gem_score:57.7,u1y:2.57,u5y:104.75,worst1y:-62.48,unreal:-7.19,cur_vs_1y:2.57,mos:-1.44,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "TSM": {grade:"B+",gem_score:56.9,u1y:-0.43,u5y:104.28,worst1y:-50.36,unreal:31.78,cur_vs_1y:-0.43,mos:39.77,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "COHR": {grade:"B+",gem_score:55.5,u1y:1.96,u5y:88.51,worst1y:-62.62,unreal:44.37,cur_vs_1y:1.96,mos:52.37,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "BOTZ": {grade:"B+",gem_score:53.8,u1y:-1.06,u5y:62.08,worst1y:-46.48,unreal:58.7,cur_vs_1y:-1.07,mos:59.78,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "MC.PA": {grade:"B+",gem_score:51.4,u1y:-1.21,u5y:55.45,worst1y:-45.94,unreal:null,cur_vs_1y:-1.21,mos:null,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "000660.KS": {grade:"B+",gem_score:56.1,u1y:4.78,u5y:51.0,worst1y:-53.22,unreal:1197.65,cur_vs_1y:4.78,mos:1295.95,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "FCX": {grade:"B+",gem_score:50.6,u1y:1.38,u5y:43.38,worst1y:-55.09,unreal:32.16,cur_vs_1y:1.39,mos:38.85,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "AMAT": {grade:"B+",gem_score:56.1,u1y:6.13,u5y:35.85,worst1y:-45.43,unreal:null,cur_vs_1y:6.13,mos:null,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "NTR": {grade:"B+",gem_score:51.0,u1y:2.35,u5y:34.41,worst1y:-48.16,unreal:11.4,cur_vs_1y:2.34,mos:18.29,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "IAU": {grade:"B+",gem_score:51.2,u1y:0.5,u5y:23.6,worst1y:-33.85,unreal:null,cur_vs_1y:0.5,mos:null,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "ASML": {grade:"B",gem_score:48.4,u1y:-1.35,u5y:47.63,worst1y:-53.06,unreal:null,cur_vs_1y:-1.35,mos:null,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "TMO": {grade:"B",gem_score:46.8,u1y:-2.29,u5y:29.99,worst1y:-40.31,unreal:20.49,cur_vs_1y:-2.29,mos:23.22,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "CWEN": {grade:"B",gem_score:42.0,u1y:-1.14,u5y:8.33,worst1y:-36.32,unreal:36.87,cur_vs_1y:-1.15,mos:41.88,mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "NTLA": {grade:"C+",gem_score:39.0,u1y:27.34,u5y:1135.28,worst1y:-87.1,unreal:null,cur_vs_1y:27.35,mos:null,mode:"heston_1m6m + rev_ps_1y3y5y"},
+  "CRSP": {grade:"C+",gem_score:39.0,u1y:3.46,u5y:424.88,worst1y:-79.94,unreal:null,cur_vs_1y:3.47,mos:null,mode:"heston_1m6m + rev_ps_1y3y5y"},
+  "OKLO": {grade:"C+",gem_score:39.7,u1y:-30.13,u5y:262.02,worst1y:-91.21,unreal:null,cur_vs_1y:-30.14,mos:null,mode:"heston_1m6m + rev_ps_1y3y5y"},
+  "ASTS": {grade:"C",gem_score:29.8,u1y:-41.31,u5y:96.26,worst1y:-90.31,unreal:null,cur_vs_1y:-41.3,mos:null,mode:"heston_1m6m + rev_ps_1y3y5y"}
 };
 
 window._GEM_META = {
-  run_date: "2026-04-13",
-  run_time: "23:36",
-  source: "gem_20260413.json",
-  total: 16,
-  grade_summary: {"A": 0, "B": 0, "C": 3, "D": 13}
+  run_date: "2026-04-14",
+  run_time: "18:06",
+  source: "gem_20260414.json",
+  total: 30,
+  grade_summary: {"A+": 1, "A": 8, "B+": 14, "B": 3, "C+": 3, "C": 1}
 };
 
 function gemBadge(grade) {
@@ -2908,8 +2923,7 @@ function updateGemGradeBar() {
   var counts = {};
   var tiers = ['S','A+','A','B+','B','C+','C','D','F'];
   tiers.forEach(function(t){ counts[t] = 0; });
-  var keys = Object.keys(GEM_DATA);
-  keys.forEach(function(k) {
+  Object.keys(GEM_DATA).forEach(function(k) {
     var g = GEM_DATA[k].grade;
     if (counts[g] != null) counts[g]++;
     else counts[g] = 1;
@@ -2970,16 +2984,16 @@ document.addEventListener('DOMContentLoaded', function() {
     <div>
       <span style="font-weight:600;color:#333">MINERVA_GEM</span>
       <span style="color:#888;margin:0 6px">·</span>
-      <span id="gem-grade-bar"></span>
+      <span id="gem-grade-bar"><span style="background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">A+: 1</span> &nbsp; <span style="background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">A: 8</span> &nbsp; <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">B+: 14</span> &nbsp; <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">B: 3</span> &nbsp; <span style="background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">C+: 3</span> &nbsp; <span style="background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">C: 1</span></span>
     </div>
     <div style="color:#888;font-size:11px">
-      Last run: 2026-04-13 23:36
+      Last run: 2026-04-14 18:06
       <span style="color:#854F0B;margin-left:8px">⚡ auto 07:05 Berlin</span>
     </div>
   </div>
-  
+  <div style="background:#FAEEDA;border-left:3px solid #EF9F27;padding:4px 10px;margin-bottom:6px;font-size:11px;border-radius:0 4px 4px 0">GRADE CHANGES: <span style="color:#854F0B">⚡ RKLB: B→B+</span></div>
   <div style="margin-top:6px;font-size:11px;color:#888">
-    Columns injected on all [data-ticker] elements · Grade = 5/3/2 Worst/Normal/Bull weighted EV
+    Columns injected on all [data-ticker] elements · Grade = 40/40/20 Worst/Normal/Bull weighted GEM Score
   </div>
 </div>
 <!-- GEM_INJECT_END -->

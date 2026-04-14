@@ -108,22 +108,24 @@ def run():
             })
         results.append(result)
 
-    grade_order = {"A": 0, "B": 1, "C": 2, "D": 3}
+    grade_order = {"S":0,"A+":1,"A":2,"B+":3,"B":4,"C+":5,"C":6,"D":7,"F":8}
     results.sort(key=lambda r: (
         grade_order.get(r["grading"]["grade"], 9),
         -r["grading"]["upside_5y_pct"]
     ))
 
+    all_grades = [r["grading"]["grade"] for r in results]
+    grade_summary = {}
+    for g in ["S","A+","A","B+","B","C+","C","D","F"]:
+        c = all_grades.count(g)
+        if c > 0:
+            grade_summary[g] = c
+
     output = {
         "run_date":     datetime.now().strftime("%Y-%m-%d"),
         "run_time":     datetime.now().strftime("%H:%M"),
         "total_positions": len(results),
-        "grade_summary": {
-            "A": sum(1 for r in results if r["grading"]["grade"] == "A"),
-            "B": sum(1 for r in results if r["grading"]["grade"] == "B"),
-            "C": sum(1 for r in results if r["grading"]["grade"] == "C"),
-            "D": sum(1 for r in results if r["grading"]["grade"] == "D"),
-        },
+        "grade_summary": grade_summary,
         "grade_changes": grade_changes,
         "alerts": [r for r in results if r["grading"].get("god_score_warning")],
         "results": results
