@@ -404,7 +404,16 @@ def main():
 
     if args.ping:
         from telegram_bot import send_test_ping
-        send_test_ping()
+
+        ok = send_test_ping()
+        if ok:
+            logger.info("Telegram ping: OK (message delivered)")
+        else:
+            logger.error(
+                "Telegram ping: FAILED — if logs show 401, fix TELEGRAM_BOT_TOKEN in .env; "
+                "if connection errors persist, try TELEGRAM_FORCE_IPV4=0 or check firewall/VPN."
+            )
+            sys.exit(1)
     elif args.olympus:
         run_briefing("olympus", "Manual")
     elif args.test:

@@ -5,19 +5,78 @@ Sends formatted briefings to Titan via Telegram.
 Outbound sends use synchronous HTTP (requests) so delivery works from any context:
 scheduler threads, ThreadPoolExecutor workers, and python-telegram-bot's asyncio
 loop — no nest_asyncio / run_until_complete on a running loop.
+
+Resilience: urllib3 retries + exponential backoff on connection/TLS resets (common on
+Windows to api.telegram.org). Optional TELEGRAM_FORCE_IPV4 (default on Windows) avoids
+bad IPv6 paths.
 """
+from __future__ import annotations
+
+import contextlib
 import logging
+import socket
 import time
 from typing import Optional
 
 import requests
+from requests.adapters import HTTPAdapter
 from telegram.constants import ParseMode
-from config import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+from urllib3.util.retry import Retry
+
+from config import (
+    TELEGRAM_BOT_TOKEN,
+    TELEGRAM_CHAT_ID,
+    TELEGRAM_FORCE_IPV4,
+    TELEGRAM_HTTP_TIMEOUT,
+)
 
 logger = logging.getLogger("titan_k.telegram")
 
 MAX_MESSAGE_LENGTH = 4096  # Telegram limit
 TG_API = "https://api.telegram.org/bot{token}/sendMessage"
+
+_session: Optional[requests.Session] = None
+_orig_getaddrinfo = socket.getaddrinfo
+
+
+@contextlib.contextmanager
+def _ipv4_dns_only():
+    """Force IPv4 for DNS resolution during this block (restores after)."""
+
+    def _gai(host, port, family=0, type=0, proto=0, flags=0):
+        fam = socket.AF_INET if family in (0, socket.AF_UNSPEC) else family
+        return _orig_getaddrinfo(host, port, fam, type, proto, flags)
+
+    socket.getaddrinfo = _gai  # type: ignore[assignment]
+    try:
+        yield
+    finally:
+        socket.getaddrinfo = _orig_getaddrinfo  # type: ignore[assignment]
+
+
+def _network_cm():
+    return _ipv4_dns_only() if TELEGRAM_FORCE_IPV4 else contextlib.nullcontext()
+
+
+def _telegram_session() -> requests.Session:
+    global _session
+    if _session is not None:
+        return _session
+    retry = Retry(
+        total=6,
+        connect=6,
+        read=4,
+        backoff_factor=0.75,
+        status_forcelist=(429, 500, 502, 503, 504),
+        allowed_methods=frozenset(["POST", "HEAD", "GET"]),
+        raise_on_status=False,
+    )
+    adapter = HTTPAdapter(max_retries=retry, pool_connections=4, pool_maxsize=8)
+    s = requests.Session()
+    s.mount("https://", adapter)
+    s.mount("http://", adapter)
+    _session = s
+    return s
 
 
 def _parse_mode_value(parse_mode) -> Optional[str]:
@@ -46,15 +105,46 @@ def _chunk_telegram_text(text: str) -> list:
     return chunks
 
 
-def send_telegram(text: str, parse_mode: str = ParseMode.HTML):
-    """Send to TELEGRAM_CHAT_ID — always synchronous (safe under PTB run_polling)."""
+def _post_telegram(url: str, payload: dict, timeout: float) -> Optional[requests.Response]:
+    """POST with IPv4 context + manual retries (covers resets after urllib3 retries)."""
+    session = _telegram_session()
+    transient = (
+        requests.exceptions.ConnectionError,
+        requests.exceptions.Timeout,
+        requests.exceptions.ChunkedEncodingError,
+        requests.exceptions.SSLError,
+    )
+    last_exc: Optional[BaseException] = None
+    for attempt in range(6):
+        try:
+            with _network_cm():
+                return session.post(url, json=payload, timeout=timeout)
+        except transient as e:
+            last_exc = e
+            delay = min(30.0, 0.6 * (2**attempt))
+            logger.warning(
+                "Telegram transient error (attempt %s/6): %s — retry in %.1fs",
+                attempt + 1,
+                e,
+                delay,
+            )
+            time.sleep(delay)
+    if last_exc is not None:
+        logger.error("Telegram send failed after retries: %s", last_exc)
+    return None
+
+
+def send_telegram(text: str, parse_mode: str = ParseMode.HTML) -> bool:
+    """Send to TELEGRAM_CHAT_ID — always synchronous (safe under PTB run_polling). Returns success."""
     if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
         logger.warning("send_telegram: missing TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID")
-        return
+        return False
 
     pm = _parse_mode_value(parse_mode)
     url = TG_API.format(token=TELEGRAM_BOT_TOKEN)
     chunks = _chunk_telegram_text(text)
+    timeout = TELEGRAM_HTTP_TIMEOUT
+    ok_all = True
 
     for i, chunk in enumerate(chunks):
         payload = {
@@ -64,18 +154,29 @@ def send_telegram(text: str, parse_mode: str = ParseMode.HTML):
         }
         if pm:
             payload["parse_mode"] = pm
-        try:
-            r = requests.post(url, json=payload, timeout=60)
-            if not r.ok:
+        r = _post_telegram(url, payload, timeout)
+        if r is None:
+            ok_all = False
+        elif not r.ok:
+            if r.status_code == 401:
+                logger.error(
+                    "Telegram HTTP 401 Unauthorized — TELEGRAM_BOT_TOKEN is wrong or revoked. "
+                    "Copy the token from @BotFather into .env on this machine."
+                )
+            else:
                 logger.error("Telegram HTTP %s: %s", r.status_code, r.text[:300])
-                payload.pop("parse_mode", None)
-                r2 = requests.post(url, json=payload, timeout=60)
-                if not r2.ok:
-                    logger.error("Telegram fallback HTTP %s: %s", r2.status_code, r2.text[:300])
-        except Exception as e:
-            logger.error("Telegram send error (chunk %s): %s", i + 1, e)
+            payload_plain = dict(payload)
+            payload_plain.pop("parse_mode", None)
+            r2 = _post_telegram(url, payload_plain, timeout)
+            if r2 is None or not r2.ok:
+                logger.error(
+                    "Telegram fallback HTTP %s",
+                    getattr(r2, "status_code", "no response"),
+                )
+                ok_all = False
         if i < len(chunks) - 1:
             time.sleep(0.5)
+    return ok_all
 
 
 def send_blog_briefing(briefing: dict):
@@ -216,9 +317,9 @@ def send_olympus_briefing(data: dict):
     send_telegram(msg)
 
 
-def send_test_ping():
+def send_test_ping() -> bool:
     """Send a test message to verify bot connection."""
-    send_telegram(
+    return send_telegram(
         "🔱 <b>titan_K v2 — CONNECTION TEST</b>\n\n"
         "✅ Bot is online and connected.\n"
         "📡 Briefings will arrive at 07:00 Berlin time.\n\n"

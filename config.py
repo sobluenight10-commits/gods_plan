@@ -6,11 +6,20 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from typing import Dict, List
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+def _env_bool(key: str, default: bool) -> bool:
+    v = os.getenv(key)
+    if v is None or v.strip() == "":
+        return default
+    return v.strip().lower() in ("1", "true", "yes", "on")
+
 
 # ── API & Telegram ────────────────────────────────────────────────────────────
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
@@ -21,6 +30,10 @@ TELEGRAM_BOT_TOKEN = (os.getenv("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_TOK
 TELEGRAM_TOKEN = TELEGRAM_BOT_TOKEN
 
 TELEGRAM_CHAT_ID = (os.getenv("TELEGRAM_CHAT_ID") or "").strip()
+# Many Windows networks reset TLS to api.telegram.org over IPv6 or flaky routes; IPv4 is more stable.
+# Set TELEGRAM_FORCE_IPV4=0 in .env to disable. On non-Windows default is off.
+TELEGRAM_FORCE_IPV4 = _env_bool("TELEGRAM_FORCE_IPV4", default=(sys.platform == "win32"))
+TELEGRAM_HTTP_TIMEOUT = float(os.getenv("TELEGRAM_HTTP_TIMEOUT", "90"))
 TITAN_BOT_TOKEN = (os.getenv("TITAN_BOT_TOKEN") or TELEGRAM_BOT_TOKEN or "").strip()
 TITAN_SYSTEM_URL = os.getenv(
     "TITAN_SYSTEM_URL",
