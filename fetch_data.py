@@ -216,10 +216,58 @@ def get_liquidity():
     }
 
 def get_ranto28():
+    """Load blog signals, filtering to only last 48h by date field."""
+    from datetime import timedelta
+    cutoff = datetime.datetime.now() - timedelta(hours=48)
+    signals = []
     try:
         path = os.path.join(BASE, "data", "blog_signals.json")
-        with open(path) as f: return json.load(f)
-    except: return []
+        with open(path) as f: raw = json.load(f)
+        for s in raw:
+            d = s.get("date", "")
+            if d:
+                try:
+                    pd = datetime.datetime.strptime(d[:10], "%Y-%m-%d")
+                    if pd < cutoff:
+                        continue
+                except ValueError:
+                    pass
+            signals.append(s)
+    except Exception:
+        pass
+
+    bt_path = os.path.join(BASE, "data", "blog_tickers.json")
+    try:
+        import time as _time
+        if os.path.exists(bt_path):
+            age_h = (_time.time() - os.path.getmtime(bt_path)) / 3600
+            if age_h < 96:
+                with open(bt_path) as f: bt = json.load(f)
+                for entry in bt.get("history", []):
+                    d = entry.get("date", "")
+                    if d:
+                        try:
+                            pd = datetime.datetime.strptime(d[:10], "%Y-%m-%d")
+                            if pd < cutoff:
+                                continue
+                        except ValueError:
+                            pass
+                    added = entry.get("added", [])
+                    if added:
+                        signals.append({
+                            "title": entry.get("post", ""),
+                            "date": d,
+                            "url": entry.get("url", ""),
+                            "affected_tickers": added[:5],
+                            "signal": "WATCH",
+                            "macro_theme": "",
+                            "summary": entry.get("post", "")[:120],
+                            "sectors": list((bt.get("by_sector") or {}).keys()),
+                        })
+    except Exception:
+        pass
+
+    return signals
 
 def get_all_data():
     prices = get_live_prices()

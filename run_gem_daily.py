@@ -60,6 +60,27 @@ def run():
     else:
         print("[GEM] All prices current (or yfinance unavailable)")
 
+    # AUTO-CALIBRATE PE multiples to live prices
+    # Formula: pe_normal = live_price * 1.05 / eps_base (Normal ≈ market is roughly fair)
+    # This prevents the "Grade D epidemic" where stale pe × eps << live price
+    calibrated = 0
+    for p in positions:
+        t = p["ticker"]
+        live = p.get("current_price", 0)
+        eps = p.get("eps_1y_base", 0)
+        if live > 0 and eps > 0:
+            ideal_pe = round(live * 1.05 / eps, 1)
+            old_pe = p.get("pe_normal", 0)
+            if old_pe > 0 and abs(ideal_pe - old_pe) / old_pe > 0.15:
+                ratio = ideal_pe / old_pe
+                p["pe_normal"] = round(ideal_pe)
+                p["pe_bear"] = max(1, round(p.get("pe_bear", old_pe * 0.5) * ratio))
+                p["pe_bull"] = round(p.get("pe_bull", old_pe * 1.5) * ratio)
+                print(f"  [PE-CAL] {t}: pe_normal {old_pe} -> {round(ideal_pe)} (ratio {ratio:.2f})")
+                calibrated += 1
+    if calibrated:
+        print(f"[GEM] Auto-calibrated PE for {calibrated} tickers")
+
     results = []
     grade_changes = []
 
