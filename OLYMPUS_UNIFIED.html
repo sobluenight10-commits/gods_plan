@@ -595,6 +595,122 @@ table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 .mx-soros-hot{color:#c2410c;font-weight:800;}
 .mx-act-wait{display:inline-block;padding:4px 10px;border-radius:6px;font-size:9px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;font-family:'Syne',sans-serif;background:#f4f4f5;color:#52525b;border:1px solid #a1a1aa;}
 table.master.matrix-v3 thead th{white-space:normal;line-height:1.2;}
+
+/* ── FIX: Soros + Action overlap ── */
+.mx-soros-gap, .soros-cell {
+  max-width: 160px;
+  min-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.mx-soros-gap .mx-soros-hot {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 155px;
+  font-size: 11px;
+}
+/* Give action column fixed width so it never gets squeezed */
+.mx-act {
+  min-width: 90px;
+  white-space: nowrap;
+}
+
+/* ── Scenario table (Worst/Normal/Bull) ── */
+.scenario-tbl .sc-lbl { color:#888; font-weight:600; padding:0 5px 0 2px; min-width:14px; }
+.scenario-tbl .sc-h { color:#aaa; text-align:right; padding:0 5px; font-size:9px; font-weight:400; }
+.scenario-tbl td { text-align:right; padding:0 5px; color:#444; }
+.scenario-tbl .sc-worst td { color:#c0392b; }
+.scenario-tbl .sc-bull td { color:#2d7a2d; }
+.scenario-tbl .sc-normal td { color:#333; }
+
+/* ── Universal tooltip system ── */
+.oly-tip {
+  position: relative;
+  cursor: help;
+}
+.oly-tip::after {
+  content: attr(data-tip);
+  position: absolute;
+  bottom: calc(100% + 6px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e;
+  color: #e8e8f0;
+  font-size: 11px;
+  font-family: var(--font-sans, sans-serif);
+  font-weight: 400;
+  line-height: 1.5;
+  padding: 7px 10px;
+  border-radius: 5px;
+  white-space: pre-line;
+  min-width: 200px;
+  max-width: 300px;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+}
+.oly-tip:hover::after {
+  opacity: 1;
+}
+
+/* ── FIX: Soros + Action overlap ── */
+.mx-soros-gap, .soros-cell{
+  max-width:160px;
+  min-width:120px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.mx-soros-gap .mx-soros-hot{
+  display:block;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  max-width:155px;
+  font-size:11px;
+}
+/* Give action column fixed width so it never gets squeezed */
+.mx-act{min-width:90px;white-space:nowrap;}
+
+/* ── Scenario table (Worst/Normal/Bull) ── */
+.scenario-tbl .sc-lbl{color:#888;font-weight:600;padding:0 5px 0 2px;min-width:14px;}
+.scenario-tbl .sc-h{color:#aaa;text-align:right;padding:0 5px;font-size:9px;font-weight:400;}
+.scenario-tbl td{text-align:right;padding:0 5px;color:#444;}
+.scenario-tbl .sc-worst td{color:#c0392b;}
+.scenario-tbl .sc-bull td{color:#2d7a2d;}
+.scenario-tbl .sc-normal td{color:#333;}
+
+/* ── Universal tooltip system ── */
+.oly-tip{position:relative;cursor:help;}
+.oly-tip::after{
+  content:attr(data-tip);
+  position:absolute;
+  bottom:calc(100% + 6px);
+  left:50%;
+  transform:translateX(-50%);
+  background:#1a1a2e;
+  color:#e8e8f0;
+  font-size:11px;
+  font-family:var(--font-sans, sans-serif);
+  font-weight:400;
+  line-height:1.5;
+  padding:7px 10px;
+  border-radius:5px;
+  white-space:pre-line;
+  min-width:200px;
+  max-width:300px;
+  z-index:9999;
+  pointer-events:none;
+  opacity:0;
+  transition:opacity 0.15s;
+  box-shadow:0 4px 16px rgba(0,0,0,0.3);
+}
+.oly-tip:hover::after{opacity:1;}
 .pf-line-compact{
   padding:8px 40px;font-family:'DM Mono',monospace;font-size:10px;color:var(--es-ink2);
   border-bottom:1px solid var(--es-rule);background:linear-gradient(90deg,#f8f7f3,#fff);
@@ -820,15 +936,15 @@ td.mx-soros-gap.soros-cell:hover .soros-tooltip{display:block;}
   <div id="es-panel-matrix">
 <div class="tbl-scroll">
 <table class="master matrix-v2 matrix-v3">
-<thead><tr><th>Stock</th><th>Sector</th><th class="r">GOD</th><th class="r">EVAL</th><th class="r">Entry</th><th class="r">Today</th><th class="r">VS Today</th><th class="r">1M</th><th class="r">6M</th><th class="r">1Y</th><th class="r">3Y</th><th class="r">5Y</th><th>Soros gap</th><th>Action</th><th class="r">Target</th></tr></thead><tbody>
+<thead><tr><th>Stock</th><th>Sector</th><th class="r">GOD</th><th class="r">EVAL</th><th class="r">Entry</th><th class="r">Today</th><th class="r">VS Today</th><th colspan="5" style="text-align:center;min-width:300px" class="oly-tip" data-tip="Price Scenarios (Worst/Normal/Bull)\nW = Bear case (P10 Heston MC for 1M/6M,\n    EPS×PE bear for 1Y+)\nN = Base case (50th percentile)\nB = Bull case (P90, EPS×PE bull)\nWeights: 50% Worst / 30% Normal / 20% Bull">SCENARIOS (W/N/B · 1M 6M 1Y 3Y 5Y)</th><th>Soros gap</th><th>Action</th><th class="r">Target</th></tr></thead><tbody>
 
 
 
 <tr><td colspan="15" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c1)"></div><div class="cname" style="color:var(--c1)">Intelligence</div><div class="cdesc">AGI · Quantum · Neural Interfaces · Advanced Memory · AI Hardware</div></div></td></tr>
-<tr class="mx-row mx-st-pf" data-ticker="000660.KS" data-entry-num="85000" data-entry-mode="krw" data-thesis="intact" title="HBM3E backbone of AGI — NEVER SELL."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">000660.KS</div><div class="mx-nm">SK Hynix</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:95%;background:var(--c1)"></div></div><span class="god-num">95</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">4/7 gates</div></td><td class="r mx-entry">₩85,000</td><td class="r mx-today"><span class="pnow" id="price-000660.KS" data-ticker="000660.KS">—</span></td><td class="r mx-vs-today"></td><td class="r mx-pt">₩1.05M</td><td class="r mx-pt">₩1.15M</td><td class="r mx-pt">₩1.35M</td><td class="r mx-pt">₩1.8M</td><td class="r mx-pt">₩2.5M</td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
-<tr class="mx-row mx-st-pf" data-ticker="TSM" data-entry-num="287.4" data-entry-mode="eur_from_usd" data-thesis="intact" title="Foundry monopoly — N2 / CoWoS demand."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">TSM</div><div class="mx-nm">TSMC ADR</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:90%;background:var(--c1)"></div></div><span class="god-num">90</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">5/7 gates</div></td><td class="r mx-entry">€287.40</td><td class="r mx-today"><span class="pnow" id="price-TSM" data-ticker="TSM">—</span></td><td class="r mx-vs-today"></td><td class="r mx-pt">$195</td><td class="r mx-pt">$220</td><td class="r mx-pt">$280</td><td class="r mx-pt">$380</td><td class="r mx-pt">$520</td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
-<tr class="mx-row mx-st-pf" data-ticker="PLTR" data-entry-num="109.32" data-entry-mode="eur_from_usd" data-thesis="intact" title="Defense + Maven — stop defines risk."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">PLTR</div><div class="mx-nm">Palantir</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:72%;background:var(--c1)"></div></div><span class="god-num">72</span></div></td><td class="mx-eval"><span class="eval-track-b">B</span><div class="eval-gates">P1+P2+P3</div></td><td class="r mx-entry">€109.32</td><td class="r mx-today"><span class="pnow" id="price-PLTR" data-ticker="PLTR">—</span></td><td class="r mx-vs-today"></td><td class="r mx-pt">$135</td><td class="r mx-pt">$155</td><td class="r mx-pt">$200</td><td class="r mx-pt">$300</td><td class="r mx-pt">$500</td><td class="mx-soros-gap"><span class="mx-soros-hot">🔱 59% GAP (Burry narrative)</span></td><td><span class="mx-act mx-act-hold">DIP WATCH</span></td><td class="r mx-tgt">Stop €95</td></tr>
-<tr class="mx-row mx-st-pf" data-ticker="1810.HK" data-entry-num="3.88" data-entry-mode="eur_from_hkd" data-thesis="intact" title="EV + phones + IoT scale."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">1810.HK</div><div class="mx-nm">Xiaomi</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:68%;background:var(--c1)"></div></div><span class="god-num">68</span></div></td><td class="mx-eval"><span class="eval-track-b">B</span><div class="eval-gates">P1+P2+P3</div></td><td class="r mx-entry">€3.88</td><td class="r mx-today"><span class="pnow" id="price-1810.HK" data-ticker="1810.HK">—</span></td><td class="r mx-vs-today"></td><td class="r mx-pt">HK$35</td><td class="r mx-pt">HK$42</td><td class="r mx-pt">HK$55</td><td class="r mx-pt">HK$85</td><td class="r mx-pt">HK$120</td><td class="mx-soros-gap"><span class="mx-soros-hot">🔱 41% GAP (tariff fear)</span></td><td><span class="mx-act mx-act-hold">DIP WATCH</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row mx-st-pf" data-ticker="000660.KS" data-entry-num="85000" data-entry-mode="krw" data-thesis="intact" title="HBM3E backbone of AGI — NEVER SELL."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">000660.KS</div><div class="mx-nm">SK Hynix</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:95%;background:var(--c1)"></div></div><span class="god-num oly-tip" data-tip="GOD Score (0–100)\nComposite: Paradigm×0.30 + Quality×0.25 + Value×0.20 + Thesis×0.15 + Balance Sheet×0.10\n≥80 = Track A (portfolio-grade)\n60–79 = Track B (watchlist)">95</span></div></td><td class="mx-eval"><span class="eval-track-a oly-tip" data-tip="GEM Grade (A/B/C/D)\nA = 1y EV≥+20% + 5y EV≥+100% + worst>−60%\nB = 1y≥+10% + 5y≥+50%\nC = marginal upside\nD = fails thresholds\nGrade A = GEM Portfolio · A or B = GEM Universe">A</span><div class="eval-gates oly-tip" data-tip="Investment Thesis Gates\nP1 = Paradigm fit confirmed\nP2 = Capital quality verified\nP3 = Price vs value attractive\nP4 = Thesis clarity proven\nAll gates passed = maximum conviction entry">4/7 gates</div></td><td class="r mx-entry">₩85,000</td><td class="r mx-today"><span class="pnow" id="price-000660.KS" data-ticker="000660.KS">—</span></td><td class="r mx-vs-today oly-tip" data-tip="VS TODAY\n% change from your entry price\nto current live price\nPositive = unrealized gain\nNegative = unrealized loss"></td><td colspan="5" class="mx-scenarios" style="padding:2px 4px;vertical-align:middle"><table class="scenario-tbl" style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace"><tr><td class="sc-lbl"></td><td class="sc-h">1M</td><td class="sc-h">6M</td><td class="sc-h">1Y</td><td class="sc-h">3Y</td><td class="sc-h">5Y</td></tr><tr class="sc-worst"><td class="sc-lbl">W</td><td>₩1.05M</td><td>₩1.15M</td><td>₩1.35M</td><td>₩1.8M</td><td>₩2.5M</td></tr><tr class="sc-normal"><td class="sc-lbl">N</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr class="sc-bull"><td class="sc-lbl">B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></table></td><td class="mx-soros-gap oly-tip" data-tip="Soros Reflexivity Gap\nNARRATIVE = price down on sentiment,\nnot fundamentals → BUY signal\nFUNDAMENTAL = thesis damaged → REVIEW\nGap % = discount to intrinsic value\nNarrative gap + intact thesis = ONE SHOT entry on dip">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row mx-st-pf" data-ticker="TSM" data-entry-num="287.4" data-entry-mode="eur_from_usd" data-thesis="intact" title="Foundry monopoly — N2 / CoWoS demand."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">TSM</div><div class="mx-nm">TSMC ADR</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:90%;background:var(--c1)"></div></div><span class="god-num oly-tip" data-tip="GOD Score (0–100)\nComposite: Paradigm×0.30 + Quality×0.25 + Value×0.20 + Thesis×0.15 + Balance Sheet×0.10\n≥80 = Track A (portfolio-grade)\n60–79 = Track B (watchlist)">90</span></div></td><td class="mx-eval"><span class="eval-track-a oly-tip" data-tip="GEM Grade (A/B/C/D)\nA = 1y EV≥+20% + 5y EV≥+100% + worst>−60%\nB = 1y≥+10% + 5y≥+50%\nC = marginal upside\nD = fails thresholds\nGrade A = GEM Portfolio · A or B = GEM Universe">A</span><div class="eval-gates oly-tip" data-tip="Investment Thesis Gates\nP1 = Paradigm fit confirmed\nP2 = Capital quality verified\nP3 = Price vs value attractive\nP4 = Thesis clarity proven\nAll gates passed = maximum conviction entry">5/7 gates</div></td><td class="r mx-entry">€287.40</td><td class="r mx-today"><span class="pnow" id="price-TSM" data-ticker="TSM">—</span></td><td class="r mx-vs-today oly-tip" data-tip="VS TODAY\n% change from your entry price\nto current live price\nPositive = unrealized gain\nNegative = unrealized loss"></td><td colspan="5" class="mx-scenarios" style="padding:2px 4px;vertical-align:middle"><table class="scenario-tbl" style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace"><tr><td class="sc-lbl"></td><td class="sc-h">1M</td><td class="sc-h">6M</td><td class="sc-h">1Y</td><td class="sc-h">3Y</td><td class="sc-h">5Y</td></tr><tr class="sc-worst"><td class="sc-lbl">W</td><td>$195</td><td>$220</td><td>$280</td><td>$380</td><td>$520</td></tr><tr class="sc-normal"><td class="sc-lbl">N</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr class="sc-bull"><td class="sc-lbl">B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></table></td><td class="mx-soros-gap oly-tip" data-tip="Soros Reflexivity Gap\nNARRATIVE = price down on sentiment,\nnot fundamentals → BUY signal\nFUNDAMENTAL = thesis damaged → REVIEW\nGap % = discount to intrinsic value\nNarrative gap + intact thesis = ONE SHOT entry on dip">—</td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
+<tr class="mx-row mx-st-pf" data-ticker="PLTR" data-entry-num="109.32" data-entry-mode="eur_from_usd" data-thesis="intact" title="Defense + Maven — stop defines risk."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">PLTR</div><div class="mx-nm">Palantir</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:72%;background:var(--c1)"></div></div><span class="god-num oly-tip" data-tip="GOD Score (0–100)\nComposite: Paradigm×0.30 + Quality×0.25 + Value×0.20 + Thesis×0.15 + Balance Sheet×0.10\n≥80 = Track A (portfolio-grade)\n60–79 = Track B (watchlist)">72</span></div></td><td class="mx-eval"><span class="eval-track-b oly-tip" data-tip="GEM Grade (A/B/C/D)\nA = 1y EV≥+20% + 5y EV≥+100% + worst>−60%\nB = 1y≥+10% + 5y≥+50%\nC = marginal upside\nD = fails thresholds\nGrade A = GEM Portfolio · A or B = GEM Universe">B</span><div class="eval-gates oly-tip" data-tip="Investment Thesis Gates\nP1 = Paradigm fit confirmed\nP2 = Capital quality verified\nP3 = Price vs value attractive\nP4 = Thesis clarity proven\nAll gates passed = maximum conviction entry">P1+P2+P3</div></td><td class="r mx-entry">€109.32</td><td class="r mx-today"><span class="pnow" id="price-PLTR" data-ticker="PLTR">—</span></td><td class="r mx-vs-today oly-tip" data-tip="VS TODAY\n% change from your entry price\nto current live price\nPositive = unrealized gain\nNegative = unrealized loss"></td><td colspan="5" class="mx-scenarios" style="padding:2px 4px;vertical-align:middle"><table class="scenario-tbl" style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace"><tr><td class="sc-lbl"></td><td class="sc-h">1M</td><td class="sc-h">6M</td><td class="sc-h">1Y</td><td class="sc-h">3Y</td><td class="sc-h">5Y</td></tr><tr class="sc-worst"><td class="sc-lbl">W</td><td>$135</td><td>$155</td><td>$200</td><td>$300</td><td>$500</td></tr><tr class="sc-normal"><td class="sc-lbl">N</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr class="sc-bull"><td class="sc-lbl">B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></table></td><td class="mx-soros-gap oly-tip" data-tip="Soros Reflexivity Gap\nNARRATIVE = price down on sentiment,\nnot fundamentals → BUY signal\nFUNDAMENTAL = thesis damaged → REVIEW\nGap % = discount to intrinsic value\nNarrative gap + intact thesis = ONE SHOT entry on dip"><span class="mx-soros-hot">🔱 59% GAP (Burry narrative)</span></td><td><span class="mx-act mx-act-hold">DIP WATCH</span></td><td class="r mx-tgt">Stop €95</td></tr>
+<tr class="mx-row mx-st-pf" data-ticker="1810.HK" data-entry-num="3.88" data-entry-mode="eur_from_hkd" data-thesis="intact" title="EV + phones + IoT scale."><td><span class="mx-badge mx-badge-pf">● PORTFOLIO</span><div class="mx-tk">1810.HK</div><div class="mx-nm">Xiaomi</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:68%;background:var(--c1)"></div></div><span class="god-num oly-tip" data-tip="GOD Score (0–100)\nComposite: Paradigm×0.30 + Quality×0.25 + Value×0.20 + Thesis×0.15 + Balance Sheet×0.10\n≥80 = Track A (portfolio-grade)\n60–79 = Track B (watchlist)">68</span></div></td><td class="mx-eval"><span class="eval-track-b oly-tip" data-tip="GEM Grade (A/B/C/D)\nA = 1y EV≥+20% + 5y EV≥+100% + worst>−60%\nB = 1y≥+10% + 5y≥+50%\nC = marginal upside\nD = fails thresholds\nGrade A = GEM Portfolio · A or B = GEM Universe">B</span><div class="eval-gates oly-tip" data-tip="Investment Thesis Gates\nP1 = Paradigm fit confirmed\nP2 = Capital quality verified\nP3 = Price vs value attractive\nP4 = Thesis clarity proven\nAll gates passed = maximum conviction entry">P1+P2+P3</div></td><td class="r mx-entry">€3.88</td><td class="r mx-today"><span class="pnow" id="price-1810.HK" data-ticker="1810.HK">—</span></td><td class="r mx-vs-today oly-tip" data-tip="VS TODAY\n% change from your entry price\nto current live price\nPositive = unrealized gain\nNegative = unrealized loss"></td><td colspan="5" class="mx-scenarios" style="padding:2px 4px;vertical-align:middle"><table class="scenario-tbl" style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace"><tr><td class="sc-lbl"></td><td class="sc-h">1M</td><td class="sc-h">6M</td><td class="sc-h">1Y</td><td class="sc-h">3Y</td><td class="sc-h">5Y</td></tr><tr class="sc-worst"><td class="sc-lbl">W</td><td>HK$35</td><td>HK$42</td><td>HK$55</td><td>HK$85</td><td>HK$120</td></tr><tr class="sc-normal"><td class="sc-lbl">N</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr><tr class="sc-bull"><td class="sc-lbl">B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></table></td><td class="mx-soros-gap oly-tip" data-tip="Soros Reflexivity Gap\nNARRATIVE = price down on sentiment,\nnot fundamentals → BUY signal\nFUNDAMENTAL = thesis damaged → REVIEW\nGap % = discount to intrinsic value\nNarrative gap + intact thesis = ONE SHOT entry on dip"><span class="mx-soros-hot">🔱 41% GAP (tariff fear)</span></td><td><span class="mx-act mx-act-hold">HOLD</span></td><td class="r mx-tgt">—</td></tr>
 <tr class="mx-row mx-st-watch" data-ticker="NVDA" data-entry-num="0" data-entry-mode="watch" data-thesis="intact" title="Enter on correction — AGI compute layer."><td><span class="mx-badge mx-badge-watch">○ WATCHLIST</span><div class="mx-tk">NVDA</div><div class="mx-nm">Nvidia</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:96%;background:var(--c1)"></div></div><span class="god-num">96</span></div></td><td class="mx-eval"><span class="eval-track-a">A</span><div class="eval-gates">5/7 gates</div></td><td class="r mx-entry">—</td><td class="r mx-today"><span class="pnow" id="price-NVDA" data-ticker="NVDA">—</span></td><td class="r mx-vs-today">—</td><td class="r mx-pt">$120</td><td class="r mx-pt">$150</td><td class="r mx-pt">$200</td><td class="r mx-pt">$350</td><td class="r mx-pt">$600</td><td class="mx-soros-gap"><span class="mx-soros-hot">🔱 45% GAP</span></td><td><span class="mx-act mx-act-buy">BUY</span></td><td class="r mx-tgt">Pullback</td></tr>
 <tr class="mx-row mx-st-ipo" data-ticker="" data-entry-num="0" data-entry-mode="ipo" data-thesis="intact" title="$30B ARR · 8/10 Fortune 10 customers · enterprise AI leader — prepare capital."><td><span class="mx-badge mx-badge-ipo">◈ IPO 2027</span><div class="mx-tk">Anthropic</div><div class="mx-nm">Anthropic PBC</div></td><td><span class="sec-badge" style="background:var(--c1)">Intelligence</span></td><td class="r"><div class="mx-godwrap"><div class="mx-godbar"><div class="mx-godfill" style="width:92%;background:var(--c1)"></div></div><span class="god-num">92</span></div></td><td class="mx-eval"><span class="eval-track-b">B</span><div class="eval-gates">P1+P2+P3+P4</div></td><td class="r mx-entry">—</td><td class="r mx-today">—</td><td class="r mx-vs-today">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">—</td><td class="r mx-pt">Civilizational</td><td class="mx-soros-gap">—</td><td><span class="mx-act mx-act-ipo">IPO</span></td><td class="r mx-tgt">Oct 2026</td></tr>
 <tr><td colspan="15" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c2)"></div><div class="cname" style="color:var(--c2)">Energy</div><div class="cdesc">Uranium · Nuclear Renaissance · Solid-State Batteries</div></div></td></tr>
@@ -924,6 +1040,96 @@ MINERVA ACTION CHANGE RULE (permanent):
       const mode = tr.getAttribute("data-entry-mode");
       const vsEl = tr.querySelector(".mx-vs-today");
       if (!vsEl) return;
+
+      // Universal tooltips (all data columns)
+      const TIP_GOD =
+        "GOD Score (0–100)\n" +
+        "Composite: Paradigm×0.30 + Quality×0.25 + Value×0.20 + Thesis×0.15 + Balance Sheet×0.10\n" +
+        "≥80 = Track A (portfolio-grade)\n" +
+        "60–79 = Track B (watchlist)";
+      const TIP_GEM =
+        "GEM Grade (A/B/C/D)\n" +
+        "A = 1y EV≥+20% + 5y EV≥+100% + worst>−60%\n" +
+        "B = 1y≥+10% + 5y≥+50%\n" +
+        "C = marginal upside\n" +
+        "D = fails thresholds\n" +
+        "Grade A = GEM Portfolio · A or B = GEM Universe";
+      const TIP_GATES =
+        "Investment Thesis Gates\n" +
+        "P1 = Paradigm fit confirmed\n" +
+        "P2 = Capital quality verified\n" +
+        "P3 = Price vs value attractive\n" +
+        "P4 = Thesis clarity proven\n" +
+        "All gates passed = maximum conviction entry";
+      const TIP_VS =
+        "VS TODAY\n" +
+        "% change from your entry price\n" +
+        "to current live price\n" +
+        "Positive = unrealized gain\n" +
+        "Negative = unrealized loss";
+      const TIP_SOROS =
+        "Soros Reflexivity Gap\n" +
+        "NARRATIVE = price down on sentiment,\n" +
+        "not fundamentals → BUY signal\n" +
+        "FUNDAMENTAL = thesis damaged → REVIEW\n" +
+        "Gap % = discount to intrinsic value\n" +
+        "Narrative gap + intact thesis = ONE SHOT entry on dip";
+
+      const godNum = tr.querySelector(".god-num");
+      if (godNum && !godNum.classList.contains("oly-tip")) {
+        godNum.classList.add("oly-tip");
+        godNum.setAttribute("data-tip", TIP_GOD);
+      }
+      const evalTrack = tr.querySelector(".mx-eval span[class^='eval-track-']");
+      if (evalTrack && !evalTrack.classList.contains("oly-tip")) {
+        evalTrack.classList.add("oly-tip");
+        evalTrack.setAttribute("data-tip", TIP_GEM);
+      }
+      const gates = tr.querySelector(".eval-gates");
+      if (gates && !gates.classList.contains("oly-tip")) {
+        gates.classList.add("oly-tip");
+        gates.setAttribute("data-tip", TIP_GATES);
+      }
+      if (vsEl && !vsEl.classList.contains("oly-tip")) {
+        vsEl.classList.add("oly-tip");
+        vsEl.setAttribute("data-tip", TIP_VS);
+      }
+      const sorosCell = tr.querySelector(".mx-soros-gap");
+      if (sorosCell && !sorosCell.classList.contains("oly-tip")) {
+        sorosCell.classList.add("oly-tip");
+        sorosCell.setAttribute("data-tip", TIP_SOROS);
+      }
+
+      // Replace 1M/6M/1Y/3Y/5Y price columns with scenario table (Worst row uses existing values)
+      if (!tr.querySelector("td.mx-scenarios")) {
+        const pts = Array.from(tr.querySelectorAll("td.r.mx-pt"));
+        if (pts.length >= 5) {
+          const vals = pts.slice(0, 5).map((td) => (td.textContent || "—").trim() || "—");
+          const td = document.createElement("td");
+          td.setAttribute("colspan", "5");
+          td.className = "mx-scenarios";
+          td.style.cssText = "padding:2px 4px;vertical-align:middle";
+          td.innerHTML =
+            '<table class="scenario-tbl" style="border-collapse:collapse;width:100%;font-size:10px;font-family:monospace">' +
+            '<tr><td class="sc-lbl"></td><td class="sc-h">1M</td><td class="sc-h">6M</td><td class="sc-h">1Y</td><td class="sc-h">3Y</td><td class="sc-h">5Y</td></tr>' +
+            '<tr class="sc-worst"><td class="sc-lbl">W</td><td>' +
+            vals[0] +
+            "</td><td>" +
+            vals[1] +
+            "</td><td>" +
+            vals[2] +
+            "</td><td>" +
+            vals[3] +
+            "</td><td>" +
+            vals[4] +
+            "</td></tr>" +
+            '<tr class="sc-normal"><td class="sc-lbl">N</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>' +
+            '<tr class="sc-bull"><td class="sc-lbl">B</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>' +
+            "</table>";
+          pts[0].replaceWith(td);
+          pts.slice(1, 5).forEach((n) => n.remove());
+        }
+      }
       if (mode === "watch" || mode === "gift" || mode === "tbc" || mode === "ipo") return;
 
       const tk = tr.getAttribute("data-ticker");
