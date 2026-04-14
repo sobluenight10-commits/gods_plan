@@ -11,6 +11,8 @@ def _load_env():
                     os.environ.setdefault(k.strip(), v.strip())
 _load_env()
 """output_factory.py — OUTPUT LAYER"""
+from dotenv import load_dotenv
+load_dotenv()
 import json, os, datetime, requests
 
 BASE = os.path.dirname(os.path.abspath(__file__))
