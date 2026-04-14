@@ -1,22 +1,327 @@
 {
-  "last_updated": "2026-04-12 18:00 CET",
+  "last_updated": "2026-04-14 08:40 CET",
   "one_command": "Set OKLO $44 + CCJ $100 + UEC €11 limits in Trade Republic — deploy full €1,500 post April 15",
   "actions": [
-    {"type": "BUY", "ticker": "OKLO", "reason": "€600 at $44 limit. Meta 1.2GW signed. Sam Altman chairman. NRC 2026. 5Y hold."},
-    {"type": "BUY", "ticker": "CCJ", "reason": "€500 at $100 limit. Largest western uranium producer. Utility contracts. Blue chip anchor."},
-    {"type": "BUY", "ticker": "UEC", "reason": "€400 at €11 limit. Already held. Spot price leverage. Burke Hollow producing."},
-    {"type": "HOLD", "ticker": "PLTR", "reason": "Entry €109. Burry deleted post. Army $10B intact. Stop €95. Do not sell."},
-    {"type": "HOLD", "ticker": "TSM", "reason": "AI foundry monopoly. N2 node ramp. Hold all."},
-    {"type": "WATCH", "ticker": "ASML", "reason": "April 16 earnings. Beat=buy at market. Miss=wait for €1,100."},
-    {"type": "WATCH", "ticker": "SpaceX", "reason": "S-1 filed April 1. June IPO. Prepare capital now."},
-    {"type": "WATCH", "ticker": "Anthropic", "reason": "October 2026 IPO target. $30B ARR. 8/10 Fortune companies. Prepare capital."}
+    {
+      "type": "BUY",
+      "ticker": "OKLO",
+      "reason": "€600 at $44 limit. Meta 1.2GW signed. Sam Altman chairman. NRC 2026. 5Y hold."
+    },
+    {
+      "type": "BUY",
+      "ticker": "CCJ",
+      "reason": "€500 at $100 limit. Largest western uranium producer. Utility contracts. Blue chip anchor."
+    },
+    {
+      "type": "BUY",
+      "ticker": "UEC",
+      "reason": "€400 at €11 limit. Already held. Spot price leverage. Burke Hollow producing."
+    },
+    {
+      "type": "HOLD",
+      "ticker": "PLTR",
+      "reason": "Entry €109. Burry deleted post. Army $10B intact. Stop €95. Do not sell."
+    },
+    {
+      "type": "HOLD",
+      "ticker": "TSM",
+      "reason": "AI foundry monopoly. N2 node ramp. Hold all."
+    },
+    {
+      "type": "WATCH",
+      "ticker": "ASML",
+      "reason": "April 16 earnings. Beat=buy at market. Miss=wait for €1,100."
+    },
+    {
+      "type": "WATCH",
+      "ticker": "SpaceX",
+      "reason": "S-1 filed April 1. June IPO. Prepare capital now."
+    },
+    {
+      "type": "WATCH",
+      "ticker": "Anthropic",
+      "reason": "October 2026 IPO target. $30B ARR. 8/10 Fortune companies. Prepare capital."
+    }
   ],
   "deployment_plan": [
-    {"ticker": "OKLO", "amount_eur": 600, "limit": "$44", "reason": "Paradigm max conviction"},
-    {"ticker": "CCJ", "amount_eur": 500, "limit": "$100", "reason": "Blue chip uranium anchor"},
-    {"ticker": "UEC", "amount_eur": 400, "limit": "€11", "reason": "Spot leverage add"}
+    {
+      "ticker": "OKLO",
+      "amount_eur": 600,
+      "limit": "$44",
+      "reason": "Paradigm max conviction"
+    },
+    {
+      "ticker": "CCJ",
+      "amount_eur": 500,
+      "limit": "$100",
+      "reason": "Blue chip uranium anchor"
+    },
+    {
+      "ticker": "UEC",
+      "amount_eur": 400,
+      "limit": "€11",
+      "reason": "Spot leverage add"
+    }
   ],
   "total_deploy_eur": 1500,
   "dry_powder_after": 0,
-  "deploy_timing": "Post April 15 — TGA drain ends, liquidity returns"
+  "deploy_timing": "Post April 15 — TGA drain ends, liquidity returns",
+  "liquidity": {
+    "net_liq_b": 2368,
+    "reserves_b": 3116,
+    "tga_b": 748,
+    "rrp_b": 0,
+    "zone": "WARNING",
+    "zone_color": "#e07b39",
+    "direction": "EXPANDING",
+    "direction_arrow": "↑",
+    "vs_last_week_b": 189,
+    "action": "DEPLOY dry powder after April 15",
+    "historical_context": "2023 SVB level but direction EXPANDING post-tax TGA drain",
+    "last_updated": "2026-04-14 08:40 CET",
+    "source": "FRED manual April 13 2026"
+  },
+  "god_scores": {
+    "000660.KS": {
+      "score": 95.0,
+      "sector_avg": 81,
+      "diff_from_avg": "+14 vs sector avg (81)",
+      "diff_from_top": "-1 vs sector best NVDA (96)",
+      "verdict": "ELITE — top conviction, full size position justified",
+      "sector": "Intelligence"
+    },
+    "TSM": {
+      "score": 90.0,
+      "sector_avg": 81,
+      "diff_from_avg": "+9 vs sector avg (81)",
+      "diff_from_top": "-6 vs sector best NVDA (96)",
+      "verdict": "ELITE — top conviction, full size position justified",
+      "sector": "Intelligence"
+    },
+    "PLTR": {
+      "score": 72.0,
+      "sector_avg": 81,
+      "diff_from_avg": "-9 vs sector avg (81)",
+      "diff_from_top": "-24 vs sector best NVDA (96)",
+      "verdict": "SOLID — hold, monitor for upgrade catalysts",
+      "sector": "Intelligence"
+    },
+    "1810.HK": {
+      "score": 68.0,
+      "sector_avg": 81,
+      "diff_from_avg": "-13 vs sector avg (81)",
+      "diff_from_top": "-28 vs sector best NVDA (96)",
+      "verdict": "WEAK — thesis needs verification before adding",
+      "sector": "Intelligence"
+    },
+    "UEC": {
+      "score": 78.0,
+      "sector_avg": 74,
+      "diff_from_avg": "+4 vs sector avg (74)",
+      "diff_from_top": "-4 vs sector best CCJ (82)",
+      "verdict": "SOLID — hold, monitor for upgrade catalysts",
+      "sector": "Energy"
+    },
+    "URNM": {
+      "score": 74.0,
+      "sector_avg": 74,
+      "diff_from_avg": "+0 vs sector avg (74)",
+      "diff_from_top": "-8 vs sector best CCJ (82)",
+      "verdict": "SOLID — hold, monitor for upgrade catalysts",
+      "sector": "Energy"
+    },
+    "CWEN": {
+      "score": 55.0,
+      "sector_avg": 74,
+      "diff_from_avg": "-19 vs sector avg (74)",
+      "diff_from_top": "-27 vs sector best CCJ (82)",
+      "verdict": "WEAK — thesis needs verification before adding",
+      "sector": "Energy"
+    },
+    "UUUU": {
+      "score": 72.0,
+      "sector_avg": 74,
+      "diff_from_avg": "-2 vs sector avg (74)",
+      "diff_from_top": "-10 vs sector best CCJ (82)",
+      "verdict": "SOLID — hold, monitor for upgrade catalysts",
+      "sector": "Energy"
+    },
+    "PL": {
+      "score": 84.0,
+      "sector_avg": 70,
+      "diff_from_avg": "+14 vs sector avg (70)",
+      "diff_from_top": "+0 vs sector best PL (84)",
+      "verdict": "HIGH — strong conviction, core position",
+      "sector": "Space"
+    },
+    "RKLB": {
+      "score": 58.0,
+      "sector_avg": 70,
+      "diff_from_avg": "-12 vs sector avg (70)",
+      "diff_from_top": "-26 vs sector best PL (84)",
+      "verdict": "WEAK — thesis needs verification before adding",
+      "sector": "Space"
+    },
+    "TMO": {
+      "score": 68.0,
+      "sector_avg": 60,
+      "diff_from_avg": "+8 vs sector avg (60)",
+      "diff_from_top": "-2 vs sector best BEAM (70)",
+      "verdict": "WEAK — thesis needs verification before adding",
+      "sector": "Bio"
+    },
+    "272210.KS": {
+      "score": 92.0,
+      "sector_avg": 75,
+      "diff_from_avg": "+17 vs sector avg (75)",
+      "diff_from_top": "+0 vs sector best 272210.KS (92)",
+      "verdict": "ELITE — top conviction, full size position justified",
+      "sector": "Robotics"
+    },
+    "KTOS": {
+      "score": 80.0,
+      "sector_avg": 75,
+      "diff_from_avg": "+5 vs sector avg (75)",
+      "diff_from_top": "-12 vs sector best 272210.KS (92)",
+      "verdict": "HIGH — strong conviction, core position",
+      "sector": "Robotics"
+    },
+    "ARKQ": {
+      "score": 62.0,
+      "sector_avg": 75,
+      "diff_from_avg": "-13 vs sector avg (75)",
+      "diff_from_top": "-30 vs sector best 272210.KS (92)",
+      "verdict": "WEAK — thesis needs verification before adding",
+      "sector": "Robotics"
+    },
+    "BOTZ": {
+      "score": 60.0,
+      "sector_avg": 75,
+      "diff_from_avg": "-15 vs sector avg (75)",
+      "diff_from_top": "-32 vs sector best 272210.KS (92)",
+      "verdict": "WEAK — thesis needs verification before adding",
+      "sector": "Robotics"
+    },
+    "VRT": {
+      "score": 84.0,
+      "sector_avg": 81,
+      "diff_from_avg": "+3 vs sector avg (81)",
+      "diff_from_top": "-3 vs sector best ASML (87)",
+      "verdict": "HIGH — strong conviction, core position",
+      "sector": "Infrastructure"
+    },
+    "COHR": {
+      "score": 76.0,
+      "sector_avg": 81,
+      "diff_from_avg": "-5 vs sector avg (81)",
+      "diff_from_top": "-11 vs sector best ASML (87)",
+      "verdict": "SOLID — hold, monitor for upgrade catalysts",
+      "sector": "Infrastructure"
+    },
+    "NTR": {
+      "score": 72.0,
+      "sector_avg": 58,
+      "diff_from_avg": "+14 vs sector avg (58)",
+      "diff_from_top": "+0 vs sector best NTR (72)",
+      "verdict": "SOLID — hold, monitor for upgrade catalysts",
+      "sector": "Global Issue"
+    },
+    "FCX": {
+      "score": 45.0,
+      "sector_avg": 58,
+      "diff_from_avg": "-13 vs sector avg (58)",
+      "diff_from_top": "-27 vs sector best NTR (72)",
+      "verdict": "EXIT CANDIDATE — thesis likely broken",
+      "sector": "Global Issue"
+    }
+  },
+  "soros_classified": {
+    "PLTR": {
+      "ticker": "PLTR",
+      "gap_pct": 59.0,
+      "cause": "Michael Burry deleted bearish post — pure narrative",
+      "reality": "US Army $10B contract intact · NATO expansion ongoing",
+      "historical_parallel": "NVDA -30% in 2022 on AI capex fear → +600% recovery",
+      "cause_type": "NARRATIVE",
+      "thesis_intact": true,
+      "action": "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact",
+      "urgency": "HIGH"
+    },
+    "1810.HK": {
+      "ticker": "1810.HK",
+      "gap_pct": 41.0,
+      "cause": "US-China tariff escalation fear — macro narrative",
+      "reality": "EV + AI smartphone sales growing · China domestic demand intact",
+      "historical_parallel": "BABA 2021-2022 regulatory fear → recovered 60% in 6 months",
+      "cause_type": "NARRATIVE",
+      "thesis_intact": true,
+      "action": "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact",
+      "urgency": "HIGH"
+    },
+    "UEC": {
+      "ticker": "UEC",
+      "gap_pct": 38.0,
+      "cause": "Uranium spot price tape weakness — sector rotation",
+      "reality": "Nuclear structural demand 2025-2035 unchanged · US Energy Dominance policy",
+      "historical_parallel": "CCJ 2020 COVID drop -50% → +400% in 24 months",
+      "cause_type": "NARRATIVE",
+      "thesis_intact": true,
+      "action": "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact",
+      "urgency": "HIGH"
+    },
+    "FCX": {
+      "ticker": "FCX",
+      "gap_pct": 32.0,
+      "cause": "Iran ceasefire optimism + copper production accident",
+      "reality": "EV demand doubles copper need by 2040 · AI data centers = copper intensive",
+      "historical_parallel": "FCX 2020 COVID -50% → +200% in 18 months on same thesis",
+      "cause_type": "NARRATIVE",
+      "thesis_intact": true,
+      "action": "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact",
+      "urgency": "HIGH"
+    },
+    "OKLO": {
+      "ticker": "OKLO",
+      "gap_pct": 60.0,
+      "cause": "SMR technology skepticism + regulatory timeline uncertainty",
+      "reality": "Meta 1.2GW contract SIGNED · Sam Altman chairman · NRC license 2026",
+      "historical_parallel": "TSLA 2019 production doubt → 10x in 24 months",
+      "cause_type": "NARRATIVE",
+      "thesis_intact": true,
+      "action": "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact",
+      "urgency": "HIGH"
+    },
+    "NVDA": {
+      "ticker": "NVDA",
+      "gap_pct": 45.0,
+      "cause": "AI capex slowdown fear + tariff uncertainty",
+      "reality": "GPU monopoly intact · $500B Stargate committed · no viable competitor",
+      "historical_parallel": "NVDA 2022 -65% on crypto/AI fear → +800% by 2024",
+      "cause_type": "NARRATIVE",
+      "thesis_intact": true,
+      "action": "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact",
+      "urgency": "HIGH"
+    },
+    "KTOS": {
+      "ticker": "KTOS",
+      "gap_pct": 13.74,
+      "cause": "Defense sector rotation + AVAV contract cancellation fear bleed",
+      "reality": "Kratos drones in active deployment · DoD contract Q2 intact · different thesis",
+      "historical_parallel": "LMT 2013 sequestration fear -20% → +300% over 5 years",
+      "cause_type": "NARRATIVE",
+      "thesis_intact": true,
+      "action": "MAXIMUM CONVICTION ENTRY — narrative gap, thesis intact",
+      "urgency": "HIGH"
+    }
+  },
+  "sector_bench": {
+    "QQQ": 1.03,
+    "XLE": 0.3,
+    "URA": 2.39,
+    "ARKX": 2.14,
+    "XBI": 2.02,
+    "BOTZ": 1.52,
+    "IGV": 5.4,
+    "DJP": 1.13
+  }
 }

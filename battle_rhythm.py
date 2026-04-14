@@ -29,6 +29,50 @@ from market_data import (
 )
 
 
+
+
+def write_liquidity_to_directives(net_liq, reserves, tga, rrp, vs_last_week=0):
+    import json
+    import datetime as _dt
+    import os
+    directives_path = os.path.join(os.path.dirname(__file__), "data", "directives.json")
+    try:
+        with open(directives_path, "r", encoding="utf-8") as f:
+            d = json.load(f)
+    except Exception:
+        d = {}
+    if net_liq < 2000:
+        zone, color = "DANGER", "#e05252"
+    elif net_liq < 2500:
+        zone, color = "WARNING", "#e07b39"
+    elif net_liq < 3500:
+        zone, color = "NORMAL", "#c4a84f"
+    else:
+        zone, color = "ABUNDANCE", "#4caf50"
+    d["liquidity"] = {
+        "net_liq_b": round(net_liq),
+        "reserves_b": round(reserves),
+        "tga_b": round(tga),
+        "rrp_b": round(rrp),
+        "zone": zone,
+        "zone_color": color,
+        "direction": "EXPANDING" if vs_last_week > 0 else "CONTRACTING",
+        "direction_symbol": "↑" if vs_last_week > 0 else "↓",
+        "vs_last_week_b": abs(round(vs_last_week)),
+        "vs_last_week_sign": "+" if vs_last_week > 0 else "-",
+        "action": (
+            "DEPLOY dry powder"
+            if (net_liq > 2500 or vs_last_week > 0)
+            else "HOLD CASH"
+        ),
+        "last_updated": _dt.datetime.now().strftime("%Y-%m-%d %H:%M CET"),
+        "source": "FRED auto-fetch",
+    }
+    d["last_updated"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M CET")
+    with open(directives_path, "w", encoding="utf-8") as f:
+        json.dump(d, f, indent=2, ensure_ascii=False)
+    return d["liquidity"]
+
 def fetch_fred_liquidity() -> dict:
     """Fetch TGA/RRP/Reserves from FRED. Auto-updates directives.json liquidity section."""
     fred_key = os.getenv("FRED_API_KEY", "0bc0ed228f83cb0853a6fa1f35b970d3")
@@ -104,36 +148,8 @@ def fetch_fred_liquidity() -> dict:
             hist_parallel = "2025 peak — strong conditions"
         else:
             hist_parallel = "2020-2021 COVID liquidity peak"
-        last_updated = datetime.now().strftime("%Y-%m-%d %H:%M") + " CET"
-        change_text = f"Δ${change:+.0f}B"
-        dp = os.path.join(os.path.dirname(__file__), "data", "directives.json")
-        try:
-            with open(dp, encoding="utf-8") as f:
-                d = json.load(f)
-        except Exception:
-            d = {}
-        d["liquidity"] = {
-            "net_liq_text": (
-                f"Net Liq ${net:.0f}B · Res ${res_b:.0f}B − TGA ${tga_b:.0f}B − RRP ${rrp_b:.0f}B"
-            ),
-            "outlook_text": f"{out['direction']} · Δ${out['change']:+.0f}B vs prev week",
-            "action_text": (
-                "DEPLOY dry powder — liquidity expanding, risk-on confirmed"
-                if net > prev
-                else "HOLD dry powder — liquidity contracting, wait for expansion"
-            ),
-            "net_liq_value": round(net, 1),
-            "change_text": change_text,
-            "zone": zone,
-            "hist_parallel": hist_parallel,
-            "last_updated": last_updated,
-        }
-        try:
-            os.makedirs(os.path.dirname(dp), exist_ok=True)
-            with open(dp, "w", encoding="utf-8") as f:
-                json.dump(d, f, indent=2, ensure_ascii=False)
-        except Exception as e:
-            logger.warning("fetch_fred_liquidity: could not write directives.json: %s", e)
+        write_liquidity_to_directives(net, res_b, tga_b, rrp_b, change)
+
     return out
 
 
