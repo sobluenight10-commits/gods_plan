@@ -51,8 +51,8 @@ NEWS_PULSE_START_HOUR = float(os.getenv("NEWS_PULSE_START_HOUR", "7"))
 NEWS_PULSE_END_HOUR = float(os.getenv("NEWS_PULSE_END_HOUR", "23.5"))
 
 # ── Thesis / intraday drop tiers (%, price_alert.check_thesis_alerts & run_price_alerts) ─
-ALERT_TIER_WATCH = -8
-ALERT_TIER_THESIS = -12
+ALERT_TIER_WATCH = -5
+ALERT_TIER_THESIS = -10
 ALERT_TIER_EMERGENCY = -15
 
 # ── Intraday upside spike tiers (%, price_alert.check_thesis_alerts) ─
@@ -206,10 +206,11 @@ PORTFOLIO: Dict[str, List[Dict]] = {
 THESIS_ALERT_TICKERS: List[str] = [
     # TR holdings
     "TSM", "PLTR", "UEC", "URNM", "COHR", "1810.HK", "NTR",
+    "PL", "TMO", "CWEN", "UUUU", "FCX", "RKLB", "MC.PA",
     # Kiwoom holdings
-    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IONQ", "IAU",
-    # Core watchlist
-    "NVDA", "CCJ", "OKLO", "RKLB", "ASTS", "CRSP", "NTLA", "BEAM", "ASML", "KTOS"
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IAU", "KTOS", "AMAT",
+    # Watchlist
+    "NVDA", "CCJ", "OKLO", "ASTS", "CRSP", "NTLA", "BEAM", "ASML",
 ]
 
 WATCHLIST: List[Dict] = [

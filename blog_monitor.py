@@ -8,6 +8,7 @@ import os
 import time
 import threading
 import feedparser
+import requests
 from datetime import datetime
 
 from config import NAVER_RSS_URL, BLOG_FETCH_INTERVAL_MINUTES
@@ -127,12 +128,27 @@ def _save_seen(s: set) -> None:
 _seen_urls: set = _load_seen()
 
 
+def _fetch_rss_xml():
+    """Fetch RSS XML via requests (Naver blocks feedparser's built-in HTTP)."""
+    try:
+        r = requests.get(NAVER_RSS_URL, timeout=15,
+                         headers={"User-Agent": "Mozilla/5.0 OLYMPUS/1.0"})
+        r.raise_for_status()
+        return r.text
+    except Exception as e:
+        logger.warning("RSS HTTP fetch failed: %s", e)
+        return None
+
+
 def _check_for_new_posts():
     """Poll RSS and return list of posts not seen before."""
     global _seen_urls
     new_posts = []
     try:
-        feed = feedparser.parse(NAVER_RSS_URL)
+        xml = _fetch_rss_xml()
+        if not xml:
+            return new_posts
+        feed = feedparser.parse(xml)
         for entry in feed.entries[:10]:
             url = _norm_url(entry.get("link", ""))
             if not url:
@@ -163,7 +179,11 @@ def _seed_seen():
         logger.info("Blog monitor resumed with %s URLs on disk — no RSS re-seed", len(_seen_urls))
         return
     try:
-        feed = feedparser.parse(NAVER_RSS_URL)
+        xml = _fetch_rss_xml()
+        if not xml:
+            logger.warning("RSS seed: no XML returned")
+            return
+        feed = feedparser.parse(xml)
         for entry in feed.entries[:20]:
             url = _norm_url(entry.get("link", ""))
             if url:

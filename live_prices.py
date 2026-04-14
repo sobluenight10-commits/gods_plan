@@ -1,5 +1,5 @@
-"""Live Price Daemon — fetches every 60s, writes /var/www/html/data/prices.json"""
-import json, time, os
+"""Live Price Daemon — fetches every 60s, writes prices.json + plunge alerts."""
+import json, time, os, requests
 from datetime import datetime
 import pytz
 import yfinance as yf
@@ -42,8 +42,108 @@ TICKERS = [
 ]
 
 OUT = "/var/www/html/data/prices.json"
+ALERT_STATE = "/root/gods_plan/data/plunge_alerts_today.json"
 BERLIN = pytz.timezone("Europe/Berlin")
 INTERVAL = 60
+
+PLUNGE_THRESHOLD = -5.0
+SPIKE_THRESHOLD = 8.0
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
+
+
+def _load_alerted_today():
+    """Load set of (ticker, tier) already alerted today."""
+    try:
+        with open(ALERT_STATE) as f:
+            data = json.load(f)
+        if data.get("date") == datetime.now(BERLIN).strftime("%Y-%m-%d"):
+            return set(tuple(x) for x in data.get("alerted", []))
+    except Exception:
+        pass
+    return set()
+
+
+def _save_alerted_today(alerted):
+    os.makedirs(os.path.dirname(ALERT_STATE), exist_ok=True)
+    with open(ALERT_STATE, "w") as f:
+        json.dump({
+            "date": datetime.now(BERLIN).strftime("%Y-%m-%d"),
+            "alerted": list(alerted),
+        }, f)
+
+
+def _send_plunge_alert(ticker, price, change_pct, prev_close, direction):
+    """Send immediate Telegram alert for significant price move."""
+    if not TELEGRAM_TOKEN or not TELEGRAM_CHAT_ID:
+        try:
+            from dotenv import load_dotenv
+            load_dotenv("/root/gods_plan/.env")
+            token = os.getenv("TELEGRAM_BOT_TOKEN", "")
+            chat = os.getenv("TELEGRAM_CHAT_ID", "")
+        except Exception:
+            return
+    else:
+        token, chat = TELEGRAM_TOKEN, TELEGRAM_CHAT_ID
+
+    if not token or not chat:
+        return
+
+    if direction == "down":
+        emoji = "\U0001F534"
+        if change_pct <= -15:
+            tier = "EMERGENCY"
+        elif change_pct <= -10:
+            tier = "THESIS DROP"
+        else:
+            tier = "WATCH"
+        msg = (
+            f"{emoji} PLUNGE ALERT: {ticker}\n"
+            f"Price: ${price:.2f} ({change_pct:+.1f}%)\n"
+            f"Prev close: ${prev_close:.2f}\n"
+            f"Tier: {tier}\n"
+            f"Detected by live_prices daemon (60s scan)"
+        )
+    else:
+        emoji = "\U0001F7E2"
+        tier = "SPIKE"
+        msg = (
+            f"{emoji} SPIKE ALERT: {ticker}\n"
+            f"Price: ${price:.2f} ({change_pct:+.1f}%)\n"
+            f"Prev close: ${prev_close:.2f}\n"
+            f"Detected by live_prices daemon (60s scan)"
+        )
+
+    try:
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        requests.post(url, json={"chat_id": chat, "text": msg}, timeout=10)
+        print(f"  [ALERT] {ticker} {change_pct:+.1f}% -> Telegram sent", flush=True)
+    except Exception as e:
+        print(f"  [ALERT] Telegram send failed: {e}", flush=True)
+
+
+def check_plunge_alerts(prices):
+    """Check all prices for significant moves and alert once per ticker per day."""
+    alerted = _load_alerted_today()
+
+    for ticker, data in prices.items():
+        chg = data.get("change_pct", 0)
+        price = data.get("price", 0)
+        prev = price / (1 + chg / 100) if chg != 0 else price
+
+        if chg <= PLUNGE_THRESHOLD:
+            key = (ticker, "down")
+            if key not in alerted:
+                _send_plunge_alert(ticker, price, chg, prev, "down")
+                alerted.add(key)
+
+        elif chg >= SPIKE_THRESHOLD:
+            key = (ticker, "up")
+            if key not in alerted:
+                _send_plunge_alert(ticker, price, chg, prev, "up")
+                alerted.add(key)
+
+    _save_alerted_today(alerted)
 
 
 def fetch_cycle():
@@ -76,6 +176,8 @@ def fetch_cycle():
         json.dump(payload, f)
     os.replace(tmp, OUT)
     print(f"[{stamp}] {len(prices)} tickers OK, {errs} errors", flush=True)
+
+    check_plunge_alerts(prices)
 
 
 if __name__ == "__main__":
