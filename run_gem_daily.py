@@ -14,6 +14,57 @@ from minerva_gem import evaluate
 INPUT_FILE  = os.path.join(os.path.dirname(__file__), "gem_inputs", "portfolio_all.json")
 OUTPUT_DIR  = os.path.join(os.path.dirname(__file__), "gem_results")
 
+TIER_LABELS = {1: "I", 2: "II", 3: "III"}
+
+
+def assign_precision_tiers(results):
+    """Within each letter grade, rank stocks into Tier I/II/III using
+    a 35% 1Y-EV + 65% 5Y-EV composite.  Buckets with < 3 stocks get Tier I."""
+
+    from collections import defaultdict
+    buckets = defaultdict(list)
+    for r in results:
+        buckets[r["grading"]["grade"]].append(r)
+
+    for grade, group in buckets.items():
+        if len(group) < 3:
+            for r in group:
+                r["grading"]["precision_tier"] = 1
+                r["grading"]["precision_grade"] = f"{grade}.I"
+                r["grading"]["precision_composite"] = None
+            continue
+
+        vals_1y = [r["grading"].get("upside_1y_pct", 0) or 0 for r in group]
+        vals_5y = [r["grading"].get("upside_5y_pct", 0) or 0 for r in group]
+
+        min1, max1 = min(vals_1y), max(vals_1y)
+        min5, max5 = min(vals_5y), max(vals_5y)
+        span1 = max1 - min1 if max1 != min1 else 1
+        span5 = max5 - min5 if max5 != min5 else 1
+
+        for r in group:
+            u1 = r["grading"].get("upside_1y_pct", 0) or 0
+            u5 = r["grading"].get("upside_5y_pct", 0) or 0
+            norm1 = (u1 - min1) / span1
+            norm5 = (u5 - min5) / span5
+            r["_pc"] = 0.35 * norm1 + 0.65 * norm5
+
+        group.sort(key=lambda r: -r["_pc"])
+        n = len(group)
+        cut1 = n // 3
+        cut2 = 2 * n // 3
+
+        for i, r in enumerate(group):
+            if i < cut1:
+                tier = 1
+            elif i < cut2:
+                tier = 2
+            else:
+                tier = 3
+            r["grading"]["precision_tier"] = tier
+            r["grading"]["precision_grade"] = f"{grade}.{TIER_LABELS[tier]}"
+            r["grading"]["precision_composite"] = round(r.pop("_pc"), 3)
+
 def fetch_live_prices(tickers):
     """Fetch FRESH prices from yfinance. Returns {ticker: price} dict."""
     prices = {}
@@ -109,8 +160,12 @@ def run():
         results.append(result)
 
     grade_order = {"S":0,"A+":1,"A":2,"B+":3,"B":4,"C+":5,"C":6,"D":7,"F":8}
+
+    assign_precision_tiers(results)
+
     results.sort(key=lambda r: (
         grade_order.get(r["grading"]["grade"], 9),
+        r["grading"].get("precision_tier", 1),
         -r["grading"]["upside_5y_pct"]
     ))
 

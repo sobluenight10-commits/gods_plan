@@ -788,7 +788,7 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 <div class="tab-panel active" id="tab-matrix" style="padding:0;background:var(--es-paper);">
 
 <div id="grade-summary-panel" style="padding:12px 40px 8px;background:#fafafa;border-bottom:1px solid #e5e5e5;">
-  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8b6914;margin-bottom:8px;">GEM GRADE SUMMARY</div>
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8b6914;margin-bottom:8px;">GEM GRADE SUMMARY <span style="font-weight:400;color:#888;font-size:9px;letter-spacing:0">— Precision Tier: <span style="color:#2d7a2d">●</span> I (top) <span style="color:#b8860b">●</span> II (mid) <span style="color:#a32d2d">●</span> III (bottom) within grade</span></div>
   <table id="grade-summary-table" style="border-collapse:collapse;width:100%;max-width:700px;font-family:'DM Mono',monospace;font-size:11px;">
     <thead><tr style="border-bottom:2px solid #d4af37;">
       <th style="text-align:left;padding:3px 8px;color:#555;font-size:10px;">TICKER</th>
@@ -2940,6 +2940,39 @@ function updateGemGradeBar() {
   bar.innerHTML = html;
 }
 
+function computePrecisionTiers(rows) {
+  var tierLabels = {1:'I', 2:'II', 3:'III'};
+  var buckets = {};
+  rows.forEach(function(r) {
+    if (!buckets[r.grade]) buckets[r.grade] = [];
+    buckets[r.grade].push(r);
+  });
+  Object.keys(buckets).forEach(function(grade) {
+    var group = buckets[grade];
+    if (group.length < 3) {
+      group.forEach(function(r) { r.tier = 1; r.pgrade = grade + '.I'; });
+      return;
+    }
+    var v1 = group.map(function(r) { return r.u1y || 0; });
+    var v5 = group.map(function(r) { return r.u5y || 0; });
+    var min1 = Math.min.apply(null, v1), max1 = Math.max.apply(null, v1);
+    var min5 = Math.min.apply(null, v5), max5 = Math.max.apply(null, v5);
+    var sp1 = max1 !== min1 ? max1 - min1 : 1;
+    var sp5 = max5 !== min5 ? max5 - min5 : 1;
+    group.forEach(function(r) {
+      var n1 = ((r.u1y || 0) - min1) / sp1;
+      var n5 = ((r.u5y || 0) - min5) / sp5;
+      r._pc = 0.35 * n1 + 0.65 * n5;
+    });
+    group.sort(function(a, b) { return b._pc - a._pc; });
+    var n = group.length, c1 = Math.floor(n / 3), c2 = Math.floor(2 * n / 3);
+    group.forEach(function(r, i) {
+      r.tier = i < c1 ? 1 : i < c2 ? 2 : 3;
+      r.pgrade = grade + '.' + tierLabels[r.tier];
+    });
+  });
+}
+
 function populateGradeSummary() {
   var body = document.getElementById('grade-summary-body');
   if (!body) return;
@@ -2949,22 +2982,28 @@ function populateGradeSummary() {
     var d = GEM_DATA[tk];
     rows.push({ticker: tk, grade: d.grade, gem: d.gem_score || 0, u1y: d.u1y, u5y: d.u5y});
   });
+
+  computePrecisionTiers(rows);
+
   rows.sort(function(a, b) {
     var ga = gradeRank[a.grade] != null ? gradeRank[a.grade] : 9;
     var gb = gradeRank[b.grade] != null ? gradeRank[b.grade] : 9;
     if (ga !== gb) return ga - gb;
+    if (a.tier !== b.tier) return a.tier - b.tier;
     return b.gem - a.gem;
   });
   var bgMap = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
   var fgMap = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
+  var tierDot = {1:'#2d7a2d', 2:'#b8860b', 3:'#a32d2d'};
   var html = '';
   rows.forEach(function(r, i) {
     var bg = i % 2 === 0 ? '#fff' : '#f8f9fa';
     var evColor = function(v) { return v == null ? '#888' : v > 0 ? '#3B6D11' : '#A32D2D'; };
-    var evFmt = function(v) { return v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'; };
+    var evFmt = function(v) { return v == null ? '\u2014' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'; };
+    var dot = '<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:' + (tierDot[r.tier]||'#999') + ';margin-right:3px;vertical-align:middle"></span>';
     html += '<tr style="background:' + bg + '">' +
       '<td style="padding:3px 8px;font-weight:600">' + r.ticker + '</td>' +
-      '<td style="text-align:center;padding:3px 8px"><span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + r.grade + '</span></td>' +
+      '<td style="text-align:center;padding:3px 8px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + r.pgrade + '</span></td>' +
       '<td style="text-align:right;padding:3px 8px">' + r.gem.toFixed(1) + '</td>' +
       '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
       '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u5y) + '">' + evFmt(r.u5y) + '</td>' +
