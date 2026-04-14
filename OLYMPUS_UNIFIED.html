@@ -572,22 +572,22 @@ table.master tbody tr:nth-child(3){animation-delay:.06s}table.master tbody tr:nt
 table.master tbody tr:nth-child(n+5){animation-delay:.10s}
 
 /* ── SOROS REFLEXIVITY PANEL (Master Matrix tab) ── */
-.soros-wrap{padding:16px 40px 20px;background:#070a0e;border-bottom:2px solid rgba(212,175,55,0.45);}
+.soros-wrap{padding:16px 40px 20px;background:#f8f9fa;border-bottom:2px solid rgba(212,175,55,0.45);}
 .soros-card{
-  background:linear-gradient(165deg,#05080c 0%,#0f141c 45%,#121a26 100%);
-  border:3px solid #d4af37;border-radius:14px;padding:22px 26px 20px;
-  box-shadow:0 16px 48px rgba(0,0,0,0.35),inset 0 1px 0 rgba(212,175,55,0.1);
+  background:#fff;
+  border:2px solid #d4af37;border-radius:14px;padding:22px 26px 20px;
+  box-shadow:0 4px 16px rgba(0,0,0,0.06);
 }
-.soros-h{font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.26em;text-transform:uppercase;color:#e8c547;margin-bottom:12px;}
-.soros-subh{font-size:9px;font-weight:800;letter-spacing:0.18em;color:#94a3b8;margin:14px 0 8px;text-transform:uppercase;border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;}
-.soros-line{font-size:12px;color:#e8e4dc;line-height:1.55;margin-bottom:10px;font-family:'DM Mono',monospace;}
-.soros-line .sl-main{display:block;color:#f5f0e6;font-weight:600;}
-.soros-line .sl-sub{display:block;font-size:11px;color:#94a3b8;font-weight:400;margin-top:3px;}
-.soros-line .sl-soros{display:block;font-size:10px;color:#fbbf24;margin-top:4px;font-weight:700;}
-.soros-cmd{margin-top:16px;padding-top:14px;border-top:1px solid rgba(212,175,55,0.35);font-size:14px;font-weight:800;color:#f5e6a3;font-family:'Syne',sans-serif;}
+.soros-h{font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.26em;text-transform:uppercase;color:#8b6914;margin-bottom:12px;}
+.soros-subh{font-size:9px;font-weight:800;letter-spacing:0.18em;color:#666;margin:14px 0 8px;text-transform:uppercase;border-top:1px solid rgba(212,175,55,0.2);padding-top:12px;}
+.soros-line{font-size:12px;color:#333;line-height:1.55;margin-bottom:10px;font-family:'DM Mono',monospace;}
+.soros-line .sl-main{display:block;color:#1a1a2e;font-weight:600;}
+.soros-line .sl-sub{display:block;font-size:11px;color:#666;font-weight:400;margin-top:3px;}
+.soros-line .sl-soros{display:block;font-size:10px;color:#8b6914;margin-top:4px;font-weight:700;}
+.soros-cmd{margin-top:16px;padding-top:14px;border-top:1px solid rgba(212,175,55,0.35);font-size:14px;font-weight:800;color:#1a1a2e;font-family:'Syne',sans-serif;}
 .soros-upd{font-size:9px;color:#64748b;margin-top:8px;font-family:'DM Mono',monospace;}
 .soros-gap-tight .soros-line{margin-bottom:8px;}
-.soros-gap-tight .sl-main{color:#fbbf24;font-weight:800;}
+.soros-gap-tight .sl-main{color:#8b6914;font-weight:800;}
 .mx-entry,.mx-today,.mx-vs-today,.mx-pt,.mx-soros-gap{font-family:'DM Mono',monospace;font-size:11px;}
 .mx-entry{max-width:65px;}
 .mx-today .pnow{font-size:13px;font-weight:600;}
@@ -629,9 +629,9 @@ tr.mx-row{min-height:52px;vertical-align:middle;}
 .radar-theme-ev{border-left:3px solid #eab308;padding:6px 10px;margin:6px 0;background:transparent;font-size:10px;line-height:1.45;color:var(--es-ink2);}
 .soros-line.soros-asml-priority{
   border-left:3px solid #38bdf8;padding:10px 12px 10px 14px;margin-bottom:12px;border-radius:6px;
-  background:rgba(56,189,248,0.07);
+  background:rgba(56,189,248,0.08);
 }
-.soros-line.soros-asml-priority .sl-soros{color:#38bdf8;}
+.soros-line.soros-asml-priority .sl-soros{color:#1a6fa5;}
 table.master.matrix-v2 thead th{font-size:10px;letter-spacing:0.05em;padding:8px 6px;}
 table.master.matrix-v2 td{padding:12px 8px;vertical-align:middle;}
 .mx-tk{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;}
@@ -696,8 +696,15 @@ td.mx-soros-gap.soros-cell:hover .soros-tooltip{display:block;}
 .mx-act-armed{background:rgba(255,180,0,0.15);color:#ffd700;border:1px solid rgba(255,180,0,0.4);border-radius:4px;font-weight:700;}
 .mx-tgt{font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:var(--es-ink2);}
 .mx-eval{font-size:10px;text-align:center;max-width:55px;min-width:45px;}
+.eval-track-s{background:rgba(184,134,11,0.3);color:#ffd700;padding:2px 6px;border-radius:3px;font-weight:700;}
+.eval-track-ap{background:rgba(59,109,17,0.3);color:#6abf40;padding:2px 6px;border-radius:3px;font-weight:700;}
 .eval-track-a{background:rgba(30,80,180,0.3);color:#7ab3ff;padding:2px 6px;border-radius:3px;font-weight:700;}
+.eval-track-bp{background:rgba(24,95,165,0.3);color:#5ba8e6;padding:2px 6px;border-radius:3px;font-weight:700;}
 .eval-track-b{background:rgba(180,140,20,0.3);color:#ffd700;padding:2px 6px;border-radius:3px;font-weight:700;}
+.eval-track-cp{background:rgba(133,79,11,0.3);color:#e6a817;padding:2px 6px;border-radius:3px;font-weight:700;}
+.eval-track-c{background:rgba(133,79,11,0.2);color:#d4941a;padding:2px 6px;border-radius:3px;font-weight:700;}
+.eval-track-d{background:rgba(163,45,45,0.3);color:#e05555;padding:2px 6px;border-radius:3px;font-weight:700;}
+.eval-track-f{background:rgba(163,45,45,0.4);color:#cc3333;padding:2px 6px;border-radius:3px;font-weight:700;}
 .eval-gates{font-size:9px;color:var(--es-text3);margin-top:2px;}
 .liq-header h2{color:var(--es-accent);font-size:18px;margin-bottom:4px;}
 .liq-sub{color:var(--es-text3);font-size:11px;}
@@ -780,25 +787,57 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 <!-- ═══════════════════════════════════════════════════════ -->
 <div class="tab-panel active" id="tab-matrix" style="padding:0;background:var(--es-paper);">
 
+<div id="grade-summary-panel" style="padding:12px 40px 8px;background:#fafafa;border-bottom:1px solid #e5e5e5;">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#8b6914;margin-bottom:8px;">GEM GRADE SUMMARY</div>
+  <table id="grade-summary-table" style="border-collapse:collapse;width:100%;max-width:700px;font-family:'DM Mono',monospace;font-size:11px;">
+    <thead><tr style="border-bottom:2px solid #d4af37;">
+      <th style="text-align:left;padding:3px 8px;color:#555;font-size:10px;">TICKER</th>
+      <th style="text-align:center;padding:3px 8px;color:#555;font-size:10px;">GRADE</th>
+      <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">GEM</th>
+      <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">1Y EV%</th>
+      <th style="text-align:right;padding:3px 8px;color:#555;font-size:10px;">5Y EV%</th>
+    </tr></thead>
+    <tbody id="grade-summary-body"><tr><td colspan="5" style="padding:6px;color:#999;font-style:italic">Loading…</td></tr></tbody>
+  </table>
+</div>
+
 <div class="soros-wrap">
   <div class="soros-card">
     <div class="soros-h">SOROS REFLEXIVITY PANEL</div>
-    <div class="soros-subh">🔱 Narrative gaps only (max 6)</div>
-    <div id="soros-gap-static" class="soros-gap-tight">
-      <div class="soros-line"><span class="sl-main">PLTR — 🔱 59% GAP</span><span class="sl-sub">Burry narrative vs Army $10B reality — Entry zone €95–109</span></div>
-      <div class="soros-line"><span class="sl-main">1810.HK — 🔱 41% GAP</span><span class="sl-sub">US–China tariff fear vs EV+AI smartphone reality — Hold</span></div>
-      <div class="soros-line"><span class="sl-main">UEC — ⚡ €11 LIMIT ARMED</span><span class="sl-sub">Order live — GOD does nothing until fill. Thesis intact.</span></div>
-      <div class="soros-line"><span class="sl-main">FCX — 🔱 32% GAP</span><span class="sl-sub">Iran ceasefire copper dip vs EV/AI 2040 demand — Hold $54.50 stop</span></div>
-      <div class="soros-line"><span class="sl-main">KTOS — −13.74% vs entry</span><span class="sl-sub">Defense sector pullback — not company failure. DoD cadence Q2 · drones live.</span></div>
-      <div class="soros-line"><span class="sl-main">OKLO — 🔱 60% GAP</span><span class="sl-sub">SMR skepticism vs Meta 1.2GW signed contract — Buy $44</span></div>
-      <div class="soros-line"><span class="sl-main">NVDA — 🔱 45% GAP</span><span class="sl-sub">AI capex fear vs GPU monopoly reality — Buy on pullback</span></div>
-    </div>
-    <div class="soros-subh">Outside portfolio · limits</div>
-    <div class="soros-line soros-asml-priority">
-      <span class="sl-main">🔍 ASML — BUY at €1,080 — April 16 earnings</span>
-      <span class="sl-sub">Beat = buy at market immediately. Miss = wait for dip to €1,080.</span>
-      <span class="sl-soros">This is the most important catalyst this week.</span>
-    </div>
+    <div class="soros-subh">🔱 Soros Gaps</div>
+    <table id="soros-gap-static" style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:10px;">
+      <thead><tr style="border-bottom:1px solid rgba(212,175,55,0.3);">
+        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">STOCK</th>
+        <th style="text-align:center;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">GAP</th>
+        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">SIGNAL</th>
+      </tr></thead>
+      <tbody>
+        <tr><td style="padding:3px 8px;font-weight:700">PLTR</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 59%</td><td style="padding:3px 8px">Entry zone €95–109</td></tr>
+        <tr><td style="padding:3px 8px;font-weight:700">OKLO</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 60%</td><td style="padding:3px 8px">Buy $44 — Meta 1.2GW</td></tr>
+        <tr><td style="padding:3px 8px;font-weight:700">NVDA</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 45%</td><td style="padding:3px 8px">Buy on pullback</td></tr>
+        <tr><td style="padding:3px 8px;font-weight:700">1810.HK</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 41%</td><td style="padding:3px 8px">Hold — tariff fear</td></tr>
+        <tr><td style="padding:3px 8px;font-weight:700">FCX</td><td style="text-align:center;padding:3px 8px;font-weight:800">🔱 32%</td><td style="padding:3px 8px">Hold $54.50 stop</td></tr>
+        <tr><td style="padding:3px 8px;font-weight:700">UEC</td><td style="text-align:center;padding:3px 8px;font-weight:800">⚡ ARM</td><td style="padding:3px 8px">€11 limit armed</td></tr>
+        <tr><td style="padding:3px 8px;font-weight:700">KTOS</td><td style="text-align:center;padding:3px 8px">−13.7%</td><td style="padding:3px 8px">Sector pullback — hold</td></tr>
+      </tbody>
+    </table>
+    <div class="soros-subh">Outside Portfolio · Limits</div>
+    <table style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-size:11px;margin-bottom:8px;">
+      <thead><tr style="border-bottom:1px solid rgba(212,175,55,0.3);">
+        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">STOCK</th>
+        <th style="text-align:center;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">ACTION</th>
+        <th style="text-align:right;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">LIMIT</th>
+        <th style="text-align:left;padding:4px 8px;font-size:9px;letter-spacing:0.1em;">BUDGET</th>
+      </tr></thead>
+      <tbody>
+        <tr style="border-left:3px solid #38bdf8;background:rgba(56,189,248,0.07);">
+          <td style="padding:3px 8px;font-weight:700">ASML</td>
+          <td style="text-align:center;padding:3px 8px;font-weight:800">BUY</td>
+          <td style="text-align:right;padding:3px 8px">€1,080</td>
+          <td style="padding:3px 8px">Apr 16 earnings ⚡</td>
+        </tr>
+      </tbody>
+    </table>
     <div id="soros-outside-portfolio"></div>
     <div id="soros-one-command" class="soros-cmd">⏳ Awaiting directives…</div>
     <div id="soros-updated" class="soros-upd"></div>
@@ -862,7 +901,7 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 <div class="tbl-scroll">
 <table class="master matrix-v2 matrix-v3">
 <thead><tr><th>Stock</th><th>Sector</th><th class="r">GOD</th><th class="r">EVAL</th><th class="r">Entry</th><th class="r">Today</th><th class="r">VS Today</th><th colspan="5" class="oly-tip" style="text-align:center; min-width:340px"
-    data-tip="Price Scenarios (Worst / Normal / Bull)&#10;W = Bear: Heston MC P10 for 1M/6M, EPS×PE bear for 1Y+&#10;N = Base: 50th percentile&#10;B = Bull: P90, EPS×PE bull&#10;EV = Expected Value (50%W + 30%N + 20%B)&#10;vs% = EV vs current price&#10;Weights are intentionally pessimistic.">
+    data-tip="Price Scenarios (Worst / Normal / Bull)&#10;W = Bear: Heston MC P10 for 1M/6M, EPS×PE bear for 1Y+&#10;N = Base: 50th percentile&#10;B = Bull: P90, EPS×PE bull&#10;EV = Expected Value (40%W + 40%N + 20%B)&#10;vs% = EV vs current price&#10;Weights are intentionally pessimistic.">
   SCENARIOS · W / N / B · EV · vs%
 </th><th>Soros gap</th><th>Action</th><th class="r">Target</th></tr></thead><tbody>
 <tr><td colspan="15" style="padding:0"><div class="cat-band"><div class="cdot" style="background:var(--c1)"></div><div class="cname" style="color:var(--c1)">Intelligence</div><div class="cdesc">AGI · Quantum · Neural Interfaces · Advanced Memory · AI Hardware</div></div></td></tr>
@@ -982,7 +1021,8 @@ MINERVA ACTION CHANGE RULE (permanent):
           return;
         }
         const eurLive = usd / EURUSD;
-        const pct = ((eurLive - en) / en) * 100;
+        const entryEur = en / EURUSD;
+        const pct = ((eurLive - entryEur) / entryEur) * 100;
         vsEl.innerHTML = fmtVsTodayPct(pct);
         return;
       }
@@ -994,7 +1034,8 @@ MINERVA ACTION CHANGE RULE (permanent):
           return;
         }
         const eurLive = hkd / HKD_PER_EUR;
-        const pct = ((eurLive - en) / en) * 100;
+        const entryEur = en / HKD_PER_EUR;
+        const pct = ((eurLive - entryEur) / entryEur) * 100;
         vsEl.innerHTML = fmtVsTodayPct(pct);
         return;
       }
@@ -2653,7 +2694,7 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     if (trackEl && pos && pos.gem_grade && pos.gem_grade !== '\u2014') {
       var g = pos.gem_grade;
       trackEl.textContent = g;
-      trackEl.className = 'eval-track-' + g.toLowerCase();
+      trackEl.className = 'eval-track-' + g.replace('+','p').toLowerCase();
       trackEl.classList.add('oly-tip');
       trackEl.dataset.tip = 'GEM Grade: ' + g + '\n\nA = 1y EV \u2265+20% AND 5y \u2265+100%\nB = 1y \u2265+10% AND 5y \u2265+50%\nC = Marginal | D = Fails\n\nActual: 1y=' + (pos.gem_u1y != null ? pos.gem_u1y.toFixed(1)+'%' : '?') + ' 5y=' + (pos.gem_u5y != null ? pos.gem_u5y.toFixed(1)+'%' : '?');
     }
@@ -2787,8 +2828,8 @@ window._GEM_META = {
 };
 
 function gemBadge(grade) {
-  const bg = {A:"#EAF3DE",B:"#E6F1FB",C:"#FAEEDA",D:"#FCEBEB"};
-  const fg = {A:"#3B6D11",B:"#185FA5",C:"#854F0B",D:"#A32D2D"};
+  const bg = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
+  const fg = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
   return `<span style="background:${bg[grade]||bg.D};color:${fg[grade]||fg.D};font-size:10px;font-weight:600;padding:2px 6px;border-radius:3px">${grade}</span>`;
 }
 
@@ -2861,8 +2902,66 @@ function injectGemIntoTables() {
   });
 }
 
+function updateGemGradeBar() {
+  var bar = document.getElementById('gem-grade-bar');
+  if (!bar) return;
+  var counts = {};
+  var tiers = ['S','A+','A','B+','B','C+','C','D','F'];
+  tiers.forEach(function(t){ counts[t] = 0; });
+  var keys = Object.keys(GEM_DATA);
+  keys.forEach(function(k) {
+    var g = GEM_DATA[k].grade;
+    if (counts[g] != null) counts[g]++;
+    else counts[g] = 1;
+  });
+  var bgMap = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
+  var fgMap = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
+  var html = '';
+  tiers.forEach(function(t) {
+    if (counts[t] > 0) {
+      html += '<span style="background:' + bgMap[t] + ';color:' + fgMap[t] + ';font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">' + t + ': ' + counts[t] + '</span> &nbsp; ';
+    }
+  });
+  bar.innerHTML = html;
+}
+
+function populateGradeSummary() {
+  var body = document.getElementById('grade-summary-body');
+  if (!body) return;
+  var rows = [];
+  var godScores = {};
+  document.querySelectorAll('.mx-row[data-ticker]').forEach(function(tr) {
+    var tk = tr.getAttribute('data-ticker');
+    var gn = tr.querySelector('.god-num');
+    if (tk && gn) godScores[tk] = parseFloat(gn.textContent) || 0;
+  });
+  Object.keys(GEM_DATA).forEach(function(tk) {
+    var d = GEM_DATA[tk];
+    rows.push({ticker: tk, grade: d.grade, gem: godScores[tk] || 0, u1y: d.u1y, u5y: d.u5y});
+  });
+  rows.sort(function(a, b) { return b.gem - a.gem; });
+  var bgMap = {S:"#FFF8E1","A+":"#EAF3DE",A:"#EAF3DE","B+":"#E6F1FB",B:"#E6F1FB","C+":"#FAEEDA",C:"#FAEEDA",D:"#FCEBEB",F:"#FCEBEB"};
+  var fgMap = {S:"#B8860B","A+":"#3B6D11",A:"#3B6D11","B+":"#185FA5",B:"#185FA5","C+":"#854F0B",C:"#854F0B",D:"#A32D2D",F:"#A32D2D"};
+  var html = '';
+  rows.forEach(function(r, i) {
+    var bg = i % 2 === 0 ? '#fff' : '#f8f9fa';
+    var evColor = function(v) { return v == null ? '#888' : v > 0 ? '#3B6D11' : '#A32D2D'; };
+    var evFmt = function(v) { return v == null ? '—' : (v > 0 ? '+' : '') + v.toFixed(1) + '%'; };
+    html += '<tr style="background:' + bg + '">' +
+      '<td style="padding:3px 8px;font-weight:600">' + r.ticker + '</td>' +
+      '<td style="text-align:center;padding:3px 8px"><span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:10px;font-weight:600;padding:1px 5px;border-radius:3px">' + r.grade + '</span></td>' +
+      '<td style="text-align:right;padding:3px 8px">' + r.gem.toFixed(1) + '</td>' +
+      '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
+      '<td style="text-align:right;padding:3px 8px;color:' + evColor(r.u5y) + '">' + evFmt(r.u5y) + '</td>' +
+      '</tr>';
+  });
+  body.innerHTML = html;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   setTimeout(injectGemIntoTables, 300);
+  setTimeout(updateGemGradeBar, 400);
+  setTimeout(populateGradeSummary, 500);
 });
 </script>
 
@@ -2871,7 +2970,7 @@ document.addEventListener('DOMContentLoaded', function() {
     <div>
       <span style="font-weight:600;color:#333">MINERVA_GEM</span>
       <span style="color:#888;margin:0 6px">·</span>
-      <span style="background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">A: 0</span> &nbsp; <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">B: 0</span> &nbsp; <span style="background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">C: 3</span> &nbsp; <span style="background:#FCEBEB;color:#A32D2D;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">D: 13</span>
+      <span id="gem-grade-bar"></span>
     </div>
     <div style="color:#888;font-size:11px">
       Last run: 2026-04-13 23:36
