@@ -96,13 +96,20 @@
   font-family: 'Barlow', sans-serif;
   font-weight: 500;
 }
-.gem-sowhat-cell a,
-.gem-sowhat-cell span.gem-sowhat-link {
+.gem-sowhat-cell a.gem-sowhat-link {
   color: #0d4a8c;
   font-weight: 600;
   text-decoration: underline;
   text-underline-offset: 2px;
+  cursor: pointer;
 }
+.gem-sowhat-cell a.gem-sowhat-link:hover { color: #063a73; }
+.gem-sowhat-cell a.gem-sowhat-link:focus {
+  outline: 2px solid #d4af37;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+#risk-heatmap-panel tr[id^="gem-risk-"] { scroll-margin-top: 76px; }
 /* GEM grade summary — readability (larger type, contrast, row rhythm) */
 #grade-summary-panel {
   font-family: 'Barlow', sans-serif;
@@ -2082,6 +2089,11 @@ function olyEsc(s) {
     .replace(/"/g, "&quot;");
 }
 
+/** Stable DOM id for risk heatmap row — matches SO WHAT link focus */
+function gemRiskDomId(ticker) {
+  return "gem-risk-" + String(ticker || "").replace(/[^a-zA-Z0-9]+/g, "_");
+}
+
 const BLOG_TICKERS_JSON_URLS = [
   "http://5.189.176.185/data/blog_tickers.json",
   "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/data/blog_tickers.json",
@@ -3419,8 +3431,16 @@ function _renderGradeSummaryTable(body, riskMap) {
     var rl = (riskMap && riskMap[r.ticker]) ? riskMap[r.ticker] : (r.risk_level || 'UNKNOWN');
     var riskBadge = '<span style="display:inline-block;min-width:4.5em;background:' + (riskBg[rl]||riskBg.UNKNOWN) + ';color:' + (riskFg[rl]||riskFg.UNKNOWN) + ';font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px;letter-spacing:0.04em;border:1px solid rgba(0,0,0,0.06)">' + rl + '</span>';
     var sow = soWhatToDo(r.grade, rl, r.u1yNum, r.gem, serverPG);
-    var sowTip = (sow.tip || '').replace(/"/g, '&quot;');
-    var sowLine = (sow.line || '—').replace(/</g, '&lt;');
+    var sowTip = (sow.tip || "").replace(/"/g, "&quot;");
+    var sowLine = olyEsc(sow.line || "—");
+    var sowAnchor =
+      '<a href="#risk-heatmap-panel" class="gem-sowhat-link" data-gem-focus="' +
+      olyEsc(r.ticker) +
+      '" title="' +
+      sowTip +
+      '">' +
+      sowLine +
+      "</a>";
     html += '<tr style="background:' + bg + '">' +
       '<td style="padding:8px 10px;font-weight:700;font-size:13px;color:#14120e">' + r.ticker + nameHtml + '</td>' +
       '<td style="text-align:center;padding:8px 10px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px">' + serverPG + '</span></td>' +
@@ -3428,7 +3448,7 @@ function _renderGradeSummaryTable(body, riskMap) {
       '<td style="text-align:right;padding:8px 10px;font-size:13px;font-weight:600;color:#1a1a1a">' + r.gem.toFixed(1) + '</td>' +
       '<td style="text-align:right;padding:8px 10px;font-size:13px;font-weight:600;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
       '<td style="text-align:right;padding:8px 10px;font-size:13px;font-weight:600;color:' + evColor(r.u5y) + '">' + evFmt(r.u5y) + '</td>' +
-      '<td class="gem-sowhat-cell" style="padding:8px 10px" title="' + sowTip + '"><span class="gem-sowhat-link">' + sowLine + '</span></td>' +
+      '<td class="gem-sowhat-cell" style="padding:8px 10px">' + sowAnchor + '</td>' +
       '</tr>';
   });
   body.innerHTML = html;
@@ -3466,7 +3486,7 @@ function loadRiskHeatmap() {
       entries.forEach(function(e, idx) {
         var tk = e[0], r = e[1];
         var bg = idx % 2 === 0 ? '' : ' style="background:#f8f9fa"';
-        html += '<tr'+bg+'><td style="padding:2px 6px;font-weight:700;font-size:11px">'+tk+'</td>';
+        html += '<tr id="' + gemRiskDomId(tk) + '"' + bg + '><td style="padding:2px 6px;font-weight:700;font-size:11px">' + tk + "</td>";
         dims.forEach(function(d) {
           var s = (r.scores && r.scores[d] != null) ? r.scores[d] : 5;
           var c = riskCellColor(s);
@@ -3521,6 +3541,30 @@ function scheduleGemBoot() {
     if (tries >= 24 || (!gStuck && !rStuck)) clearInterval(watchdog);
   }, 1500);
 }
+
+(function initGemSowhatAnchorClicks() {
+  document.addEventListener("click", function (ev) {
+    var a = ev.target.closest("a.gem-sowhat-link[data-gem-focus]");
+    if (!a) return;
+    ev.preventDefault();
+    var tk = a.getAttribute("data-gem-focus");
+    if (!tk) return;
+    var panel = document.getElementById("risk-heatmap-panel");
+    var row = document.getElementById(gemRiskDomId(tk));
+    if (panel) panel.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (row) {
+      setTimeout(function () {
+        row.scrollIntoView({ behavior: "smooth", block: "center" });
+        row.style.transition = "background-color 0.35s ease";
+        row.style.backgroundColor = "rgba(212, 175, 55, 0.28)";
+        setTimeout(function () {
+          row.style.backgroundColor = "";
+        }, 1400);
+      }, 120);
+    }
+  });
+})();
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', scheduleGemBoot);
 } else {
