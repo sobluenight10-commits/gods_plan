@@ -37,6 +37,26 @@ INTERVAL = 60
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN", "")
 TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID", "")
 
+def _watchlist_only_from_config():
+    """
+    Tickers in THESIS_ALERT_TICKERS but not in PORTFOLIO holdings — matches
+    Master Matrix watchlist (no broker core position). Used to soften EXIT copy.
+    """
+    try:
+        from config import PORTFOLIO, THESIS_ALERT_TICKERS
+
+        held = set()
+        for _bk, lst in PORTFOLIO.items():
+            for p in lst:
+                held.add(p["ticker"])
+        return frozenset(t for t in THESIS_ALERT_TICKERS if t not in held)
+    except Exception:
+        return frozenset()
+
+
+WATCHLIST_ONLY_TICKERS = _watchlist_only_from_config()
+
+
 SECTOR_MAP = {
     "PLTR": "Intelligence", "TSM": "Intelligence", "000660.KS": "Intelligence",
     "NVDA": "Intelligence", "1810.HK": "Intelligence", "ASML": "Infra",
@@ -236,15 +256,27 @@ def detect_correlated_signals(state, prices, skills):
         if grade in ("D", "F") and chg <= -2.0:
             key = f"exit_{ticker}"
             if _alert_cooldown_ok(state, key, 120):
+                wl = ticker in WATCHLIST_ONLY_TICKERS
+                foot = (
+                    "<i>Watchlist only (no core PORTFOLIO line) — pass on adding / "
+                    "trim spec thesis; not a full position exit.</i>"
+                    if wl
+                    else "<i>Low grade + declining price = consider exit</i>"
+                )
+                title = (
+                    f"\u26A0\uFE0F <b>EXIT / PASS SIGNAL: {ticker}</b>"
+                    if wl
+                    else f"\u26A0\uFE0F <b>EXIT SIGNAL: {ticker}</b>"
+                )
                 alerts.append({
                     "type": "EXIT_SIGNAL",
                     "ticker": ticker,
                     "severity": "HIGH",
                     "msg": (
-                        f"\u26A0\uFE0F <b>EXIT SIGNAL: {ticker}</b>\n"
+                        f"{title}\n"
                         f"GEM Grade: {grade} + Price: {chg:+.1f}%\n"
                         f"Risk: {risk_level}\n"
-                        f"<i>Low grade + declining price = consider exit</i>"
+                        f"{foot}"
                     ),
                     "key": key,
                 })
