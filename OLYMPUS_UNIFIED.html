@@ -2985,6 +2985,11 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
   function applyEvalTip(tr, pos) {
     var evalCell = tr.querySelector('.mx-eval');
     if (!evalCell) return;
+    var ticker = tr.getAttribute('data-ticker');
+    /* Single source of truth: inject_gem GEM_DATA — do not overwrite with stale dashboard_state gem_grade */
+    if (typeof GEM_DATA !== 'undefined' && ticker && GEM_DATA[ticker]) {
+      return;
+    }
     var trackEl = evalCell.querySelector('[class*="eval-track"]');
     if (trackEl && pos && pos.gem_grade && pos.gem_grade !== '\u2014') {
       var g = pos.gem_grade;
@@ -3073,6 +3078,8 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
       var actionText = pos.action || (tr.querySelector('.mx-act') ? tr.querySelector('.mx-act').textContent.trim() : 'HOLD');
       applyActionTip(tr, actionText);
     });
+    /* Re-apply MINERVA_GEM letter + score after live dashboard inject (prevents detached letter vs GEM sub-row) */
+    if (typeof syncEvalWithGem === 'function') syncEvalWithGem();
   }
 
   fetch('/data/dashboard_state.json?t=' + Date.now())
