@@ -860,6 +860,20 @@ td:has(.mx-act) { min-width: 110px; white-space: nowrap; vertical-align: middle;
 }
 .oly-tip:hover::after { opacity: 1; }
 .scenario-tbl td.oly-tip::after { left: 0; transform: none; }
+/* Matrix GOD + EVAL — tooltips stay on-screen in narrow columns */
+td.r .mx-godwrap.oly-tip::after {
+  left: auto;
+  right: 0;
+  transform: none;
+  min-width: 300px;
+  max-width: min(420px, 92vw);
+}
+td.mx-eval.oly-tip::after {
+  left: 50%;
+  transform: translateX(-50%);
+  min-width: 300px;
+  max-width: min(440px, 94vw);
+}
 
 </style>
 </head>
@@ -3230,6 +3244,46 @@ function injectGemIntoTables() {
   });
 }
 
+/** Hover on GOD bar + GEM EVAL — same “SO WHAT” engine as grade summary */
+function applyMatrixGodEvalHoverTips(tr, d, ticker, rl) {
+  var u1n = d.u1y != null ? Number(d.u1y) : null;
+  var sow = soWhatToDo(d.grade, rl, u1n, d.gem_score, d.pgrade || d.grade);
+  var thesis = typeof matrixThesisLine === "function" ? matrixThesisLine(ticker) : "";
+  var gNum = tr.querySelector(".god-num");
+  var gtxt = gNum ? gNum.textContent.trim() : "";
+  var godLines = [
+    "GOD " + gtxt + " — qualitative thesis strength (0–100). Separate from MINERVA_GEM letter/score in EVAL →",
+    thesis ? "Matrix thesis: " + thesis : "",
+    "",
+    "SO WHAT — " + sow.line,
+    sow.tip,
+  ]
+    .filter(function (x) {
+      return x !== "";
+    })
+    .join("\n");
+  var godWrap = tr.querySelector(".mx-godwrap");
+  if (godWrap) {
+    godWrap.classList.add("oly-tip");
+    godWrap.setAttribute("data-tip", godLines);
+  }
+  var evalCell = tr.querySelector(".mx-eval");
+  if (!evalCell) return;
+  var evalLines = [
+    "MINERVA_GEM — this column",
+    "Letter " + d.grade + " · " + (d.gem_score != null ? d.gem_score.toFixed(1) + "/100" : "—"),
+    "Risk (9-dim): " + rl,
+    "1Y EV: " + (d.u1y != null ? d.u1y.toFixed(1) + "%" : "—") + " · 5Y EV: " + (d.u5y != null ? d.u5y.toFixed(1) + "%" : "—"),
+    "",
+    "SO WHAT — " + sow.line,
+    sow.tip,
+    "",
+    "Same logic as § GEM Grade Summary · Not personalized advice.",
+  ].join("\n");
+  evalCell.classList.add("oly-tip");
+  evalCell.setAttribute("data-tip", evalLines);
+}
+
 function syncEvalWithGem() {
   var gradeClass = {
     S:"eval-track-s","A+":"eval-track-ap",A:"eval-track-a",
@@ -3245,12 +3299,15 @@ function syncEvalWithGem() {
     var evalCell = tr.querySelector('.mx-eval');
     if (!evalCell) return;
     var cls = gradeClass[d.grade] || 'eval-track-b';
-    var rl = d.risk_level || '';
+    var rl = (typeof window !== 'undefined' && window.__riskMapGem && window.__riskMapGem[ticker])
+      ? window.__riskMapGem[ticker]
+      : (d.risk_level || 'UNKNOWN');
     var rIcon = riskDot[rl] || '';
     evalCell.innerHTML = '<span class="' + cls + '">' + d.grade + '</span>' +
       (rIcon ? '<span style="font-size:8px;margin-left:2px" title="Risk: ' + rl + '">' + rIcon + '</span>' : '') +
       '<div class="eval-gates" style="font-size:9px;color:#888;margin-top:2px">' +
       (d.gem_score ? d.gem_score.toFixed(1) + '/100' : '') + '</div>';
+    applyMatrixGodEvalHoverTips(tr, d, ticker, rl);
   });
 }
 
@@ -3410,7 +3467,9 @@ function populateGradeSummary() {
   if (!body) return;
   _fetchRiskLevelMap().then(function(riskMap) {
     try {
+      window.__riskMapGem = riskMap || {};
       _renderGradeSummaryTable(body, riskMap);
+      if (typeof syncEvalWithGem === 'function') syncEvalWithGem();
     } catch (err) {
       console.error('populateGradeSummary', err);
       body.innerHTML = '<tr><td colspan="7" style="padding:10px;color:#a32d2d;font-size:13px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
@@ -3529,8 +3588,10 @@ function loadRiskHeatmap() {
       var entries = Object.entries(data.results);
       entries.sort(function(a,b) { return (b[1].avg_risk||0) - (a[1].avg_risk||0); });
       var html = '';
+      window.__riskMapGem = {};
       entries.forEach(function(e, idx) {
         var tk = e[0], r = e[1];
+        if (r && r.risk_level) window.__riskMapGem[tk] = String(r.risk_level).toUpperCase().trim();
         var bg = idx % 2 === 0 ? '' : ' style="background:#f8f9fa"';
         html += '<tr id="' + gemRiskDomId(tk) + '"' + bg + '><td style="padding:2px 6px;font-weight:700;font-size:11px">' + tk + "</td>";
         dims.forEach(function(d) {
@@ -3543,6 +3604,7 @@ function loadRiskHeatmap() {
         html += '<td style="padding:2px 6px">'+riskLevelBadge(r.risk_level||'UNKNOWN')+'</td></tr>';
       });
       tbody.innerHTML = html || '<tr><td colspan="12" style="padding:6px;color:#999">No risk data yet</td></tr>';
+      if (typeof syncEvalWithGem === 'function') syncEvalWithGem();
       if (typeof populateGradeSummary === 'function') populateGradeSummary();
     })
     .catch(function(e) {
