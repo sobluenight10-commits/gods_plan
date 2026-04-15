@@ -90,7 +90,7 @@
 .gem-sowhat-cell {
   font-size: 12px;
   line-height: 1.45;
-  max-width: 220px;
+  max-width: 300px;
   text-align: left !important;
   color: var(--es-ink2);
   font-family: 'Barlow', sans-serif;
@@ -102,6 +102,12 @@
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  max-width: 300px;
+  line-height: 1.4;
 }
 .gem-sowhat-cell a.gem-sowhat-link:hover { color: #063a73; }
 .gem-sowhat-cell a.gem-sowhat-link:focus {
@@ -3360,6 +3366,20 @@ function computePrecisionTiers(rows) {
 }
 
 /** Merge /data/skill_results/risk_latest.json over GEM row risk_level for display. */
+/** Master Matrix row `title` = one-line thesis — each name's story */
+function matrixThesisLine(ticker) {
+  var tk = String(ticker || "");
+  if (!tk) return "";
+  var rows = document.querySelectorAll("tr.mx-row[data-ticker]");
+  for (var i = 0; i < rows.length; i++) {
+    if (rows[i].getAttribute("data-ticker") === tk) {
+      var t = rows[i].getAttribute("title") || "";
+      return t.replace(/\s+/g, " ").trim();
+    }
+  }
+  return "";
+}
+
 function _fetchRiskLevelMap() {
   var origin = (typeof window !== 'undefined' && window.location && window.location.origin) ? window.location.origin : '';
   var riskUrl = origin + '/data/skill_results/risk_latest.json?t=' + Date.now();
@@ -3431,8 +3451,27 @@ function _renderGradeSummaryTable(body, riskMap) {
     var rl = (riskMap && riskMap[r.ticker]) ? riskMap[r.ticker] : (r.risk_level || 'UNKNOWN');
     var riskBadge = '<span style="display:inline-block;min-width:4.5em;background:' + (riskBg[rl]||riskBg.UNKNOWN) + ';color:' + (riskFg[rl]||riskFg.UNKNOWN) + ';font-size:10px;font-weight:700;padding:3px 7px;border-radius:4px;letter-spacing:0.04em;border:1px solid rgba(0,0,0,0.06)">' + rl + '</span>';
     var sow = soWhatToDo(r.grade, rl, r.u1yNum, r.gem, serverPG);
-    var sowTip = (sow.tip || "").replace(/"/g, "&quot;");
-    var sowLine = olyEsc(sow.line || "—");
+    var thesis = matrixThesisLine(r.ticker);
+    var dgem = GEM_DATA[r.ticker];
+    var sowLineRaw;
+    var sowTipFull;
+    if (thesis) {
+      sowLineRaw = thesis.length > 120 ? thesis.slice(0, 117) + "…" : thesis;
+      sowTipFull =
+        "Matrix thesis: " +
+        thesis +
+        " · GEM hint: " +
+        (sow.tip || sow.line) +
+        (dgem && dgem.mode ? " · Mode: " + dgem.mode : "");
+    } else {
+      sowLineRaw = sow.line || "—";
+      sowTipFull =
+        (sow.tip || sow.line) +
+        (dgem && dgem.mode ? " · " + dgem.mode : "") +
+        " (no matrix row — name only in GEM run)";
+    }
+    var sowTip = olyEsc(sowTipFull);
+    var sowLine = olyEsc(sowLineRaw);
     var sowAnchor =
       '<a href="#risk-heatmap-panel" class="gem-sowhat-link" data-gem-focus="' +
       olyEsc(r.ticker) +
