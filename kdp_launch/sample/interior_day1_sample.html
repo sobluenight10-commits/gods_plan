@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<!-- interior_day1_sample.html v4 — black 1px rules, 3+3 lines, 40/60 split — 2026-04-16 -->
+<!-- Mirror of: D:\AI\Claude\Code\kdp-automation\Self-console book\sample\interior_day1_sample.html -->
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <title>HOME TO MYSELF — Interior sample (Day 1)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Great+Vibes&family=Josefin+Sans:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <style>
+    @page { size: 6in 9in; margin: 0; }
+    * { box-sizing: border-box; }
+    html { background: #2e2a26; }
+    body {
+      margin: 0;
+      padding: 16px 12px 24px;
+      font-family: "Josefin Sans", "Segoe UI", sans-serif;
+      color: #1a1816;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* ---- Page: cream paper + noise + binding edge ---- */
+    .sheet-wrap {
+      width: 6in;
+      margin: 0 auto;
+      position: relative;
+      filter: drop-shadow(0 12px 28px rgba(0,0,0,.45));
+    }
+    .sheet {
+      width: 6in;
+      min-height: 9in;
+      position: relative;
+      padding: 0.36in 0.4in 0.4in 0.48in;
+      background-color: #f3ece2;
+      background-image:
+        linear-gradient(115deg, rgba(255,255,255,.55) 0%, transparent 42%, rgba(212,188,106,.06) 100%),
+        radial-gradient(ellipse 120% 80% at 100% 0%, rgba(255,255,255,.25), transparent 55%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      border: 1px solid rgba(180, 160, 130, 0.45);
+    }
+    /* Spiral / perforated binding strip */
+    .binding-edge {
+      position: absolute;
+      left: 0;
+      top: 0.2in;
+      bottom: 0.2in;
+      width: 0.14in;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent 0,
+        transparent 10px,
+        rgba(140, 120, 100, 0.22) 10px,
+        rgba(140, 120, 100, 0.22) 11px
+      );
+      pointer-events: none;
+    }
+    .binding-edge::before {
+      content: "";
+      position: absolute;
+      left: 3px;
+      top: 0;
+      bottom: 0;
+      width: 8px;
+      background: repeating-radial-gradient(
+        circle at 50% 9px,
+        rgba(90, 78, 65, 0.2) 0 2px,
+        transparent 2.5px 18px
+      );
+    }
+
+    /* Gold corner flourishes */
+    .ornament {
+      position: absolute;
+      width: 0.45in;
+      height: 0.45in;
+      opacity: 0.35;
+      color: #b8954a;
+      font-family: Georgia, serif;
+      font-size: 22pt;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .orn-tl { top: 0.06in; left: 0.2in; }
+    .orn-tr { top: 0.06in; right: 0.08in; transform: scaleX(-1); }
+    .orn-bl { bottom: 0.06in; left: 0.2in; transform: scaleY(-1); }
+    .orn-br { bottom: 0.06in; right: 0.08in; transform: scale(-1); }
+
+    .reg {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: #c4a052;
+      opacity: 0.85;
+      z-index: 2;
+    }
+    .reg-tl { top: 0.1in; left: 0.22in; }
+    .reg-tr { top: 0.1in; right: 0.1in; }
+    .reg-bl { bottom: 0.1in; left: 0.22in; }
+    .reg-br { bottom: 0.1in; right: 0.1in; }
+    .gold-dot-br {
+      position: absolute;
+      bottom: 0.13in;
+      right: 0.12in;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #c4a052;
+      z-index: 2;
+    }
+
+    .watermark {
+      text-align: center;
+      font-size: 6pt;
+      color: #8a8278;
+      margin-bottom: 10px;
+    }
+
+    /* Header */
+    .page-head { margin-bottom: 0.1in; position: relative; z-index: 1; }
+    .head-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.12in;
+    }
+    .head-left {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 0.08in;
+    }
+    .head-title {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 10.5pt;
+      font-weight: 700;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      color: #9a7b3a;
+      line-height: 1.2;
+    }
+    .chk {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid #b8954a;
+      color: #b8954a;
+      font-size: 9px;
+      flex-shrink: 0;
+    }
+
+    .date-cell { flex-shrink: 0; min-width: 1.4in; }
+    .date-cell label {
+      display: block;
+      font-size: 6.5pt;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #8a8278;
+      margin-bottom: 2px;
+    }
+    .date-line {
+      border-bottom: 1px solid #a89880;
+      min-height: 0.15in;
+    }
+
+    .gold-rule {
+      border: none;
+      border-top: 1px solid #d4bc6a;
+      margin: 0.09in 0 0.1in;
+      opacity: 0.95;
+    }
+
+    /* A B C */
+    .block { margin-bottom: 0.08in; position: relative; z-index: 1; }
+    .block-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.05in;
+    }
+    .block-label { display: flex; flex-direction: column; gap: 2px; }
+    .letter {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 15pt;
+      font-weight: 700;
+      color: #b8954a;
+      line-height: 1;
+    }
+    .aph-caps {
+      font-size: 6.5pt;
+      font-weight: 600;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #b8954a;
+    }
+    .aph-sub {
+      font-size: 7.5pt;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #a08040;
+      margin-top: 1px;
+    }
+
+    .block-body {
+      display: flex;
+      gap: 0.08in;
+      align-items: stretch;
+    }
+    /* Slightly narrower quote column so writing cells gain width (balance) */
+    .quote-col {
+      flex: 0 1 40%;
+      max-width: 40%;
+      min-width: 0;
+    }
+    .quote-bold {
+      font-family: "Josefin Sans", sans-serif;
+      font-size: 8.5pt;
+      font-weight: 700;
+      line-height: 1.45;
+      color: #121210;
+      margin: 0;
+      padding: 0.06in 0 0;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .quote-bold .src {
+      display: block;
+      font-size: 6pt;
+      font-weight: 400;
+      letter-spacing: 0.1em;
+      color: #6b645c;
+      margin-top: 0.08in;
+      text-transform: none;
+    }
+
+    .journal-box {
+      flex: 1 1 60%;
+      min-width: 0;
+      border: 1px solid #000;
+      padding: 0.07in 0.11in 0.09in;
+      background: rgba(255,255,255,0.42);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.6);
+    }
+    .journal-box .lbl {
+      font-size: 6.5pt;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: #3a3632;
+      margin: 0.05in 0 0.03in;
+    }
+    .journal-box .lbl:first-child { margin-top: 0; }
+
+    /* Writing lines: solid #000 (repeat every 1.18em — reads black in all browsers / print) */
+    .ruled {
+      font-size: 9pt;
+      line-height: 1.18em;
+      min-height: calc(1.18em * var(--rows, 1));
+      color: transparent;
+      background-color: transparent;
+      background-image: repeating-linear-gradient(
+        to bottom,
+        #000000 0,
+        #000000 1px,
+        transparent 1px,
+        transparent 1.18em
+      );
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    /* Section D: two-column like above */
+    .final-wrap {
+      margin-top: 0.08in;
+      padding-top: 0.08in;
+      border-top: 1px solid #d4bc6a;
+      position: relative;
+      z-index: 1;
+    }
+    .final-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 0.06in;
+    }
+    .final-title-block {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .final-letter {
+      font-family: "Cormorant Garamond", Georgia, serif;
+      font-size: 15pt;
+      font-weight: 700;
+      color: #b8954a;
+      line-height: 1;
+    }
+    .final-h {
+      font-family: "Great Vibes", cursive;
+      font-size: 17pt;
+      color: #3d3528;
+      line-height: 1.15;
+      margin: 0.04in 0 0;
+    }
+    .moon {
+      font-size: 14pt;
+      opacity: 0.45;
+      margin-left: 0.06in;
+    }
+    .final-body {
+      display: flex;
+      gap: 0.08in;
+      align-items: stretch;
+    }
+    .final-aside {
+      flex: 0 1 40%;
+      max-width: 40%;
+      min-width: 0;
+      padding-top: 0.04in;
+    }
+    .final-aside .night-line {
+      font-family: "Cormorant Garamond", serif;
+      font-size: 9pt;
+      font-style: italic;
+      color: #6b6258;
+      margin: 0;
+      line-height: 1.35;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 6.5pt;
+      letter-spacing: 0.06em;
+      color: #5c564e;
+      margin-top: 0.12in;
+      padding-top: 0.08in;
+      border-top: 1px solid rgba(212, 188, 106, 0.45);
+      position: relative;
+      z-index: 1;
+    }
+
+    @media print {
+      body { padding: 0; background: #fff; }
+      .sheet-wrap { filter: none; }
+      .sheet {
+        border: none;
+        box-shadow: none;
+      }
+      .watermark { opacity: 0.35; }
+    }
+  </style>
+</head>
+<body>
+  <p class="watermark">SAMPLE v4 — black rules · 3+3 lines · wide cell (40/60). If this looks unchanged, hard-refresh: Ctrl+F5.</p>
+
+  <div class="sheet-wrap">
+    <div class="sheet">
+      <div class="binding-edge" aria-hidden="true"></div>
+      <span class="ornament orn-tl" aria-hidden="true">&#10086;</span>
+      <span class="ornament orn-tr" aria-hidden="true">&#10086;</span>
+      <span class="ornament orn-bl" aria-hidden="true">&#10086;</span>
+      <span class="ornament orn-br" aria-hidden="true">&#10086;</span>
+
+      <div class="reg reg-tl"></div><div class="reg reg-tr"></div>
+      <div class="reg reg-bl"></div><div class="reg reg-br"></div>
+      <div class="gold-dot-br"></div>
+
+      <header class="page-head">
+        <div class="head-row">
+          <div class="head-left">
+            <span class="head-title">[MONDAY]: A SACRED RECLAMATION</span>
+            <span class="chk" title="done">&#10003;</span>
+          </div>
+          <div class="date-cell">
+            <label for="d">Date</label>
+            <div class="date-line" id="d"></div>
+          </div>
+        </div>
+        <hr class="gold-rule" />
+      </header>
+
+      <!-- A: MY THOUGHTS 3 lines + MY IMPLEMENTATION 3 lines (black rules, wide cell) -->
+      <section class="block">
+        <div class="block-top">
+          <div class="block-label">
+            <span class="letter">A</span>
+            <span class="aph-caps">Aphorism</span>
+            <span class="aph-sub">morning &mdash; The Release</span>
+          </div>
+          <span class="chk">&#10003;</span>
+        </div>
+        <div class="block-body">
+          <div class="quote-col">
+            <p class="quote-bold">You are not a backup plan for your own life.<span class="src">[ source ]</span></p>
+          </div>
+          <div class="journal-box">
+            <div class="lbl">My thoughts</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+            <div class="lbl">My implementation plan</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+          </div>
+        </div>
+        <hr class="gold-rule" />
+      </section>
+
+      <section class="block">
+        <div class="block-top">
+          <div class="block-label">
+            <span class="letter">B</span>
+            <span class="aph-caps">Aphorism</span>
+            <span class="aph-sub">afternoon &mdash; The Radical Center</span>
+          </div>
+          <span class="chk">&#10003;</span>
+        </div>
+        <div class="block-body">
+          <div class="quote-col">
+            <p class="quote-bold">Your needs are not an inconvenience.<span class="src">[ source ]</span></p>
+          </div>
+          <div class="journal-box">
+            <div class="lbl">My thoughts</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+            <div class="lbl">My implementation plan</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+          </div>
+        </div>
+        <hr class="gold-rule" />
+      </section>
+
+      <section class="block">
+        <div class="block-top">
+          <div class="block-label">
+            <span class="letter">C</span>
+            <span class="aph-caps">Aphorism</span>
+            <span class="aph-sub">evening &mdash; Welcome Home</span>
+          </div>
+          <span class="chk">&#10003;</span>
+        </div>
+        <div class="block-body">
+          <div class="quote-col">
+            <p class="quote-bold">You survived every hard day before this one.<span class="src">[ source ]</span></p>
+          </div>
+          <div class="journal-box">
+            <div class="lbl">My thoughts</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+            <div class="lbl">My implementation plan</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+          </div>
+        </div>
+        <hr class="gold-rule" />
+      </section>
+
+      <!-- D: Your aphorism — good night -->
+      <section class="final-wrap">
+        <div class="final-head">
+          <div class="final-title-block">
+            <span class="final-letter">D</span>
+            <p class="final-h">Your aphorism &mdash; good night<span class="moon" aria-hidden="true">&#9790;</span></p>
+          </div>
+          <span class="chk">&#10003;</span>
+        </div>
+        <div class="final-body">
+          <div class="final-aside">
+            <p class="night-line">Close the day in your own words. Let this be the line you carry into sleep.</p>
+          </div>
+          <div class="journal-box">
+            <div class="lbl">Why this aphorism</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+            <div class="lbl">My implement this</div>
+            <div class="ruled" style="--rows:3" aria-hidden="true">&nbsp;</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer">THIS BOOK IS ONLY FOR ME &nbsp;|&nbsp; Kai Greatwhite &nbsp;|&nbsp; -p2-</div>
+    </div>
+  </div>
+</body>
+</html>
