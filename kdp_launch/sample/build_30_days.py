@@ -3,8 +3,8 @@ Generate interior_30_days.html — HOME TO MYSELF interior.
 
 - Weekday + Day n of 30 + date header (gold serif; red checkbox).
 - Full-page hero: your umbrella line-art embedded as CSS background (portable HTML).
-- Sections A/B/C: script subtitles, daily aphorisms from quote bank, journal (1 line thoughts + 2 lines implementation) per your comp.
-- Section D: night prompt + full-width journal (1 + 1 lines). Footer with flourishes.
+- Sections A/B/C: journal box = labeled line for thoughts, labeled line for implementation, then two blank ruled lines (four lines total in box).
+- Section D: full-width box; three ruled lines (why / my implement this / spare). Red checkbox on D. Footer with flourishes.
 
 Book 1 days 1–30: global quote IDs (N-1)*3+1 … +3. Source: kdp_launch/quotes_src/*.txt
 
@@ -111,11 +111,11 @@ def _png_data_uri(png_path: Path) -> str:
     return f"url('data:image/png;base64,{b64}')"
 
 
-# __ART_BG__ embedded once for portable HTML
+# __ART_BG__ embedded once for portable HTML (hero strip only — not full-bleed)
 _CSS_TEMPLATE = r'''  <style>
     @page { size: 6in 9in; margin: 0; }
     * { box-sizing: border-box; }
-    html { background: #333; }
+    html { background: #e8e8e8; }
     body {
       margin: 0;
       padding: 12px 0 24px;
@@ -133,36 +133,27 @@ _CSS_TEMPLATE = r'''  <style>
       overflow: hidden;
       box-shadow: 0 8px 32px rgba(0,0,0,.35);
       page-break-after: always;
-      background-color: #fafafa;
-      background-image: __ART_BG__;
-      background-size: cover;
-      background-position: center center;
-      background-repeat: no-repeat;
-    }
-
-    /* Light readability veil — art stays visible mid-page */
-    .day-veil {
-      position: absolute;
-      inset: 0;
-      background: linear-gradient(
-        180deg,
-        rgba(255,255,255,0.94) 0%,
-        rgba(255,255,255,0.78) 12%,
-        rgba(255,255,255,0.42) 38%,
-        rgba(255,255,255,0.5) 62%,
-        rgba(255,255,255,0.88) 100%
-      );
-      pointer-events: none;
-      z-index: 0;
+      background-color: #ffffff;
     }
 
     .day-stack {
-      position: relative;
-      z-index: 1;
       min-height: 9in;
-      padding: 0.28in 0.34in 0.32in;
+      padding: 0.28in 0.36in 0.32in;
       display: flex;
       flex-direction: column;
+      background: #fff;
+    }
+
+    /* Hero art only in this band — crisp print, no full-page wash or “ghost” layers */
+    .day-hero {
+      height: 2.35in;
+      margin: 0 0 0.1in;
+      background-color: #f5f5f5;
+      background-image: __ART_BG__;
+      background-size: contain;
+      background-position: center center;
+      background-repeat: no-repeat;
+      border: 1px solid #e0e0e0;
     }
 
     .day-top {
@@ -203,10 +194,10 @@ _CSS_TEMPLATE = r'''  <style>
       flex-shrink: 0;
       margin-left: 0.06in;
     }
-    /* Section checkboxes — neutral grey per layered interior comp */
+    /* A–C: grey tick boxes; D uses default red .chk */
     .chk-body {
-      border-color: #6e6e6e;
-      color: #6e6e6e;
+      border-color: #444444;
+      color: #444444;
     }
     .date-cell { min-width: 1.35in; }
     .date-cell label {
@@ -255,6 +246,7 @@ _CSS_TEMPLATE = r'''  <style>
       flex: 0 1 31%;
       max-width: 31%;
       min-width: 0;
+      background: #fff;
     }
     .quote-bold {
       font-family: "Josefin Sans", sans-serif;
@@ -266,7 +258,6 @@ _CSS_TEMPLATE = r'''  <style>
       margin: 0;
       padding-top: 0.04in;
       color: #000;
-      text-shadow: 0 0 6px rgba(255,255,255,0.95), 0 0 1px #fff;
     }
 
     .journal-box {
@@ -274,7 +265,7 @@ _CSS_TEMPLATE = r'''  <style>
       min-width: 0;
       border: 2px solid #000;
       padding: 0.06in 0.1in 0.08in;
-      background: rgba(255,255,255,0.94);
+      background: #ffffff;
     }
     .journal-box.journal-full {
       flex: 1 1 100%;
@@ -316,10 +307,14 @@ _CSS_TEMPLATE = r'''  <style>
       font-family: "Cormorant Garamond", serif;
       font-size: 8pt;
       font-style: italic;
-      color: #444;
+      color: #333;
       margin: 0.04in 0 0;
       line-height: 1.35;
-      text-shadow: 0 0 4px rgba(255,255,255,0.9);
+    }
+
+    .final-wrap .block-body {
+      display: block;
+      width: 100%;
     }
 
     .footer {
@@ -337,6 +332,7 @@ _CSS_TEMPLATE = r'''  <style>
       html { background: #fff; }
       body { padding: 0; }
       .day-sheet { margin: 0; box-shadow: none; page-break-after: always; }
+      .day-hero { border-color: #ccc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
     }
   </style>'''
 
@@ -349,7 +345,6 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
     wd = WEEKDAYS[(n - 1) % 7]
     return f'''
     <article class="day-sheet" id="day-{n}">
-      <div class="day-veil" aria-hidden="true"></div>
       <div class="day-stack">
         <div class="day-top">
           <div class="head-row">
@@ -368,6 +363,8 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
           <hr class="gold-rule" />
         </div>
 
+        <div class="day-hero" role="img" aria-label=""></div>
+
         <section class="block">
           <div class="block-top">
             <div class="block-label">
@@ -382,7 +379,9 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
               <div class="lbl">My thoughts</div>
               <div class="ruled" style="--rows:1"></div>
               <div class="lbl">My implementation plan</div>
-              <div class="ruled" style="--rows:2"></div>
+              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:1"></div>
             </div>
           </div>
           <hr class="gold-rule" />
@@ -402,7 +401,9 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
               <div class="lbl">My thoughts</div>
               <div class="ruled" style="--rows:1"></div>
               <div class="lbl">My implementation plan</div>
-              <div class="ruled" style="--rows:2"></div>
+              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:1"></div>
             </div>
           </div>
           <hr class="gold-rule" />
@@ -422,7 +423,9 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
               <div class="lbl">My thoughts</div>
               <div class="ruled" style="--rows:1"></div>
               <div class="lbl">My implementation plan</div>
-              <div class="ruled" style="--rows:2"></div>
+              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:1"></div>
             </div>
           </div>
           <hr class="gold-rule" />
@@ -434,7 +437,7 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
               <span class="letter">D</span>
               <span class="aph-sub">Your aphorism &mdash; good night<span class="moon">&#9790;</span></span>
             </div>
-            <span class="chk chk-body">&#10003;</span>
+            <span class="chk">&#10003;</span>
           </div>
           <p class="night-line">Close the day in your own words. Let this be the line you carry into sleep.</p>
           <div class="block-body" style="margin-top:0.05in">
@@ -442,6 +445,7 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
               <div class="lbl">Why this aphorism</div>
               <div class="ruled" style="--rows:1"></div>
               <div class="lbl">My implement this</div>
+              <div class="ruled" style="--rows:1"></div>
               <div class="ruled" style="--rows:1"></div>
             </div>
           </div>
@@ -502,7 +506,7 @@ def main() -> None:
     mode = "Book 1 IDs 1–90" if not use_fallback else "fallback: first 90 quotes by ID"
     parts = [
         "<!DOCTYPE html>",
-        f"<!-- build {build_id} | {mode} | full-page art + A–D | HOME TO MYSELF -->",
+        f"<!-- build {build_id} | {mode} | hero strip + clean A–D | HOME TO MYSELF -->",
         '<html lang="en">',
         "<head>",
         '  <meta charset="utf-8" />',
