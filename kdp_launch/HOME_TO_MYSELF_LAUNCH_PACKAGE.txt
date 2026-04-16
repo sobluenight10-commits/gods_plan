@@ -177,6 +177,46 @@ PART G — POSITIONING LINE (USE IN ADS / BACK COVER)
 “Famous words. Honest reflection. One small implementation — so the day
 actually changes.”
 
+PART H — QUOTE BANK: COUNT FIX, ASSIGNMENT MAP, REPO FILES (UPDATED)
+--------------------------------------------------------------------------------
+COUNT FIX (CORPUS MATH)
+- Target: 1,080 lines = 12 books x 90 quotes (30 days x 3 slots A/B/C per book).
+- If a section header once claimed “121–240” but only 121–180 were listed, that
+  block was 300 lines, not 360 — leaving 60 missing in “Healing & Integration.”
+- Filling 181–240 restores that segment; you still need 001–180 (Books 1–2) and
+  241–360 (end of Book 3 + all of Book 4) to reach 1,080. Remaining gap: 300 lines.
+
+TOPIC / THEME ALLOCATION (BY GLOBAL ID)
+Vol  Month    IDs        Theme
+ 1   March    001–090    Awakening
+ 2   April    091–180    Remembering Self
+ 3   May      181–270    Healing & Integration
+ 4   June     271–360    Claiming & Self-Trust
+ 5   July     361–450    Releasing the Past
+ 6   August   451–540    Owning Your Space
+ 7   Sept     541–630    Boundaries as Love
+ 8   October  631–720    The Harvest
+ 9   November 721–810   The Fortress Within
+10   December 811–900    The Sanctuary
+11   January  901–990    The Stillness
+12   February 991–1080   The Homecoming
+
+DAY / SLOT WITHIN EACH BOOK (30 DAYS x 3 QUOTES)
+- For global id Q in volume V with book start S (first id of that volume):
+  offset = Q - S   (0 .. 89)
+  day_in_volume = offset // 3 + 1   (1 .. 30)
+  slot = A if offset%3==0, B if 1, C if 2
+- Maps to prompts: A = Morning — The Release; B = Midday — The Radical Center;
+  C = Evening — Welcome Home. (Your “aphorism / return to myself” block stays
+  the reader’s original line, outside this 90-quote bank.)
+
+FILES IN REPO (gods_plan/kdp_launch/)
+- quote_books_meta.json — themes, ranges, slot labels.
+- quotes_src/*.txt — one numbered line per quote; add 001-180.txt and
+  241-360.txt when ready (same format as existing files).
+- build_home_to_myself_quotes_master.py — merges fragments into
+  home_to_myself_quotes_MASTER.json (currently 780/1080 lines filled).
+
 ================================================================================
 END OF PACKAGE — duplicate this file per locale (DE/KR) with translated keywords
 ================================================================================

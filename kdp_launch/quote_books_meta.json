@@ -1,0 +1,27 @@
+{
+  "schema": "home_to_myself_v1",
+  "total_target_quotes": 1080,
+  "quotes_per_book": 90,
+  "days_per_book": 30,
+  "slots_per_day": ["A", "B", "C"],
+  "slot_labels": {
+    "A": "Morning — The Release",
+    "B": "Midday — The Radical Center",
+    "C": "Evening — Welcome Home"
+  },
+  "count_fix_note": "If a section header claimed 121-240 but only 121-180 were listed, that block had 300 lines instead of 360. Full corpus target is 1080 (12 books x 90). Supplied in repo: 181-240 and 361-1080. Missing until added: 001-180 and 241-360.",
+  "books": [
+    {"volume": 1, "month": "March", "theme": "Awakening", "quote_range": [1, 90]},
+    {"volume": 2, "month": "April", "theme": "Remembering Self", "quote_range": [91, 180]},
+    {"volume": 3, "month": "May", "theme": "Healing & Integration", "quote_range": [181, 270]},
+    {"volume": 4, "month": "June", "theme": "Claiming & Self-Trust", "quote_range": [271, 360]},
+    {"volume": 5, "month": "July", "theme": "Releasing the Past", "quote_range": [361, 450]},
+    {"volume": 6, "month": "August", "theme": "Owning Your Space", "quote_range": [451, 540]},
+    {"volume": 7, "month": "September", "theme": "Boundaries as Love", "quote_range": [541, 630]},
+    {"volume": 8, "month": "October", "theme": "The Harvest", "quote_range": [631, 720]},
+    {"volume": 9, "month": "November", "theme": "The Fortress Within", "quote_range": [721, 810]},
+    {"volume": 10, "month": "December", "theme": "The Sanctuary", "quote_range": [811, 900]},
+    {"volume": 11, "month": "January", "theme": "The Stillness", "quote_range": [901, 990]},
+    {"volume": 12, "month": "February", "theme": "The Homecoming", "quote_range": [991, 1080]}
+  ]
+}

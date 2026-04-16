@@ -1,0 +1,17 @@
+Coverage of kdp_launch/quotes_src (HOME TO MYSELF line bank)
+
+FILLED IN REPO (780 lines):
+  181-240   Book 3  Healing & Integration (part)
+  361-1080  Books 5-12 (complete)
+
+STILL TO ADD AS NUMBERED FILES (300 lines):
+  001-180   Books 1-2  -> suggest filename: 001-180.txt
+  241-360   Book 3 end + Book 4 -> suggest filename: 241-360.txt
+
+Format per line (ASCII-friendly for print PDF tools):
+  NNN. Your quote text here.
+
+After adding files, run from repo root:
+  python kdp_launch/build_home_to_myself_quotes_master.py
+
+Expected: populated_count = 1080 in home_to_myself_quotes_MASTER.json
