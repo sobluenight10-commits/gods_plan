@@ -1,7 +1,16 @@
 """
-Generate interior_30_days.html from the umbrella-woman template.
-Run: python build_30_days.py
+Generate interior_30_days.html — template unchanged; only weekday + A/B/C aphorisms vary.
+
+Aphorism source: ../quotes_src/*.txt (same merge rules as build_home_to_myself_quotes_master.py)
+Book 1, days 1–30: global quote IDs 1–90 (Day N uses IDs (N-1)*3+1, (N-1)*3+2, (N-1)*3+3).
+
+Run from repo root: python kdp_launch/sample/build_30_days.py
+Or from this folder: python build_30_days.py
 """
+from __future__ import annotations
+
+import html
+import re
 from pathlib import Path
 
 WEEKDAYS = [
@@ -13,6 +22,86 @@ WEEKDAYS = [
     "SATURDAY",
     "SUNDAY",
 ]
+
+# Relative to kdp_launch/
+FRAGMENTS = [
+    ("quotes_src/001-180.txt", 1, 180),
+    ("quotes_src/181-240.txt", 181, 240),
+    ("quotes_src/241-360.txt", 241, 360),
+    ("quotes_src/361-450.txt", 361, 450),
+    ("quotes_src/451-540.txt", 451, 540),
+    ("quotes_src/541-630.txt", 541, 630),
+    ("quotes_src/631-720.txt", 631, 720),
+    ("quotes_src/721-810.txt", 721, 810),
+    ("quotes_src/811-900.txt", 811, 900),
+    ("quotes_src/901-990.txt", 901, 990),
+    ("quotes_src/991-1080.txt", 991, 1080),
+]
+
+KDP_LAUNCH = Path(__file__).resolve().parent.parent
+
+
+def parse_file(path: Path) -> dict[int, str]:
+    out: dict[int, str] = {}
+    raw = path.read_text(encoding="utf-8")
+    for line in raw.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        m = re.match(r"^(\d+)\s+(.+)$", line)
+        if not m:
+            m = re.match(r"^(\d+)\.\s*(.+)$", line)
+        if not m:
+            continue
+        qid = int(m.group(1))
+        text = m.group(2).strip()
+        out[qid] = text
+    return out
+
+
+def load_merged_quotes() -> dict[int, str]:
+    merged: dict[int, str] = {}
+    for rel, lo, hi in FRAGMENTS:
+        p = KDP_LAUNCH / rel
+        if not p.exists():
+            continue
+        part = parse_file(p)
+        for qid in range(lo, hi + 1):
+            if qid in part:
+                merged[qid] = part[qid]
+    return merged
+
+
+def quote_triple_for_day(
+    merged: dict[int, str],
+    day: int,
+    book_start_id: int = 1,
+    *,
+    fallback: bool = False,
+) -> tuple[str, str, str]:
+    """Day 1..30 → quote IDs book_start_id + (day-1)*3 ... +2 (Book 1 = 1..90)."""
+    base = book_start_id + (day - 1) * 3
+
+    def one(qid: int) -> str:
+        t = merged.get(qid)
+        if not t:
+            return f"[Quote #{qid} — add line to quotes_src in kdp_launch]"
+        return html.escape(t)
+
+    if not fallback:
+        return one(base), one(base + 1), one(base + 2)
+
+    # First 90 strings in global ID order (when 001-180.txt not present yet)
+    flat = [merged[k] for k in sorted(merged.keys())]
+    idx = (day - 1) * 3
+    if idx + 2 >= len(flat):
+        return (
+            f"[Bank too small: need {idx + 3} quotes, have {len(flat)}]",
+            "[—]",
+            "[—]",
+        )
+    return html.escape(flat[idx]), html.escape(flat[idx + 1]), html.escape(flat[idx + 2])
+
 
 CSS = r'''  <style>
     @page { size: 6in 9in; margin: 0; }
@@ -199,12 +288,6 @@ CSS = r'''  <style>
       align-items: flex-start;
       margin-bottom: 0.05in;
     }
-    .final-h {
-      font-family: "Great Vibes", cursive;
-      font-size: 15pt;
-      color: #222;
-      margin: 0;
-    }
     .moon { font-size: 12pt; opacity: 0.5; margin-left: 0.04in; }
     .night-line {
       font-family: "Cormorant Garamond", serif;
@@ -233,18 +316,9 @@ CSS = r'''  <style>
     }
   </style>'''
 
-QUOTES_A = [
-    "You are not a backup plan for your own life.",
-    "Your needs are not an inconvenience.",
-    "You survived every hard day before this one.",
-] * 10  # 30 days - rotate or use same 3 per day cycle for template
 
-def day_block(n: int) -> str:
+def day_block(n: int, qa: str, qb: str, qc: str) -> str:
     wd = WEEKDAYS[(n - 1) % 7]
-    # Placeholder quotes cycle (template — replace in production)
-    qa = QUOTES_A[(n - 1) % 3]
-    qb = QUOTES_A[(n) % 3]
-    qc = QUOTES_A[(n + 1) % 3]
     return f'''
     <article class="day-sheet" id="day-{n}">
       <div class="day-top">
@@ -356,29 +430,71 @@ def day_block(n: int) -> str:
     </article>
 '''
 
-def main():
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Build 30-day interior HTML from quote bank.")
+    parser.add_argument(
+        "--fallback",
+        action="store_true",
+        help="Force bank-order fill (first 90 lines by ID) even when quotes 1–3 exist.",
+    )
+    parser.add_argument(
+        "--strict",
+        action="store_true",
+        help="Require quote IDs 1–90; do not fall back (HTML will show [Quote #…] gaps).",
+    )
+    args = parser.parse_args()
+
     root = Path(__file__).resolve().parent
     out = root / "interior_30_days.html"
+    merged = load_merged_quotes()
+    populated = len(merged)
+    print(f"Loaded {populated} quote lines from kdp_launch/quotes_src")
+
+    book1_ok = all(merged.get(i) for i in range(1, 91))
+    if args.strict:
+        use_fallback = False
+    elif args.fallback:
+        use_fallback = True
+    else:
+        # Auto: real Book 1 mapping when 001-180.txt supplies IDs 1–90; else use bank order (181+…)
+        use_fallback = not book1_ok
+        if use_fallback:
+            print(
+                "Note: quotes 1-90 not all present - using first 90 lines in global ID order. "
+                "Add kdp_launch/quotes_src/001-180.txt for true Book 1 text, then rebuild."
+            )
+
+    mode = "strict Book 1 (IDs 1–90)" if not use_fallback else "bank order: first 90 quotes by ID (until 001-180.txt added)"
     parts = [
         "<!DOCTYPE html>",
-        "<!-- 30-day interior — generated by build_30_days.py; art: assets/umbrella-woman.png -->",
+        f"<!-- 30-day interior — {mode} -->",
         '<html lang="en">',
         "<head>",
         '  <meta charset="utf-8" />',
         '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
-        "  <title>HOME TO MYSELF — 30 days (template)</title>",
+        "  <title>HOME TO MYSELF — 30 days (Book 1)</title>",
         '  <link rel="preconnect" href="https://fonts.googleapis.com" />',
         '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
         '  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Great+Vibes&family=Josefin+Sans:wght@400;600;700&display=swap" rel="stylesheet" />',
         CSS,
         "</head>",
         "<body>",
-        '  <p style="text-align:center;font-size:6pt;color:#888;margin:8px">Template: 30 pages &middot; Print: Save as PDF &middot; 6&times;9 in</p>',
+        f'  <p style="text-align:center;font-size:6pt;color:#888;margin:8px">Book 1 &middot; {mode} &middot; bank: {populated} lines &middot; strict IDs day 1 = 1–3, day 30 = 88–90 &middot; 6&times;9 in</p>',
     ]
+    missing_any = False
     for n in range(1, 31):
-        parts.append(day_block(n))
-    parts.extend(["</body>", "</html>"])
-    out.write_text("\n".join(parts), encoding="utf-8")
+        qa, qb, qc = quote_triple_for_day(merged, n, book_start_id=1, fallback=use_fallback)
+        if "Quote #" in qa or "Bank too small" in qa:
+            missing_any = True
+        parts.append(day_block(n, qa, qb, qc))
+    body = "\n".join(parts)
+    if missing_any and not use_fallback:
+        body = "<!-- WARNING: missing some IDs 1–90 — add quotes_src/001-180.txt -->\n" + body
+    body += "\n</body>\n</html>\n"
+    out.write_text(body, encoding="utf-8")
     print(f"Wrote {out} ({out.stat().st_size // 1024} KB)")
 
 
