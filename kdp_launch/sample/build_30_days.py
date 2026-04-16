@@ -9,8 +9,10 @@ Or from this folder: python build_30_days.py
 """
 from __future__ import annotations
 
+import base64
 import html
 import re
+from datetime import datetime, timezone
 from pathlib import Path
 
 WEEKDAYS = [
@@ -103,7 +105,13 @@ def quote_triple_for_day(
     return html.escape(flat[idx]), html.escape(flat[idx + 1]), html.escape(flat[idx + 2])
 
 
-CSS = r'''  <style>
+def _png_data_uri(png_path: Path) -> str:
+    b64 = base64.standard_b64encode(png_path.read_bytes()).decode("ascii")
+    return f"url('data:image/png;base64,{b64}')"
+
+
+# Placeholder __ART_BG__ = CSS background-image value (data URI embeds PNG once for portable HTML)
+_CSS_TEMPLATE = r'''  <style>
     @page { size: 6in 9in; margin: 0; }
     * { box-sizing: border-box; }
     html { background: #333; }
@@ -132,18 +140,13 @@ CSS = r'''  <style>
     }
 
     .day-art {
-      text-align: center;
-      padding: 0.28in 0.35in 0.12in;
-      background: linear-gradient(180deg, #fafafa 0%, #fff 100%);
-    }
-    .day-art img {
-      max-width: 88%;
-      max-height: 2.35in;
-      width: auto;
-      height: auto;
-      display: block;
-      margin: 0 auto;
-      object-fit: contain;
+      min-height: 2.45in;
+      margin: 0 0.32in 0.08in;
+      background-color: #fafafa;
+      background-image: __ART_BG__;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center top;
     }
 
     .day-body {
@@ -163,7 +166,7 @@ CSS = r'''  <style>
       font-weight: 700;
       letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #1a1a1a;
+      color: #9a7b3a;
       line-height: 1.2;
     }
     .head-meta {
@@ -282,12 +285,6 @@ CSS = r'''  <style>
       padding-top: 0.07in;
       border-top: 1px solid #c5a059;
     }
-    .final-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 0.05in;
-    }
     .moon { font-size: 12pt; opacity: 0.5; margin-left: 0.04in; }
     .night-line {
       font-family: "Cormorant Garamond", serif;
@@ -305,7 +302,7 @@ CSS = r'''  <style>
       color: #999;
       margin-top: 0.1in;
       padding-top: 0.06in;
-      border-top: 1px solid #e0e0e0;
+      border-top: 1px solid #c5a059;
     }
     .leaf { color: #c5a059; opacity: 0.6; }
 
@@ -315,6 +312,11 @@ CSS = r'''  <style>
       .day-sheet { margin: 0; box-shadow: none; page-break-after: always; }
     }
   </style>'''
+
+
+def build_css(art_background: str) -> str:
+    """Embed PNG as data URI so opening HTML from any path still shows art."""
+    return _CSS_TEMPLATE.replace("__ART_BG__", art_background)
 
 
 def day_block(n: int, qa: str, qb: str, qc: str) -> str:
@@ -337,9 +339,7 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
         </div>
         <hr class="gold-rule" />
       </div>
-      <div class="day-art">
-        <img src="assets/umbrella-woman.png" alt="" width="900" />
-      </div>
+      <div class="day-art" role="img" aria-label=""></div>
       <div class="day-body">
         <section class="block">
           <div class="block-top">
@@ -449,6 +449,15 @@ def main() -> None:
 
     root = Path(__file__).resolve().parent
     out = root / "interior_30_days.html"
+    png = root / "assets" / "umbrella-woman.png"
+    if png.is_file():
+        art_bg = _png_data_uri(png)
+        print(f"Embedded art: {png.name} ({png.stat().st_size // 1024} KB)")
+    else:
+        art_bg = "linear-gradient(180deg, #f5f5f5, #ffffff)"
+        print("WARN: assets/umbrella-woman.png missing — using plain gradient")
+
+    build_id = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%MZ")
     merged = load_merged_quotes()
     populated = len(merged)
     print(f"Loaded {populated} quote lines from kdp_launch/quotes_src")
@@ -470,19 +479,20 @@ def main() -> None:
     mode = "strict Book 1 (IDs 1–90)" if not use_fallback else "bank order: first 90 quotes by ID (until 001-180.txt added)"
     parts = [
         "<!DOCTYPE html>",
-        f"<!-- 30-day interior — {mode} -->",
+        f"<!-- build {build_id} | {mode} | art embedded | gold header -->",
         '<html lang="en">',
         "<head>",
         '  <meta charset="utf-8" />',
         '  <meta name="viewport" content="width=device-width, initial-scale=1" />',
+        '  <meta http-equiv="Cache-Control" content="no-cache" />',
         "  <title>HOME TO MYSELF — 30 days (Book 1)</title>",
         '  <link rel="preconnect" href="https://fonts.googleapis.com" />',
         '  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />',
         '  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,400&family=Great+Vibes&family=Josefin+Sans:wght@400;600;700&display=swap" rel="stylesheet" />',
-        CSS,
+        build_css(art_bg),
         "</head>",
         "<body>",
-        f'  <p style="text-align:center;font-size:6pt;color:#888;margin:8px">Book 1 &middot; {mode} &middot; bank: {populated} lines &middot; strict IDs day 1 = 1–3, day 30 = 88–90 &middot; 6&times;9 in</p>',
+        f'  <p style="text-align:center;font-size:6pt;color:#666;margin:8px">Build {build_id} &middot; embedded PNG &middot; gold header &middot; {mode} &middot; bank {populated} lines &middot; Ctrl+F5 if page looks old</p>',
     ]
     missing_any = False
     for n in range(1, 31):
