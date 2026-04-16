@@ -1,0 +1,182 @@
+================================================================================
+HOME TO MYSELF — AMAZON KDP LAUNCH PACKAGE (ALL-IN-ONE)
+Series: A Sacred Reclamation | Author: Kai Greatwhite | 12 volumes x 4 weeks
+Generated for: English (amazon.com) — adapt keywords for DE/KR separately
+================================================================================
+
+PART A — BUSINESS ANALYSIS (SELLABILITY & UPGRADE LEVERS)
+--------------------------------------------------------------------------------
+STRENGTHS (WHY THIS CAN SELL)
+1) Series flywheel: 12 covers / 12 “season episodes” creates repeat purchase and
+   collectible completion bias — stronger than a one-off undated planner.
+2) Clear avatar: stressed working adults, especially women 28–42, burnout,
+   self-reclamation language maps to a proven journal/planner market.
+3) Premium visual system: solid color + central foil-style icon reads “giftable”
+   on thumbnails; series consistency builds brand recognition.
+4) Structure hook: “great quote -> what I found -> how I implement” is teachable
+   in the listing and reduces “blank page anxiety.”
+
+RISKS (MITIGATE IN LISTING + PRODUCT)
+1) Quote-heavy interiors: avoid long copyrighted excerpts; prefer short quotes
+   with attribution where required, public domain, or original paraphrase.
+   Position the book as a guided reflection system, not a quote anthology.
+2) Undated planner competition is fierce: you must differentiate on EMOTION
+   (reclamation, fortress, sanctuary) + SERIES STORY + interior elegance.
+3) Print cost vs price: 6x9 / 8.5x11 page count drives minimum price; model
+   royalty after KDP printing fee before final retail.
+
+UPGRADES THAT MOVE THE NEEDLE
+Product
+- Volume-specific “theme page” (1 page): season thesis + 3–5 journaling prompts
+  unique to that volume (reduces “same interior, different cover” feeling).
+- One “signature ritual” per volume (e.g., Vol.6: 2-minute boundary script).
+- Interior: registration marks + OCR hint page = differentiated “serious tool.”
+
+Brand
+- Author central + series page + consistent subtitle pattern.
+- Lead magnet: printable “Week 0” one-pager (email list) — optional.
+
+Amazon SEO
+- Master keyword cluster: reclamation journal, burnout journal, boundaries
+  journal, wellness planner undated, self-priority journal, sacred journal.
+- Split tests: subtitle emphasizes OUTCOME (reclaim yourself) vs FORMAT (planner).
+
+PART B — SERIES MASTER DATA (PASTE INTO YOUR TRACKER)
+--------------------------------------------------------------------------------
+Series display title (suggested): HOME TO MYSELF: A Sacred Reclamation
+Series description (short): A 12-volume undated reclamation arc. Each volume is
+four weeks of guided reflection — from awakening to boundaries to claiming —
+so the shelf becomes a single year-long story you can live.
+
+PART C — PER-VOLUME KDP METADATA (ENGLISH / US)
+--------------------------------------------------------------------------------
+Use these as templates; swap ONLY the volume-specific lines.
+
+--- VOLUME 1 (Season 1) ---
+Title: HOME TO MYSELF
+Subtitle: My Sacred 4-Week Reclamation Planner — Vol. 1: A Letter to My Former Self
+Series: HOME TO MYSELF: A Sacred Reclamation
+Volume number: 1
+Edition note (optional): First Edition
+
+Suggested BISAC (pick 2):
+- Self-Help / Personal Growth / Happiness
+- Body, Mind & Spirit / Inspiration & Personal Growth
+
+Suggested 7 keyword strings (Amazon separate fields; avoid duplication):
+1) undated wellness planner women
+2) burnout journal for working women
+3) self reclamation journal guided
+4) anxiety stress relief journal prompts
+5) boundaries self care reflection journal
+6) gratitude and healing journal undated
+7) sacred journaling ritual four weeks
+
+Short description (plain text, under ~4000 chars for description field):
+You are not behind. You are beginning again.
+
+HOME TO MYSELF is a four-week, undated reclamation planner for adults who are
+tired of performing strength and ready to return to truth. Each day gives you
+three anchoring quotes (A/B/C), space to think, and space to act — because insight
+without implementation is just another loop.
+
+Vol. 1 opens the arc: A Letter to My Former Self — naming what happened,
+releasing shame, and choosing a gentler way forward.
+
+Inside: morning / midday / evening prompts, your own closing aphorism, and a
+private footer reminder: this book is only for you.
+
+--- VOLUME 2 ---
+Subtitle: ... Vol. 2: The Map Back to Who You Were
+(Keep same title/series; swap subtitle theme line; adjust first paragraph to
+match “memory, identity, gentle remembering.”)
+
+--- VOLUME 3 ---
+Subtitle: ... Vol. 3: A Sacred Reclamation
+(Theme: direction, choosing a north star, small aligned actions.)
+
+--- VOLUME 4 ---
+Subtitle: ... Vol. 4: You Are Worthy of Love
+(Theme: worthiness without earning love through overwork.)
+
+--- VOLUME 5 (Season 2) ---
+Subtitle: ... Vol. 5: Not Required to Set Yourself on Fire
+(Theme: sacrifice vs sustainability; saying no as care.)
+
+--- VOLUME 6 ---
+Subtitle: ... Vol. 6: The World Will Not Collapse
+(Theme: anxiety, catastrophic thinking, evidence-based reassurance.)
+
+--- VOLUME 7 ---
+Subtitle: ... Vol. 7: Silence Has Been Your Teacher
+(Theme: listening, slowing, wisdom from quiet.)
+
+--- VOLUME 8 ---
+Subtitle: ... Vol. 8: Other People's Discomfort Is Not Your Emergency
+(Theme: boundaries without cruelty; guilt vs responsibility.)
+
+--- VOLUME 9 (Season 3) ---
+Subtitle: ... Vol. 9: The Fortress Is Yours Now
+(Theme: stability, home inside yourself, containment as strength.)
+
+--- VOLUME 10 ---
+Subtitle: ... Vol. 10: Rest Without Guilt
+(Theme: recovery, permission, nervous system care.)
+
+--- VOLUME 11 ---
+Subtitle: ... Vol. 11: In Stillness, You Remember
+(Theme: integration, meaning, gentle clarity.)
+
+--- VOLUME 12 ---
+Subtitle: ... Vol. 12: Spent Four Weeks Becoming Braver
+(Theme: closure, courage, carrying the work forward.)
+
+PART D — INTERIOR SPEC (ALIGN PDF EXPORT TO KDP)
+--------------------------------------------------------------------------------
+Recommended trim (choose one and stay consistent across series for shelf unity):
+- 6 x 9 in (most common paperback journal)
+- or 7 x 10 in / 8.5 x 11 in if you want premium workbook feel
+
+Bleed: 0.125 in on all sides if any background/image touches edge.
+Margins: follow KDP interior guidelines for your page count; keep gutter generous.
+
+Mandatory interior elements (your brand system):
+- Day header: DAY X * A SACRED RECLAMATION
+- Aphorism A/B/C: quote + MY THOUGHTS (5 lines) + MY IMPLEMENTATION PLAN (5 lines)
+- Section D: MAKE YOUR OWN APHORISM + HOW TO KEEP & IMPLEMENT (4 lines)
+- Footer: THIS BOOK IS ONLY FOR ME.
+- Corner registration marks (4 gold dots) + subtle blossom accents
+- Bridge page: The Bridge to Your Forever Self (scan/OCR/archive steps)
+
+Accessibility: line spacing not too tight; ink bleed on cream paper — test print.
+
+PART E — FILE CHECKLIST BEFORE UPLOAD
+--------------------------------------------------------------------------------
+For EACH volume:
+[ ] Interior PDF (embedded fonts subset where possible)
+[ ] Cover PDF (spine width from KDP cover calculator using exact page count)
+[ ] Paper type + trim size match between interior and cover
+[ ] No copyrighted long quotes without permission; attributions as needed
+[ ] Proof copy ordered; check gutter, contrast, registration marks print correctly
+
+Series setup in KDP:
+[ ] Create series in series manager (or consistent series name across listings)
+[ ] Volume numbers consistent
+[ ] A+ Content (Author Central): 12-cover mosaic + “how to use” module
+
+PART F — PRICING & ROYALTY (US PAPERBACK, RULE OF THUMB)
+--------------------------------------------------------------------------------
+- Compare 5–10 comps in “guided journal / burnout journal / undated planner.”
+- If page count is high, printing cost rises — price must clear your minimum.
+- 70% royalty zone applies to ebooks; paperbacks use printing cost calculator.
+- Subscription / reader club is OUTSIDE Amazon Terms unless compliant — treat
+  email list and bonuses as off-Amazon ops with legal review.
+
+PART G — POSITIONING LINE (USE IN ADS / BACK COVER)
+--------------------------------------------------------------------------------
+“Famous words. Honest reflection. One small implementation — so the day
+actually changes.”
+
+================================================================================
+END OF PACKAGE — duplicate this file per locale (DE/KR) with translated keywords
+================================================================================
