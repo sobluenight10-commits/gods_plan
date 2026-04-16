@@ -140,13 +140,13 @@ _CSS_TEMPLATE = r'''  <style>
     }
 
     .day-art {
-      min-height: 2.45in;
-      margin: 0 0.32in 0.08in;
+      min-height: 3.25in;
+      margin: 0 0.22in 0.06in;
       background-color: #fafafa;
       background-image: __ART_BG__;
-      background-size: contain;
+      background-size: 96% auto;
       background-repeat: no-repeat;
-      background-position: center top;
+      background-position: center 8px;
     }
 
     .day-body {
@@ -229,15 +229,15 @@ _CSS_TEMPLATE = r'''  <style>
       margin-top: 2px;
     }
 
-    .block-body { display: flex; gap: 0.08in; align-items: stretch; }
+    .block-body { display: flex; gap: 0.07in; align-items: stretch; }
     .quote-col {
-      flex: 0 1 38%;
-      max-width: 38%;
+      flex: 0 1 31%;
+      max-width: 31%;
       min-width: 0;
     }
     .quote-bold {
       font-family: "Josefin Sans", sans-serif;
-      font-size: 7.5pt;
+      font-size: 8pt;
       font-weight: 700;
       line-height: 1.4;
       text-transform: uppercase;
@@ -248,11 +248,15 @@ _CSS_TEMPLATE = r'''  <style>
     }
 
     .journal-box {
-      flex: 1 1 62%;
+      flex: 1 1 69%;
       min-width: 0;
-      border: 1px solid #000;
-      padding: 0.06in 0.1in 0.08in;
-      background: rgba(255,255,255,0.92);
+      border: 2px solid #000;
+      padding: 0.07in 0.12in 0.09in;
+      background: rgba(255,255,255,0.96);
+    }
+    .final-wrap .journal-box.journal-full {
+      flex: 1 1 100%;
+      max-width: 100%;
     }
     .journal-box .lbl {
       font-size: 6.5pt;
@@ -266,15 +270,15 @@ _CSS_TEMPLATE = r'''  <style>
 
     .ruled {
       font-size: 9pt;
-      line-height: 1.18em;
-      min-height: calc(1.18em * var(--rows, 1));
+      line-height: 1.22em;
+      min-height: calc(1.22em * var(--rows, 1));
       color: transparent;
       background-image: repeating-linear-gradient(
         to bottom,
         #000000 0,
         #000000 1px,
         transparent 1px,
-        transparent 1.18em
+        transparent 1.22em
       );
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
@@ -284,6 +288,10 @@ _CSS_TEMPLATE = r'''  <style>
       margin-top: 0.06in;
       padding-top: 0.07in;
       border-top: 1px solid #c5a059;
+    }
+    .final-wrap .block-body {
+      display: block;
+      width: 100%;
     }
     .moon { font-size: 12pt; opacity: 0.5; margin-left: 0.04in; }
     .night-line {
@@ -353,7 +361,7 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
             <div class="quote-col"><p class="quote-bold">{qa}</p></div>
             <div class="journal-box">
               <div class="lbl">My thoughts</div>
-              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:2"></div>
               <div class="lbl">My implementation plan</div>
               <div class="ruled" style="--rows:2"></div>
             </div>
@@ -373,7 +381,7 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
             <div class="quote-col"><p class="quote-bold">{qb}</p></div>
             <div class="journal-box">
               <div class="lbl">My thoughts</div>
-              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:2"></div>
               <div class="lbl">My implementation plan</div>
               <div class="ruled" style="--rows:2"></div>
             </div>
@@ -393,7 +401,7 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
             <div class="quote-col"><p class="quote-bold">{qc}</p></div>
             <div class="journal-box">
               <div class="lbl">My thoughts</div>
-              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:2"></div>
               <div class="lbl">My implementation plan</div>
               <div class="ruled" style="--rows:2"></div>
             </div>
@@ -411,10 +419,9 @@ def day_block(n: int, qa: str, qb: str, qc: str) -> str:
           </div>
           <p class="night-line">Close the day in your own words. Let this be the line you carry into sleep.</p>
           <div class="block-body" style="margin-top:0.06in">
-            <div class="quote-col"></div>
-            <div class="journal-box">
+            <div class="journal-box journal-full">
               <div class="lbl">Why this aphorism</div>
-              <div class="ruled" style="--rows:1"></div>
+              <div class="ruled" style="--rows:2"></div>
               <div class="lbl">My implement this</div>
               <div class="ruled" style="--rows:2"></div>
             </div>
@@ -492,7 +499,6 @@ def main() -> None:
         build_css(art_bg),
         "</head>",
         "<body>",
-        f'  <p style="text-align:center;font-size:6pt;color:#666;margin:8px">Build {build_id} &middot; embedded PNG &middot; gold header &middot; {mode} &middot; bank {populated} lines &middot; Ctrl+F5 if page looks old</p>',
     ]
     missing_any = False
     for n in range(1, 31):

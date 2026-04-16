@@ -15,7 +15,9 @@ OUT_PATH = DIR / "home_to_myself_quotes_MASTER.json"
 
 # Optional fragment files: filename -> (start_id, end_id) inclusive
 FRAGMENTS = [
+    ("quotes_src/001-180.txt", 1, 180),
     ("quotes_src/181-240.txt", 181, 240),
+    ("quotes_src/241-360.txt", 241, 360),
     ("quotes_src/361-450.txt", 361, 450),
     ("quotes_src/451-540.txt", 451, 540),
     ("quotes_src/541-630.txt", 541, 630),
