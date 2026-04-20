@@ -85,7 +85,7 @@ NAVER_RSS_URL = os.getenv(
 )
 # Optional extra Naver RSS feeds: comma-separated blog IDs (e.g. "otherid") or full https://rss.blog.naver.com/....xml
 BLOG_EXTRA_RSS_URLS = os.getenv("BLOG_EXTRA_RSS_URLS", "").strip()
-BLOG_FETCH_INTERVAL_MINUTES = int(os.getenv("BLOG_FETCH_INTERVAL_MINUTES", "30"))
+BLOG_FETCH_INTERVAL_MINUTES = int(os.getenv("BLOG_FETCH_INTERVAL_MINUTES", "5"))
 
 
 def naver_blog_rss_list() -> List[str]:
