@@ -69,7 +69,10 @@ def _load_env() -> None:
                 os.environ.setdefault(k.strip(), v.strip())
 
 
-def _send_tg(text: str) -> bool:
+TG_LIMIT = 3800  # safe margin under 4096
+
+
+def _tg_post(text: str) -> bool:
     import requests
     token = os.getenv("TELEGRAM_BOT_TOKEN", "")
     chat = os.getenv("TELEGRAM_CHAT_ID", "")
@@ -88,6 +91,43 @@ def _send_tg(text: str) -> bool:
     except Exception as exc:
         print(f"[GEM_DIFF] Telegram error: {exc}")
         return False
+
+
+def _chunk_lines(lines: List[str], limit: int = TG_LIMIT) -> List[str]:
+    """Greedy line-boundary chunker — never splits inside a ticker block (blank line = boundary)."""
+    chunks: List[str] = []
+    buf: List[str] = []
+    cur_len = 0
+    for ln in lines:
+        add = len(ln) + 1
+        if cur_len + add > limit and buf:
+            # Trim trailing blanks
+            while buf and not buf[-1].strip():
+                buf.pop()
+            chunks.append("\n".join(buf))
+            buf = []
+            cur_len = 0
+        buf.append(ln)
+        cur_len += add
+    if buf:
+        while buf and not buf[-1].strip():
+            buf.pop()
+        chunks.append("\n".join(buf))
+    return chunks
+
+
+def _send_tg(text: str) -> bool:
+    lines = text.split("\n")
+    parts = _chunk_lines(lines)
+    if len(parts) == 1:
+        return _tg_post(parts[0])
+    ok_any = False
+    total = len(parts)
+    for i, p in enumerate(parts, 1):
+        tagged = f"<i>[{i}/{total}]</i>\n" + p if total > 1 else p
+        if _tg_post(tagged):
+            ok_any = True
+    return ok_any
 
 
 def _load(path: str) -> Optional[Dict[str, Any]]:
