@@ -20,7 +20,6 @@ CHECK_INTERVAL = max(60, int(BLOG_FETCH_INTERVAL_MINUTES) * 60)  # seconds; min 
 THEME_MAP = {
     "이란": ("Middle East Conflict", ["KTOS", "272210.KS", "NTR"], ["LMT", "XOM", "FLNG"]),
     "전쟁": ("War Premium", ["KTOS", "272210.KS"], ["LMT", "RTX", "NOC"]),
-    # Naval / carrier / escalation (titles often omit explicit "전쟁")
     "항공모함": ("Naval / Carrier Group", ["KTOS", "272210.KS"], ["LMT", "RTX", "NOC", "GD"]),
     "항모": ("Naval / Carrier Group", ["KTOS", "272210.KS"], ["LMT", "RTX", "NOC"]),
     "부시함": ("US Navy / Strike Group", ["KTOS", "272210.KS"], ["LMT", "RTX"]),
@@ -40,6 +39,50 @@ THEME_MAP = {
     "파키스탄": ("Pakistan Development", [], ["USSM"]),
     "중동": ("Middle East", ["KTOS", "NTR"], ["XOM", "LMT"]),
     "인플레이션": ("Inflation Hedge", ["NTR", "IAU", "FCX"], ["GLD", "PDBC"]),
+    # Quantum — any 양자 variant including 암호/통신/컴퓨터/얽힘 + ENG "quantum"
+    "양자": ("Quantum Ecosystem", [], ["IONQ", "ARQQ", "LAES", "QUBT", "RGTI", "QBTS", "IBM", "GOOGL"]),
+    "quantum": ("Quantum Ecosystem", [], ["IONQ", "ARQQ", "LAES", "QUBT", "RGTI", "QBTS", "IBM", "GOOGL"]),
+    "양자암호": ("Quantum Cryptography / Secure Comms", [], ["ARQQ", "LAES", "QUBT", "IONQ"]),
+    "양자통신": ("Quantum Communication", [], ["IONQ", "ARQQ", "LAES", "QUBT"]),
+    "양자컴퓨터": ("Quantum Computing", [], ["IONQ", "RGTI", "QBTS", "QUBT", "IBM", "GOOGL"]),
+    "핵융합": ("Fusion Power", [], ["BWXT", "FLUX", "GEV", "CCJ"]),
+    "fusion": ("Fusion Power", [], ["BWXT", "FLUX", "GEV"]),
+    "유전자": ("Gene Editing / Therapy", [], ["CRSP", "NTLA", "BEAM", "EDIT", "VERV"]),
+    "crispr": ("Gene Editing / CRISPR", [], ["CRSP", "NTLA", "BEAM", "EDIT"]),
+    "자율주행": ("Autonomous Driving", ["NVDA", "PLTR"], ["TSLA", "MBLY", "GOOGL"]),
+    "로봇": ("Humanoid Robotics", ["NVDA"], ["TSLA", "ABB", "ISRG", "ESTC"]),
+    "휴머노이드": ("Humanoid Robotics", ["NVDA"], ["TSLA", "ABB", "ISRG"]),
+    "데이터센터": ("Data Center Power", ["VRT"], ["GEV", "ETN", "EMR", "FTAI"]),
+    "전력망": ("Grid Modernization", ["VRT"], ["GEV", "ETN", "EMR", "QNTM"]),
+    "비만": ("GLP-1 Obesity Drugs", [], ["NVO", "LLY", "PFE", "AZN"]),
+    "GLP-1": ("GLP-1 Obesity Drugs", [], ["NVO", "LLY", "PFE"]),
+    "스테이블코인": ("Stablecoin Rails", [], ["COIN", "V", "MA", "PYPL", "HOOD"]),
+    "stablecoin": ("Stablecoin Rails", [], ["COIN", "V", "MA", "PYPL"]),
+}
+
+# Theme-level pure-play fallback: when GPT returns STOCKS:NONE, surface top pure-play US names
+# so the pre-alert system does not silently drop concept posts (e.g. quantum communication).
+THEME_PUREPLAY_MAP = {
+    "Quantum Ecosystem":            ["IONQ", "ARQQ", "LAES", "QUBT", "RGTI", "QBTS", "IBM", "GOOGL"],
+    "Quantum Cryptography / Secure Comms": ["ARQQ", "LAES", "QUBT", "IONQ"],
+    "Quantum Communication":        ["IONQ", "ARQQ", "LAES", "QUBT"],
+    "Quantum Computing":            ["IONQ", "RGTI", "QBTS", "QUBT", "IBM", "GOOGL"],
+    "Fusion Power":                 ["BWXT", "FLUX", "GEV", "CCJ"],
+    "Gene Editing / Therapy":       ["CRSP", "NTLA", "BEAM", "EDIT", "VERV"],
+    "Gene Editing / CRISPR":        ["CRSP", "NTLA", "BEAM", "EDIT"],
+    "Humanoid Robotics":            ["TSLA", "ABB", "ISRG", "NVDA"],
+    "Autonomous Driving":           ["TSLA", "MBLY", "NVDA", "GOOGL"],
+    "Data Center Power":            ["VRT", "GEV", "ETN", "EMR"],
+    "Grid Modernization":           ["GEV", "ETN", "EMR", "VRT"],
+    "GLP-1 Obesity Drugs":          ["NVO", "LLY", "PFE"],
+    "Stablecoin Rails":             ["COIN", "V", "MA", "PYPL", "HOOD"],
+    "Uranium":                      ["UEC", "URNM", "UUUU", "CCJ"],
+    "Nuclear Renaissance":          ["UEC", "URNM", "OKLO", "UUUU", "CCJ"],
+    "Semiconductor Cycle":          ["TSM", "ASML", "AMAT", "KLAC", "LRCX"],
+    "LNG Shortage":                 ["FLNG", "GLNG", "LNG"],
+    "Copper/EV Demand":             ["FCX", "SCCO", "COPX"],
+    "AI Infrastructure":            ["NVDA", "TSM", "PLTR", "VRT", "SMCI"],
+    "Inflation Hedge":              ["IAU", "GLD", "NTR", "FCX"],
 }
 
 
@@ -91,14 +134,29 @@ def classify_blog_theme(content: str, direct_tickers: list) -> dict:
 
     detected_themes = list(dict.fromkeys(detected_themes))
 
+    # Theme-level pure-play fallback (never let a concept post return STOCKS: NONE)
+    pureplay_seen = []
+    pureplay = []
+    for th in detected_themes:
+        for tk in THEME_PUREPLAY_MAP.get(th, []):
+            if tk in pureplay_seen:
+                continue
+            if tk in (direct_tickers or []):
+                continue
+            pureplay_seen.append(tk)
+            pureplay.append(tk)
+    pureplay = pureplay[:8]
+
     return {
         "direct_tickers": list(direct_tickers or []),
         "themes": detected_themes,
         "portfolio_confirmed": list(portfolio_confirmed),
         "new_watchlist": list(new_watchlist),
+        "theme_pureplay": pureplay,
         "action_summary": (
             f"Confirms: {', '.join(portfolio_confirmed) or 'none'} · "
             f"New watch: {', '.join(new_watchlist) or 'none'}"
+            + (f" · Pureplay: {', '.join(pureplay)}" if pureplay else "")
         ),
     }
 _started = False
@@ -452,20 +510,38 @@ def _send_alert(post: dict):
         content = _fetch_post_content(url)
         if content and len(content) > 100:
             prompt = f"""IMPORTANT: Always respond in ENGLISH regardless of the blog post language.
-You are Minerva, investment analyst for GOD's OLYMPUS system.
-Analyze this blog post and return ONLY this format, nothing else:
+You are Minerva, investment analyst for GOD's OLYMPUS pre-alert system.
+This is a PRE-ALERT for a sophisticated investor. NEVER return STOCKS: NONE
+when the post discusses an identifiable investment theme — instead, list the
+top publicly-traded US PURE-PLAY companies for that theme, ranked by directness.
 
-📰 [3-5 word title]
+Return ONLY this exact format (no extra prose, no code fences):
+
+📰 [3-5 word English title]
 🔑 [2-3 core keywords separated by ·]
 📊 SO WHAT: [1 sentence — exact market impact]
-🎯 STOCKS: [ticker1, ticker2] or NONE
+🎯 STOCKS: [ticker1, ticker2, ticker3]    ← up to 6 US tickers; write NONE only if the post is purely non-investment (e.g. personal anecdote).
+🧭 INFERRED: true|false                   ← true if tickers were inferred from theme (not explicitly named in the post), false if the post names them.
 ⏱ TIMING: [BUY NOW / WATCH / AVOID / HOLD]
-📈 ESTIMATES (if data supports): 1M: [price or INSUFFICIENT DATA] · 6M: [price] · 1Y: [price] · 5Y: [price]
-Fill in realistic dollar prices only when the post gives enough context (targets, levels, or clear basis). If you cannot estimate from the content, omit the entire 📈 line — do not output placeholder symbols or $X.
+🎯 THEME: [the specific investment theme, e.g. "Quantum Communication / KeyGen"]
+
+Then OPTIONALLY a single line starting with "📈 ESTIMATES:" only if the post gives concrete price targets, levels, revenue, or clear quantitative basis. If you cannot price it with real context, DO NOT output the 📈 line at all. Do NOT print "INSUFFICIENT DATA" or placeholders.
+
+Concept → pure-play hints (non-exhaustive, use freely):
+- Quantum communication / 양자통신 / QKD → IONQ, ARQQ, LAES, QUBT, IBM, GOOGL
+- Quantum computing / 양자컴퓨터 → IONQ, RGTI, QBTS, QUBT, IBM, GOOGL
+- Post-quantum cryptography / 양자암호 → ARQQ, LAES, QUBT
+- Fusion / 핵융합 → BWXT, FLUX, GEV
+- CRISPR / gene editing / 유전자 → CRSP, NTLA, BEAM, EDIT, VERV
+- Humanoid / 휴머노이드 / 로봇 → TSLA, ABB, ISRG, NVDA
+- Grid / 전력망 / data center power → VRT, GEV, ETN, EMR
+- GLP-1 / 비만 → NVO, LLY, PFE
+- Stablecoin / 스테이블코인 → COIN, V, MA, PYPL, HOOD
+- Nuclear / 원자력 / 우라늄 → UEC, URNM, OKLO, CCJ, UUUU
 
 Blog post:
 Title: {post.get('title')}
-Content: {content[:1500]}
+Content: {content[:1800]}
 """
             response = client.chat.completions.create(
                 model="gpt-4o-mini",
@@ -474,25 +550,43 @@ Content: {content[:1500]}
                 max_tokens=800,
             )
             gpt_text = (response.choices[0].message.content or "").strip()
+            # Strip stray "INSUFFICIENT DATA" or placeholder ESTIMATES lines
+            gpt_text = re.sub(
+                r"^\s*📈\s*ESTIMATES[^\n]*(INSUFFICIENT|\$X|\[price\])[^\n]*\n?",
+                "",
+                gpt_text,
+                flags=re.IGNORECASE | re.MULTILINE,
+            )
             tickers_gpt = []
             mstk = re.search(r"🎯 STOCKS:\s*([^\n]+)", gpt_text)
             if mstk:
                 raw_t = (mstk.group(1) or "").strip()
                 if raw_t.upper() != "NONE":
                     tickers_gpt = [
-                        x.strip()
+                        x.strip().upper()
                         for x in re.split(r"[,，]", raw_t)
-                        if x.strip()
+                        if x.strip() and x.strip().upper() != "NONE"
                     ]
-            if gpt_text:
-                lines.append(escape(gpt_text))
-            else:
-                lines.append("⚠️ GPT returned empty — check manually")
             bt = classify_blog_theme(
                 (content or "") + "\n" + title + "\n" + (gpt_text or ""),
                 tickers_gpt,
             )
-            if bt.get("themes") or bt.get("portfolio_confirmed") or bt.get("new_watchlist"):
+            # Fallback: if GPT returned NONE but we detected pure-play themes, patch STOCKS line
+            if not tickers_gpt and bt.get("theme_pureplay"):
+                pp = bt["theme_pureplay"][:5]
+                gpt_text = re.sub(
+                    r"🎯 STOCKS:\s*NONE",
+                    f"🎯 STOCKS: {', '.join(pp)}\n🧭 INFERRED: true (theme pure-plays · OLYMPUS fallback)",
+                    gpt_text,
+                    count=1,
+                    flags=re.IGNORECASE,
+                )
+                tickers_gpt = pp
+            if gpt_text:
+                lines.append(escape(gpt_text))
+            else:
+                lines.append("⚠️ GPT returned empty — check manually")
+            if bt.get("themes") or bt.get("portfolio_confirmed") or bt.get("new_watchlist") or bt.get("theme_pureplay"):
                 lines.append("")
                 lines.append(
                     f"🌍 <b>THEME:</b> {escape(', '.join(bt['themes']) or 'none')}"
@@ -505,6 +599,11 @@ Content: {content[:1500]}
                     f"🔍 <b>NEW WATCHLIST CANDIDATES:</b> "
                     f"{escape(', '.join(bt['new_watchlist']) or 'none')}"
                 )
+                if bt.get("theme_pureplay"):
+                    lines.append(
+                        f"🎯 <b>THEME PURE-PLAYS:</b> "
+                        f"{escape(', '.join(bt['theme_pureplay']))}"
+                    )
             _extract_and_register_tickers(content, post.get("title", "") or title)
         else:
             lines.append("⚠️ Could not fetch content — check manually")
