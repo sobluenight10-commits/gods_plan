@@ -23,6 +23,15 @@ def _refresh_fred_liquidity() -> None:
         print(f"[FRED] refresh failed: {exc}")
 
 
+def _enrich_catalysts() -> None:
+    """Pull Finnhub catalysts (next earnings, EPS-beat streak, analyst rec delta)."""
+    try:
+        from tools.catalyst_enricher import enrich_all
+        enrich_all()
+    except Exception as exc:
+        print(f"[CATALYST] enrich failed: {exc}")
+
+
 def _grade_diff_digest() -> None:
     """Run the GEM grade-change digest (silent if no new run today)."""
     try:
@@ -35,6 +44,7 @@ def _grade_diff_digest() -> None:
 def main():
     print("=== OLYMPUS DAILY PIPELINE ===")
     _refresh_fred_liquidity()
+    _enrich_catalysts()
     from fetch_data import get_all_data
     from olympus_engine import run_engine
     from output_factory import generate_outputs

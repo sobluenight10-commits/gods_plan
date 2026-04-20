@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional, Tuple
 BASE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GEM_DIR = os.path.join(BASE, "gem_results")
 RISK_LATEST = os.path.join(BASE, "data", "skill_results", "risk_latest.json")
+CATALYSTS  = os.path.join(BASE, "data", "finnhub_catalysts.json")
 STATE = os.path.join(BASE, "data", "gem_diff_state.json")
 
 GRADE_ORDER = ["S", "A+", "A", "B+", "B", "C+", "C", "D", "F"]
@@ -144,6 +145,59 @@ def _load_risk_full() -> Dict[str, Dict[str, Any]]:
     return d.get("results") or {}
 
 
+def _load_catalysts() -> Dict[str, Dict[str, Any]]:
+    """Per-ticker Finnhub catalyst data (produced by tools/catalyst_enricher.py)."""
+    d = _load(CATALYSTS)
+    return d if isinstance(d, dict) else {}
+
+
+def _catalyst_lines(tk: str, cat: Dict[str, Dict[str, Any]]) -> List[str]:
+    """
+    Format per-ticker catalyst lines: earnings calendar, beat-streak, analyst
+    recommendation delta. Fully ticker-specific — never generic.
+    """
+    rec = cat.get(tk) or {}
+    out: List[str] = []
+    ne = rec.get("next_earnings") or {}
+    et = rec.get("earnings_trend") or {}
+    rd = rec.get("rec_delta") or {}
+    if ne.get("date"):
+        d = ne["date"]; days = ne.get("days_away")
+        extra = []
+        if ne.get("eps_estimate") is not None:
+            extra.append(f"EPS est {ne['eps_estimate']:.2f}")
+        if isinstance(days, int):
+            if days <= 7:
+                extra.append(f"<b>{days}d away — pre-print window</b>")
+            elif days <= 21:
+                extra.append(f"{days}d away")
+            else:
+                extra.append(f"{days}d away")
+        out.append(f"  📅 <i>Next earnings: {d}" + (f" · {' · '.join(extra)}" if extra else "") + "</i>")
+    if et.get("beats_last4") is not None and et.get("sample_size"):
+        last = et.get("last_surprise_pct")
+        avg  = et.get("avg_surprise_pct")
+        out.append(
+            f"  📊 <i>Beat streak: {et['beats_last4']}/{et['sample_size']} · "
+            f"last {last:+.1f}% · avg {avg:+.1f}%</i>"
+        )
+    if rd.get("tone"):
+        tone = rd["tone"].replace("_", " ")
+        delta_bits = []
+        for k in ("strongBuy", "buy", "hold", "sell"):
+            v = rd.get(k, 0)
+            if v:
+                delta_bits.append(f"{k}:{v:+d}")
+        br = rd.get("buy_ratio")
+        extra = f" · buy-ratio {br:.0%}" if isinstance(br, (int, float)) else ""
+        out.append(
+            f"  👥 <i>Analysts: {tone}"
+            + (f" ({', '.join(delta_bits)})" if delta_bits else "")
+            + extra + "</i>"
+        )
+    return out
+
+
 def _specific_risk_lines(tk: str, risk_full: Dict[str, Dict[str, Any]]) -> List[str]:
     """
     Pull the TICKER-SPECIFIC narratives for the top-ranked risk dimensions.
@@ -259,12 +313,38 @@ def _horizon_line(cur: Dict[str, Any]) -> str:
     return f"Near {near or '—'}, Long {lng or '—'}"
 
 
+def _catalyst_action_hint(tk: str, cat: Dict[str, Dict[str, Any]]) -> str:
+    """Turn catalyst data into a timing modifier for the SO WHAT line."""
+    rec = cat.get(tk) or {}
+    ne = rec.get("next_earnings") or {}
+    rd = rec.get("rec_delta") or {}
+    et = rec.get("earnings_trend") or {}
+    bits = []
+    days = ne.get("days_away")
+    if isinstance(days, int) and 0 <= days <= 7:
+        bits.append(f"pre-print caution ({days}d to earnings)")
+    elif isinstance(days, int) and days <= 14:
+        bits.append(f"earnings in {days}d — no fresh size until print")
+    tone = rd.get("tone", "")
+    if tone in ("materially_more_bullish", "slightly_more_bullish"):
+        bits.append("analyst tape turning up")
+    elif tone in ("materially_less_bullish", "slightly_less_bullish"):
+        bits.append("analyst tape softening")
+    if et.get("beats_last4") is not None and et.get("sample_size", 0) >= 3:
+        if et["beats_last4"] == et["sample_size"] and et["sample_size"] >= 3:
+            bits.append("4/4 beat streak")
+        elif et["beats_last4"] == 0:
+            bits.append("recent miss pattern")
+    return "; ".join(bits)
+
+
 def _ticker_action(
     prev: Dict[str, Any],
     cur: Dict[str, Any],
     *,
     direction: str,
     risk_lines: List[str],
+    catalyst_hint: str = "",
 ) -> str:
     """
     Ticker-unique action. Combines:
@@ -356,6 +436,8 @@ def _ticker_action(
     if direction == "new":
         return f"WATCH — newly covered at {cur['grade']}, risk {cur_risk}. Size only once {reentry}."
 
+    if catalyst_hint:
+        return f"{base} · <i>{catalyst_hint}</i>"
     return base
 
 
@@ -391,7 +473,7 @@ def _gem_files() -> List[str]:
     return sorted(f for f in os.listdir(GEM_DIR) if f.startswith("gem_") and f.endswith(".json"))
 
 
-def _fmt_rank_changes(lbl: str, icon: str, items, risk_full) -> List[str]:
+def _fmt_rank_changes(lbl: str, icon: str, items, risk_full, cat) -> List[str]:
     if not items:
         return []
     out = [f"{icon} <b>{lbl}</b>"]
@@ -399,12 +481,15 @@ def _fmt_rank_changes(lbl: str, icon: str, items, risk_full) -> List[str]:
         header = f"<b>{tk}</b>  #{pr} → <b>#{cr}</b>  · {cur['pgrade']}"
         drv = _driver(prev, cur)
         risk_lines = _specific_risk_lines(tk, risk_full)
+        cat_lines = _catalyst_lines(tk, cat)
+        cat_hint = _catalyst_action_hint(tk, cat)
         horizon = _horizon_line(cur)
-        sw = _ticker_action(prev, cur, direction=direction, risk_lines=risk_lines)
+        sw = _ticker_action(prev, cur, direction=direction, risk_lines=risk_lines, catalyst_hint=cat_hint)
         out.append(header)
         if drv != "—":
             out.append(f"  {drv}")
         out += _risk_drivers_lines(risk_lines, cur.get("risk", ""))
+        out += cat_lines
         if horizon:
             out.append(f"  🧭 <i>{horizon}</i>")
         out.append(f"  → <b>SO WHAT:</b> {sw}")
@@ -412,7 +497,7 @@ def _fmt_rank_changes(lbl: str, icon: str, items, risk_full) -> List[str]:
     return out
 
 
-def _fmt_grade_changes(lbl: str, icon: str, items, risk_full) -> List[str]:
+def _fmt_grade_changes(lbl: str, icon: str, items, risk_full, cat) -> List[str]:
     if not items:
         return []
     out = [f"{icon} <b>{lbl}</b>"]
@@ -420,12 +505,15 @@ def _fmt_grade_changes(lbl: str, icon: str, items, risk_full) -> List[str]:
         header = f"<b>{tk}</b>  {prev['grade']} → <b>{cur['grade']}</b>"
         drv = _driver(prev, cur)
         risk_lines = _specific_risk_lines(tk, risk_full)
+        cat_lines = _catalyst_lines(tk, cat)
+        cat_hint = _catalyst_action_hint(tk, cat)
         horizon = _horizon_line(cur)
-        sw = _ticker_action(prev, cur, direction=direction, risk_lines=risk_lines)
+        sw = _ticker_action(prev, cur, direction=direction, risk_lines=risk_lines, catalyst_hint=cat_hint)
         out.append(header)
         if drv != "—":
             out.append(f"  {drv}")
         out += _risk_drivers_lines(risk_lines, cur.get("risk", ""))
+        out += cat_lines
         if horizon:
             out.append(f"  🧭 <i>{horizon}</i>")
         out.append(f"  → <b>SO WHAT:</b> {sw}")
@@ -454,6 +542,7 @@ def run() -> int:
     prev_doc = _load(os.path.join(GEM_DIR, files[-2])) or {}
     cur_doc = _load(os.path.join(GEM_DIR, latest_name)) or {}
     risk_full = _load_risk_full()
+    cat = _load_catalysts()
 
     prev_rows = {tk: r for tk, r in _ordered(prev_doc)}
     cur_ordered = _ordered(cur_doc)
@@ -504,18 +593,20 @@ def run() -> int:
     if not any_change:
         lines.append("No change in grade or order vs previous run.")
     else:
-        lines += _fmt_grade_changes("GRADE UPGRADES", "🟢", grade_ups, risk_full)
-        lines += _fmt_grade_changes("GRADE DOWNGRADES", "🔴", grade_downs, risk_full)
-        lines += _fmt_rank_changes("RANK GAINERS (top 15)", "⬆️", rank_gainers, risk_full)
-        lines += _fmt_rank_changes("RANK LOSERS (top 15)", "⬇️", rank_losers, risk_full)
+        lines += _fmt_grade_changes("GRADE UPGRADES", "🟢", grade_ups, risk_full, cat)
+        lines += _fmt_grade_changes("GRADE DOWNGRADES", "🔴", grade_downs, risk_full, cat)
+        lines += _fmt_rank_changes("RANK GAINERS (top 15)", "⬆️", rank_gainers, risk_full, cat)
+        lines += _fmt_rank_changes("RANK LOSERS (top 15)", "⬇️", rank_losers, risk_full, cat)
         if new_names:
             lines.append("🆕 <b>NEW IN UNIVERSE</b>")
             for tk, c in new_names[:6]:
                 lines.append(f"  <b>{tk}</b> · {c['pgrade']} · risk {c['risk']}")
                 rl = _specific_risk_lines(tk, risk_full)
                 lines += _risk_drivers_lines(rl, c.get("risk", ""))
+                lines += _catalyst_lines(tk, cat)
                 fake_prev = {"grade": c["grade"], "risk": "", "u1y": 0, "u5y": 0, "tier": c["tier"]}
-                lines.append(f"  → <b>SO WHAT:</b> {_ticker_action(fake_prev, c, direction='new', risk_lines=rl)}")
+                hint = _catalyst_action_hint(tk, cat)
+                lines.append(f"  → <b>SO WHAT:</b> {_ticker_action(fake_prev, c, direction='new', risk_lines=rl, catalyst_hint=hint)}")
                 lines.append("")
         if dropped:
             lines.append("🧹 <b>DROPPED FROM UNIVERSE:</b> " + ", ".join(dropped[:10]))
