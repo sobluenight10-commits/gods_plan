@@ -51,13 +51,14 @@ def _load_env() -> None:
                 os.environ.setdefault(k.strip(), v.strip())
 
 
+_VALID = sorted(list(VALID_ACTIONS) + ["HOLD"])
 SCHEMA_PROMPT = f"""You are OLYMPUS Ledger Parser.
 Extract structured investment decisions from the user's personal journal prose.
 
 Return ONLY a JSON array (no prose around it). Each element:
 {{
   "ticker": "UPPERCASE_SYMBOL",
-  "action": "one of {sorted(VALID_ACTIONS | {{'HOLD'}})}",
+  "action": "one of {_VALID}",
   "price": number or null,
   "date": "YYYY-MM-DD" (default today if missing),
   "thesis": "what the investor believes (1-2 sentences, investor's own framing)",
