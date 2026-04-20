@@ -217,8 +217,76 @@ def _fmt(flags: Dict[str, List[Dict[str, Any]]]) -> str:
             for t, bt in ranked[:8]:
                 lines.append(f"    {t:<18} n={bt['n']} · win {bt['win_rate']*100:.0f}% · avg {bt['avg_pnl']:+.1f}%")
     lines.append("")
+
+    # ── EMOTIONAL PATTERN — the compounding edge ──
+    lines += _emotional_pattern_lines()
+
     lines.append("<i>Your own ledger = your structural edge. Institutions cannot do this per-individual.</i>")
     return "\n".join(lines)
+
+
+# ─────────────────────────── EMOTIONAL PATTERN ───────────────────────────
+def _feel_bucket(feel: str) -> str:
+    """Collapse free-form feel strings into 4 behavioural buckets."""
+    f = (feel or "").lower().strip()
+    if not f:
+        return ""
+    if any(k in f for k in ("fomo", "fear of missing", "hype", "chase", "rushed", "excited")):
+        return "FOMO"
+    if any(k in f for k in ("fear", "anxious", "worr", "scared", "panic", "nervous")):
+        return "FEAR"
+    if any(k in f for k in ("doubt", "unsure", "uncertain", "confused", "hesit")):
+        return "DOUBT"
+    if any(k in f for k in ("calm", "conviction", "patient", "confident", "solid", "clear")):
+        return "CONVICTION"
+    if any(k in f for k in ("regret", "mistake", "missed", "should have")):
+        return "REGRET"
+    if any(k in f for k in ("greed", "confident", "sure-thing", "easy")):
+        return "GREED"
+    return f.split()[0].upper()[:12]
+
+
+def _emotional_pattern_lines() -> List[str]:
+    """Analyse feel-tagged closed decisions to surface: 'your best decisions felt X, worst felt Y'."""
+    from thesis_ledger import list_closed, list_open
+    lines = ["🧠 <b>EMOTIONAL PATTERN (closed decisions)</b>"]
+    closed = [r for r in list_closed() if r.get("pnl_pct") is not None and r.get("feel")]
+    if not closed:
+        lines.append("  Need ≥1 closed decision with a <i>feel</i> note to surface pattern. Keep journalling.")
+        lines.append("")
+        # Still useful: show the open-position feel distribution
+        open_with_feel = [r for r in list_open() if r.get("feel")]
+        if open_with_feel:
+            lines.append("  <b>Open positions by feel:</b>")
+            counts: Dict[str, int] = {}
+            for r in open_with_feel:
+                b = _feel_bucket(r["feel"]) or "OTHER"
+                counts[b] = counts.get(b, 0) + 1
+            for b, n in sorted(counts.items(), key=lambda x: -x[1]):
+                lines.append(f"    {b:<12} {n}")
+            lines.append("")
+        return lines
+    buckets: Dict[str, Dict[str, Any]] = {}
+    for r in closed:
+        b = _feel_bucket(r["feel"]) or "OTHER"
+        bt = buckets.setdefault(b, {"n": 0, "wins": 0, "pnl": []})
+        bt["n"] += 1
+        bt["pnl"].append(r["pnl_pct"] or 0)
+        if (r["pnl_pct"] or 0) > 0:
+            bt["wins"] += 1
+    for b, bt in buckets.items():
+        bt["win_rate"] = round(bt["wins"] / bt["n"], 2) if bt["n"] else 0
+        bt["avg_pnl"] = round(sum(bt["pnl"]) / len(bt["pnl"]), 2) if bt["pnl"] else 0
+    ranked = sorted(buckets.items(), key=lambda x: -x[1]["avg_pnl"])
+    if ranked:
+        best_b, best = ranked[0]
+        worst_b, worst = ranked[-1]
+        lines.append(f"  <b>Best feel state:</b> {best_b} — n={best['n']} · win {best['win_rate']*100:.0f}% · avg {best['avg_pnl']:+.1f}%")
+        if len(ranked) > 1:
+            lines.append(f"  <b>Worst feel state:</b> {worst_b} — n={worst['n']} · win {worst['win_rate']*100:.0f}% · avg {worst['avg_pnl']:+.1f}%")
+        lines.append("  <i>Rule of thumb: size UP when you feel like your best state; size DOWN / wait when you feel like your worst.</i>")
+    lines.append("")
+    return lines
 
 
 def run() -> int:

@@ -929,12 +929,13 @@ td.mx-eval.oly-tip::after {
       <th style="text-align:right;padding:4px 6px;">NOW</th>
       <th style="text-align:right;padding:4px 6px;">P&amp;L</th>
       <th style="text-align:center;padding:4px 6px;" title="Conviction at entry (1–10)">CONV</th>
+      <th style="text-align:left;padding:4px 6px;" title="Emotional state at decision — this is the compounding signal">FEEL</th>
       <th style="text-align:left;padding:4px 6px;">TYPE</th>
       <th style="text-align:center;padding:4px 6px;" title="Days since thesis last reviewed">REV</th>
-      <th style="text-align:left;padding:4px 6px;max-width:420px;">THESIS</th>
+      <th style="text-align:left;padding:4px 6px;max-width:380px;">THESIS / LEARN</th>
       <th style="text-align:left;padding:4px 6px;">FLAG</th>
     </tr></thead>
-    <tbody id="ledger-body"><tr><td colspan="10" style="padding:8px;color:#666;">Loading…</td></tr></tbody>
+    <tbody id="ledger-body"><tr><td colspan="11" style="padding:8px;color:#666;">Loading…</td></tr></tbody>
   </table>
   <div style="font-family:'DM Mono',monospace;font-size:10px;color:#7a6a3a;margin-top:6px;line-height:1.6;">
     Log a decision: <code style="background:#efe7cf;padding:1px 4px;">python3 thesis_ledger.py add TICKER BUY PRICE --thesis "..." --catalyst "..." --horizon 3Y --conviction 8 --target X --stop Y --type ai_infra</code>
@@ -953,7 +954,7 @@ td.mx-eval.oly-tip::after {
         var body = document.getElementById("ledger-body");
         var meta = document.getElementById("ledger-meta");
         var hr   = document.getElementById("ledger-hit-rate");
-        if(!d || !d.decisions){ body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#a32d2d;">ledger not published — run <code>python3 tools/publish_ledger.py</code> on server</td></tr>'; return; }
+        if(!d || !d.decisions){ body.innerHTML = '<tr><td colspan="11" style="padding:8px;color:#a32d2d;">ledger not published — run <code>python3 tools/publish_ledger.py</code> on server</td></tr>'; return; }
         var opens  = d.decisions.filter(function(r){ return r.status==="open"; });
         var closed = d.decisions.filter(function(r){ return r.status==="closed" && r.pnl_pct!=null; });
         // Hit-rate line
@@ -968,7 +969,7 @@ td.mx-eval.oly-tip::after {
           hr.textContent = "No closed decisions yet — ledger seeding.";
         }
         meta.textContent = "· " + opens.length + " open · last updated " + (d.meta && d.meta.last_written ? d.meta.last_written.slice(0,19) : "?");
-        if(!opens.length){ body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#666;">No open decisions logged yet. Seed with <code>python3 tools/ledger_seed.py</code>.</td></tr>'; return; }
+        if(!opens.length){ body.innerHTML = '<tr><td colspan="11" style="padding:8px;color:#666;">No open decisions logged yet. Seed with <code>python3 tools/ledger_seed.py</code>.</td></tr>'; return; }
         // Pull current price from existing matrix rows
         var priceMap = {};
         document.querySelectorAll('.pnow[data-ticker]').forEach(function(el){
@@ -988,6 +989,13 @@ td.mx-eval.oly-tip::after {
           else if(pnl!=null && pnl<=-25 && (rev||0)>=30)                 flag = "🟨 ANCHOR";
           var pnlCol = pnl==null ? "#666" : (pnl>=0 ? "#2d7a2d" : "#a32d2d");
           var revCol = (rev!=null && rev>=30) ? "#a32d2d" : (rev!=null && rev>=14 ? "#b8860b" : "#4a4a4a");
+          var feel = r.feel || "";
+          var learn = r.learn || "";
+          var feelCol = feel ? "#5c4810" : "#bbb";
+          var esc = function(s){ return (s||"").replace(/"/g,"&quot;").replace(/</g,"&lt;"); };
+          var tipText = esc(r.thesis || "") + (learn ? "\n\nLEARN: " + esc(learn) : "") + (r.raw_note ? "\n\nRAW: " + esc(r.raw_note) : "");
+          var thesisCellText = (r.thesis || "—") + (learn ? "  <span style=\"color:#5c4810;\">💡 "+esc(learn).slice(0,60)+"</span>" : "");
+          var notesCount = (r.notes && r.notes.length) ? (' <span style="color:#8b6914;">· '+r.notes.length+' note'+(r.notes.length>1?"s":"")+'</span>') : "";
           return '<tr style="border-bottom:1px solid #e8e0c9;">' +
             '<td style="padding:4px 6px;font-weight:700;">'+r.ticker+'</td>' +
             '<td style="padding:4px 6px;color:#555;">'+(r.date||"—")+'</td>' +
@@ -995,9 +1003,10 @@ td.mx-eval.oly-tip::after {
             '<td style="padding:4px 6px;text-align:right;">'+(now!=null?fmt(now,2):"—")+'</td>' +
             '<td style="padding:4px 6px;text-align:right;color:'+pnlCol+';font-weight:700;">'+(pnl!=null?(pnl>=0?"+":"")+pnl.toFixed(1)+"%":"—")+'</td>' +
             '<td style="padding:4px 6px;text-align:center;">'+r.conviction+'/10</td>' +
+            '<td style="padding:4px 6px;color:'+feelCol+';font-style:italic;">'+(feel||"—")+'</td>' +
             '<td style="padding:4px 6px;color:#5c4810;">'+(r.thesis_type||"—")+'</td>' +
             '<td style="padding:4px 6px;text-align:center;color:'+revCol+';" title="days since thesis reviewed">'+(rev==null?"—":rev+"d")+'</td>' +
-            '<td style="padding:4px 6px;color:#333;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+(r.thesis||"").replace(/"/g,"&quot;")+'">'+(r.thesis||"—")+'</td>' +
+            '<td style="padding:4px 6px;color:#333;max-width:380px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help;" title="'+tipText+'">'+thesisCellText+notesCount+'</td>' +
             '<td style="padding:4px 6px;font-weight:700;">'+flag+'</td>' +
             '</tr>';
         }).join("");

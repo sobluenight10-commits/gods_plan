@@ -101,7 +101,8 @@ def _today() -> str:
 
 
 # ─────────────────────────── CORE OPS ───────────────────────────
-VALID_ACTIONS = {"BUY", "SELL", "TRIM", "ADD", "SKIP"}
+VALID_ACTIONS = {"BUY", "SELL", "TRIM", "ADD", "SKIP", "STAY"}
+ACTION_ALIAS = {"HOLD": "STAY", "FILL": "ADD", "DIP-BUY": "ADD", "DIP BUY": "ADD"}
 
 
 def add_decision(
@@ -119,18 +120,28 @@ def add_decision(
     thesis_type: str = "",
     size_pct: Optional[float] = None,
     when: Optional[str] = None,
+    feel: str = "",
+    learn: str = "",
+    raw_note: str = "",
 ) -> Dict[str, Any]:
-    action = action.upper().strip()
+    action_raw = action.upper().strip()
+    action = ACTION_ALIAS.get(action_raw, action_raw)
     if action not in VALID_ACTIONS:
-        raise ValueError(f"action must be one of {VALID_ACTIONS}")
+        raise ValueError(f"action must be one of {VALID_ACTIONS} (got {action_raw})")
     if not thesis:
         raise ValueError("thesis is required — no anonymous bets")
+    # STAY = active decision NOT to act; it's a note on an existing open position.
+    if action == "STAY":
+        rec_note = add_note(ticker, f"[STAY @ {price}] {thesis}" + (f" · feel: {feel}" if feel else "") + (f" · learn: {learn}" if learn else ""))
+        if rec_note:
+            return rec_note
+        # No open position → fall through and record as a standalone record for history
     rec = {
         "id": uuid.uuid4().hex[:12],
         "ticker": ticker.upper().strip(),
         "action": action,
         "date": when or _today(),
-        "price": float(price),
+        "price": float(price) if price is not None else None,
         "size_pct": float(size_pct) if size_pct is not None else None,
         "thesis": thesis.strip(),
         "catalyst": catalyst.strip(),
@@ -140,6 +151,9 @@ def add_decision(
         "stop_loss": float(stop_loss) if stop_loss is not None else None,
         "exit_criteria": exit_criteria.strip(),
         "thesis_type": thesis_type.strip().lower(),
+        "feel": feel.strip().lower(),
+        "learn": learn.strip(),
+        "raw_note": raw_note.strip(),
         "status": "open" if action in {"BUY", "ADD"} else ("closed" if action in {"SELL", "SKIP"} else "open"),
         "thesis_last_reviewed": _today(),
         "exit_date": None,
@@ -253,8 +267,9 @@ def _cli_add(args: argparse.Namespace) -> int:
         target=args.target, stop_loss=args.stop,
         exit_criteria=args.exit or "", thesis_type=args.type or "",
         size_pct=args.size, when=args.date,
+        feel=args.feel or "", learn=args.learn or "", raw_note=args.raw or "",
     )
-    print(f"[LEDGER] {rec['action']} {rec['ticker']} @ {rec['price']} · conv {rec['conviction']}/10 · id {rec['id']}")
+    print(f"[LEDGER] {rec.get('action','NOTE')} {rec['ticker']} @ {rec.get('price','—')} · conv {rec.get('conviction','—')}/10 · id {rec.get('id','—')}")
     return 0
 
 
@@ -319,6 +334,7 @@ def main() -> int:
     a.add_argument("--target", type=float); a.add_argument("--stop", type=float)
     a.add_argument("--exit", default=""); a.add_argument("--type", default="")
     a.add_argument("--size", type=float); a.add_argument("--date")
+    a.add_argument("--feel", default=""); a.add_argument("--learn", default=""); a.add_argument("--raw", default="")
     a.set_defaults(func=_cli_add)
 
     e = sub.add_parser("exit")
