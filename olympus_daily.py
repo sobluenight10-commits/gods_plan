@@ -41,6 +41,15 @@ def _grade_diff_digest() -> None:
         print(f"[GEM_DIFF] digest failed: {exc}")
 
 
+def _publish_ledger() -> None:
+    """Copy thesis_ledger to /var/www/html/ledger.json for dashboard fetch."""
+    try:
+        from tools.publish_ledger import main as _pub
+        _pub()
+    except Exception as exc:
+        print(f"[LEDGER] publish failed: {exc}")
+
+
 def main():
     print("=== OLYMPUS DAILY PIPELINE ===")
     _refresh_fred_liquidity()
@@ -54,6 +63,7 @@ def main():
     print(f"Engine: ONE COMMAND = {state['one_command'][:60]}")
     generate_outputs(state)
     _grade_diff_digest()
+    _publish_ledger()
     print("=== DONE ===")
 
 

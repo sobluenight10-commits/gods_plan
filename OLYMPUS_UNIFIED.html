@@ -907,6 +907,114 @@ td.mx-eval.oly-tip::after {
 <!-- ═══════════════════════════════════════════════════════ -->
 <div class="tab-panel active" id="tab-matrix" style="padding:0;background:var(--es-paper);">
 
+<!-- ═══════════════════════════════════════════════════════════════════
+     DECISION LOG — thesis ledger (structural edge vs institutions)
+     Loaded from /ledger.json. Institutions cannot run per-individual
+     journals — we can, and it compounds.
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="ledger-panel" style="padding:14px 40px 12px;background:linear-gradient(180deg,#f4f1ea 0%,#efebe0 100%);border-bottom:1px solid #d8cfbe;">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#3d2e08;margin-bottom:8px;line-height:1.5;">
+    📓 DECISION LOG
+    <span style="font-weight:500;color:#4a4a4a;font-size:11px;letter-spacing:0.02em;text-transform:none;display:inline-block;margin-left:10px;">
+      — your thesis ledger · institutions cannot do this per-individual · this is the compounding edge
+      <span id="ledger-meta" style="color:#7a6a3a;margin-left:8px;"></span>
+    </span>
+  </div>
+  <div id="ledger-hit-rate" style="font-family:'DM Mono',monospace;font-size:11px;color:#5c4810;margin-bottom:6px;"></div>
+  <table id="ledger-table" style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-variant-numeric:tabular-nums;font-size:11px;">
+    <thead><tr style="border-bottom:1.5px solid #a38b3f;color:#5c4810;">
+      <th style="text-align:left;padding:4px 6px;">TICKER</th>
+      <th style="text-align:left;padding:4px 6px;">DATE</th>
+      <th style="text-align:right;padding:4px 6px;">ENTRY</th>
+      <th style="text-align:right;padding:4px 6px;">NOW</th>
+      <th style="text-align:right;padding:4px 6px;">P&amp;L</th>
+      <th style="text-align:center;padding:4px 6px;" title="Conviction at entry (1–10)">CONV</th>
+      <th style="text-align:left;padding:4px 6px;">TYPE</th>
+      <th style="text-align:center;padding:4px 6px;" title="Days since thesis last reviewed">REV</th>
+      <th style="text-align:left;padding:4px 6px;max-width:420px;">THESIS</th>
+      <th style="text-align:left;padding:4px 6px;">FLAG</th>
+    </tr></thead>
+    <tbody id="ledger-body"><tr><td colspan="10" style="padding:8px;color:#666;">Loading…</td></tr></tbody>
+  </table>
+  <div style="font-family:'DM Mono',monospace;font-size:10px;color:#7a6a3a;margin-top:6px;line-height:1.6;">
+    Log a decision: <code style="background:#efe7cf;padding:1px 4px;">python3 thesis_ledger.py add TICKER BUY PRICE --thesis "..." --catalyst "..." --horizon 3Y --conviction 8 --target X --stop Y --type ai_infra</code>
+    · Weekly audit auto-sent Sundays 20:00 Berlin.
+  </div>
+</div>
+
+<script>
+(function(){
+  function fmt(v, d){ return (v==null||isNaN(v))?"—":(Number(v).toFixed(d||2)); }
+  function daysAgo(iso){ if(!iso) return null; try{ return Math.round((Date.now()-new Date(iso).getTime())/86400000); }catch(e){ return null; } }
+  function loadLedger(){
+    fetch("/ledger.json?cb=" + Date.now(), {cache:"no-store"})
+      .then(function(r){ return r.ok?r.json():null; })
+      .then(function(d){
+        var body = document.getElementById("ledger-body");
+        var meta = document.getElementById("ledger-meta");
+        var hr   = document.getElementById("ledger-hit-rate");
+        if(!d || !d.decisions){ body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#a32d2d;">ledger not published — run <code>python3 tools/publish_ledger.py</code> on server</td></tr>'; return; }
+        var opens  = d.decisions.filter(function(r){ return r.status==="open"; });
+        var closed = d.decisions.filter(function(r){ return r.status==="closed" && r.pnl_pct!=null; });
+        // Hit-rate line
+        if(closed.length){
+          var wins = closed.filter(function(r){ return r.pnl_pct>0; });
+          var rate = Math.round(100*wins.length/closed.length);
+          var avgW = wins.length ? (wins.reduce(function(a,r){return a+r.pnl_pct;},0)/wins.length) : 0;
+          var loss = closed.filter(function(r){ return r.pnl_pct<=0; });
+          var avgL = loss.length ? (loss.reduce(function(a,r){return a+r.pnl_pct;},0)/loss.length) : 0;
+          hr.innerHTML = "Closed: <b>"+closed.length+"</b> · Win rate <b>"+rate+"%</b> · Avg winner <b>"+avgW.toFixed(1)+"%</b> · Avg loser <b>"+avgL.toFixed(1)+"%</b>";
+        } else {
+          hr.textContent = "No closed decisions yet — ledger seeding.";
+        }
+        meta.textContent = "· " + opens.length + " open · last updated " + (d.meta && d.meta.last_written ? d.meta.last_written.slice(0,19) : "?");
+        if(!opens.length){ body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#666;">No open decisions logged yet. Seed with <code>python3 tools/ledger_seed.py</code>.</td></tr>'; return; }
+        // Pull current price from existing matrix rows
+        var priceMap = {};
+        document.querySelectorAll('.pnow[data-ticker]').forEach(function(el){
+          var t = el.getAttribute('data-ticker');
+          var v = parseFloat((el.textContent||"").replace(/[^0-9\.\-]/g,""));
+          if(!isNaN(v)) priceMap[t] = v;
+        });
+        var rows = opens.map(function(r){
+          var now = priceMap[r.ticker] != null ? priceMap[r.ticker] : null;
+          var pnl = (now && r.price) ? (100*(now/r.price - 1)) : null;
+          var rev = daysAgo(r.thesis_last_reviewed || r.date);
+          // Flag logic mirrors tools/ledger_review.py
+          var flag = "";
+          if(r.stop_loss!=null && now!=null && now <= r.stop_loss)      flag = "🟥 STOP";
+          else if(r.target!=null && now!=null && now >= r.target)        flag = "🟩 TARGET";
+          else if(pnl!=null && Math.abs(pnl)>=20 && (rev||0)>=14)        flag = "🟧 DRIFT";
+          else if(pnl!=null && pnl<=-25 && (rev||0)>=30)                 flag = "🟨 ANCHOR";
+          var pnlCol = pnl==null ? "#666" : (pnl>=0 ? "#2d7a2d" : "#a32d2d");
+          var revCol = (rev!=null && rev>=30) ? "#a32d2d" : (rev!=null && rev>=14 ? "#b8860b" : "#4a4a4a");
+          return '<tr style="border-bottom:1px solid #e8e0c9;">' +
+            '<td style="padding:4px 6px;font-weight:700;">'+r.ticker+'</td>' +
+            '<td style="padding:4px 6px;color:#555;">'+(r.date||"—")+'</td>' +
+            '<td style="padding:4px 6px;text-align:right;">'+fmt(r.price,2)+'</td>' +
+            '<td style="padding:4px 6px;text-align:right;">'+(now!=null?fmt(now,2):"—")+'</td>' +
+            '<td style="padding:4px 6px;text-align:right;color:'+pnlCol+';font-weight:700;">'+(pnl!=null?(pnl>=0?"+":"")+pnl.toFixed(1)+"%":"—")+'</td>' +
+            '<td style="padding:4px 6px;text-align:center;">'+r.conviction+'/10</td>' +
+            '<td style="padding:4px 6px;color:#5c4810;">'+(r.thesis_type||"—")+'</td>' +
+            '<td style="padding:4px 6px;text-align:center;color:'+revCol+';" title="days since thesis reviewed">'+(rev==null?"—":rev+"d")+'</td>' +
+            '<td style="padding:4px 6px;color:#333;max-width:420px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="'+(r.thesis||"").replace(/"/g,"&quot;")+'">'+(r.thesis||"—")+'</td>' +
+            '<td style="padding:4px 6px;font-weight:700;">'+flag+'</td>' +
+            '</tr>';
+        }).join("");
+        body.innerHTML = rows;
+      })
+      .catch(function(e){
+        var body = document.getElementById("ledger-body");
+        if(body) body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#a32d2d;">ledger fetch error: '+(e&&e.message||e)+'</td></tr>';
+      });
+  }
+  // Initial + refresh after matrix price sync
+  document.addEventListener("DOMContentLoaded", loadLedger);
+  setTimeout(loadLedger, 2500);
+  setInterval(loadLedger, 60000);
+})();
+</script>
+
 <div id="grade-summary-panel" style="padding:16px 40px 14px;background:linear-gradient(180deg,#faf9f6 0%,#f5f3ee 100%);border-bottom:1px solid #dcd6cc;">
   <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5c4810;margin-bottom:10px;line-height:1.5;">GEM GRADE SUMMARY <span style="font-weight:500;color:#4a4a4a;font-size:11px;letter-spacing:0.02em;text-transform:none;display:inline-block;margin-top:4px;">— Risk-Integrated v5 · <span style="color:#2d7a2d">●</span> I <span style="color:#b8860b">●</span> II <span style="color:#a32d2d">●</span> III · Downside penalty + 9-dim risk scoring</span></div>
   <table id="grade-summary-table" style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-variant-numeric:tabular-nums;">
