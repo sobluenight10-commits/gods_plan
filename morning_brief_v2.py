@@ -22,8 +22,8 @@ PORTFOLIO = [
 ]
 
 WATCHLIST = [
-    {"ticker": "OKLO",  "limit": 44,   "note": "ARMED $44"},
-    {"ticker": "CCJ",   "limit": 100,  "note": "ARMED $100"},
+    {"ticker": "OKLO",  "limit": 57,   "note": "ARMED $57 (raised from $44)"},
+    {"ticker": "CCJ",   "limit": 105,  "note": "ARMED €105 (raised from $100)"},
     {"ticker": "ASML",  "limit": 1080, "note": "ARMED €1080 · Apr 16 earnings"},
 ]
 

@@ -43,7 +43,7 @@ PORTFOLIO_TICKERS = {
     "URNM":      {"name": "Sprott Uranium ETF",  "score": None, "action": "HOLD — ADD IN 2 WEEKS",   "broker": "TR"},
     "000660.KS": {"name": "SK Hynix",            "score": 10,   "action": "LEGEND — NEVER SELL",     "broker": "Kiwoom"},
     "272210.KS": {"name": "Hanwha Systems",      "score": 10,   "action": "LEGEND — NEVER SELL",     "broker": "Kiwoom"},
-    "KTOS":      {"name": "Kratos Defense",      "score": 9,    "action": "HOLD + ADD $80",          "broker": "Kiwoom"},
+    "KTOS":      {"name": "Kratos Defense",      "score": 9,    "action": "HOLD pending May 6",       "broker": "Kiwoom"},
     "IONQ":      {"name": "IonQ Quantum",        "score": 7,    "action": "LIMIT $25 ACTIVE",        "broker": "Kiwoom"},
     "HUYA":      {"name": "HUYA",                "score": 2,    "action": "EXIT MAR 17",             "broker": "Kiwoom"},
     "GEVO":      {"name": "Gevo",                "score": 4,    "action": "HOLD TO MAR 26 ONLY",     "broker": "Kiwoom"},

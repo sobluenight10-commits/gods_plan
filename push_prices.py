@@ -37,6 +37,8 @@ TICKERS = [
     ("BEAM",      "BEAM",      "USD"),
     ("272210.KS", "272210.KS", "KRW"),
     ("KTOS",      "KTOS",      "USD"),
+    ("UUUU",      "UUUU",      "USD"),
+    ("CWEN",      "CWEN",      "USD"),
     ("AVAV",      "AVAV",      "USD"),
     ("ARKQ",      "ARKQ",      "USD"),
     ("BOTZ",      "BOTZ",      "USD"),

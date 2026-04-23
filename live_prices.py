@@ -22,6 +22,7 @@ TICKERS = [
     ("BEAM",      "BEAM",      "USD"),
     ("272210.KS", "272210.KS", "KRW"),
     ("KTOS",      "KTOS",      "USD"),
+    ("UUUU",      "UUUU",      "USD"),
     ("LMT",       "LMT",       "USD"),
     ("NOC",       "NOC",       "USD"),
     ("RTX",       "RTX",       "USD"),
@@ -46,6 +47,8 @@ TICKERS = [
 ]
 
 OUT = "/root/gods_plan/data/prices.json"
+# The dashboard fetches /data/prices.json from webroot — MUST stay in sync.
+WEBROOT_OUT = "/var/www/html/data/prices.json"
 ALERT_STATE = "/root/gods_plan/data/plunge_alerts_today.json"
 BERLIN = pytz.timezone("Europe/Berlin")
 INTERVAL = 60
@@ -179,6 +182,13 @@ def fetch_cycle():
     with open(tmp, "w") as f:
         json.dump(payload, f)
     os.replace(tmp, OUT)
+    # Mirror to webroot so the dashboard actually serves fresh prices.
+    try:
+        import shutil
+        os.makedirs(os.path.dirname(WEBROOT_OUT), exist_ok=True)
+        shutil.copy2(OUT, WEBROOT_OUT)
+    except Exception as e:
+        print(f"[{stamp}] webroot mirror failed: {e}", flush=True)
     print(f"[{stamp}] {len(prices)} tickers OK, {errs} errors", flush=True)
 
     check_plunge_alerts(prices)

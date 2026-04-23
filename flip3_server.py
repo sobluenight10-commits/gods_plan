@@ -212,7 +212,7 @@ PORTFOLIO = {
         {"ticker": "272210.KS", "name": "Hanwha Systems",  "score": 10, "action": "LEGEND — NEVER SELL"},
     ],
     "Kiwoom US": [
-        {"ticker": "KTOS",  "name": "Kratos Defense",  "score": 9,  "action": "HOLD + ADD $80"},
+        {"ticker": "KTOS",  "name": "Kratos Defense",  "score": 9,  "action": "HOLD pending May 6"},
         {"ticker": "IONQ",  "name": "IonQ Quantum",    "score": 7,  "action": "LIMIT $25"},
     ],
 }

@@ -81,8 +81,8 @@ MATRIX = [
     ("energy", "Energy", "Uranium · Nuclear Renaissance · Solid-State Batteries", "c2", [
         {"t": "UEC", "n": "Uranium Energy", "g": "port", "god": 78, "ed": "€11", "en": 11.9, "em": "usd", "th": "intact", "sp": None, "st": "", "ac": "HOLD", "tg": "€11 limit", "tip": "Burke Hollow / spot leverage thesis."},
         {"t": "URNM", "n": "Sprott Uranium ETF", "g": "port", "god": 74, "ed": "€72", "en": 77.8, "em": "usd", "th": "intact", "sp": None, "st": "", "ac": "HOLD", "tg": "—", "tip": "Basket — structural uranium."},
-        {"t": "CCJ", "n": "Cameco", "g": "watch", "god": 82, "ed": "—", "en": 0, "em": "usd", "th": "intact", "sp": None, "st": "", "ac": "BUY", "tg": "$100", "tip": "Western producer — utility contracts."},
-        {"t": "OKLO", "n": "Oklo Inc", "g": "watch", "god": 70, "ed": "—", "en": 0, "em": "usd", "th": "intact", "sp": None, "st": "", "ac": "BUY", "tg": "$44", "tip": "SMR + Meta power deal / NRC path."},
+        {"t": "CCJ", "n": "Cameco", "g": "watch", "god": 82, "ed": "—", "en": 0, "em": "usd", "th": "intact", "sp": None, "st": "", "ac": "BUY", "tg": "€105 at market", "tip": "Western producer — utility contracts."},
+        {"t": "OKLO", "n": "Oklo Inc", "g": "watch", "god": 70, "ed": "—", "en": 0, "em": "usd", "th": "intact", "sp": None, "st": "", "ac": "BUY", "tg": "$57", "tip": "SMR + Meta power deal / NRC path."},
     ]),
     ("space", "Space / Logistics", "Orbital Infrastructure · Satellite Networks · Lunar Economy", "c3", [
         {"t": "PL", "n": "Planet Labs", "g": "port", "god": 84, "ed": "€28", "en": 28, "em": "eur_from_usd", "th": "intact", "sp": None, "st": "", "ac": "HOLD", "tg": "—", "tip": "NASA contract expansion 2026."},
@@ -263,8 +263,8 @@ FRAGMENT = f'''<div class="tab-panel active" id="tab-matrix" style="padding:0;ba
 
 <div class="alert-bar">
   <div class="alert-lbl">⚑ Alerts</div>
-  <div class="alert-chip">🟡 OKLO $44 armed — Meta 1.2GW + NRC 2026</div>
-  <div class="alert-chip">🟡 CCJ $100 armed — uranium blue chip</div>
+  <div class="alert-chip">🟡 OKLO $57 armed — Meta 1.2GW + NRC 2026</div>
+  <div class="alert-chip">🟡 CCJ €105 market armed — uranium blue chip</div>
   <div class="alert-chip">🟡 UEC €11 armed — spot leverage</div>
   <div class="alert-chip">🔵 PLTR stop €95 — thesis intact</div>
   <div class="alert-chip">🟠 ASML April 16 — beat=buy, miss=wait</div>
@@ -274,7 +274,7 @@ FRAGMENT = f'''<div class="tab-panel active" id="tab-matrix" style="padding:0;ba
 
 <div id="pf-line-compact" class="pf-line-compact">
   TR: <strong id="pf-tr-n">—</strong> positions · Kiwoom: <strong id="pf-kw-n">—</strong> positions · Dry Powder: <strong>€1,500</strong> ·
-  Active Limits: OKLO $44 · CCJ $100 · UEC €11 · Next Catalyst: <strong>ASML Apr 16</strong>
+  Active Limits: OKLO $57 · CCJ €105 market · UEC €11 · Next Catalyst: <strong>KTOS May 6</strong>
 </div>
 
   <div style="font-size:9px;color:var(--es-ink4);font-family:'DM Mono',monospace;padding:6px 16px 0;letter-spacing:0.1em;" id="es-price-status">prices loading...</div>

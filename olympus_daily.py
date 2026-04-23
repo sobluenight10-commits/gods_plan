@@ -77,6 +77,15 @@ def _catalyst_digest() -> None:
         print(f"[RADAR] digest failed: {exc}")
 
 
+def _build_active_actions() -> None:
+    """Single-source action layer — reconciles every panel to one truth."""
+    try:
+        from tools.build_active_actions import build
+        build()
+    except Exception as exc:
+        print(f"[ACTIONS] build failed: {exc}")
+
+
 def main():
     print("=== OLYMPUS DAILY PIPELINE ===")
     _refresh_fred_liquidity()
@@ -94,6 +103,8 @@ def main():
     _build_catalyst_radar()
     _publish_catalyst_radar()
     _catalyst_digest()
+    # Must run LAST — consumes directives, portfolio, thesis_history, radar
+    _build_active_actions()
     print("=== DONE ===")
 
 

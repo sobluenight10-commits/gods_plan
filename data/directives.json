@@ -5,12 +5,17 @@
     {
       "type": "BUY",
       "ticker": "OKLO",
-      "reason": "\u20ac600 at $44 limit. Meta 1.2GW signed. Sam Altman chairman. NRC 2026. 5Y hold."
+      "reason": "\u20ac600 at $57 limit (raised from $44 \u2014 stock never filled, re-armed at current support). Meta 1.2GW + Sam Altman + NRC 2026. 5Y hold."
     },
     {
       "type": "BUY",
       "ticker": "CCJ",
-      "reason": "\u20ac500 at $100 limit. Largest western uranium producer. Utility contracts. Blue chip anchor."
+      "reason": "\u20ac500 at market up to \u20ac105 (raised from $100 \u2014 blue chip accumulation). Largest western uranium producer. Utility contracts."
+    },
+    {
+      "type": "HOLD",
+      "ticker": "KTOS",
+      "reason": "Entry $85.50. Current ~$65.52 (-23.4%). Thesis INTACT \u2014 sector pullback only. HOLD pending May 6 earnings. NO ADD until print confirms."
     },
     {
       "type": "BUY",

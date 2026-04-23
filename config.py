@@ -256,7 +256,7 @@ PORTFOLIO: Dict[str, List[Dict]] = {
         {"ticker": "272210.KS", "name": "Hanwha Systems", "score": 10, "action": "LEGEND — NEVER SELL", "thesis": "Defense / space exposure"},
     ],
     "Kiwoom US": [
-        {"ticker": "KTOS", "name": "Kratos Defense", "score": 9, "action": "HOLD + ADD $80", "thesis": "Hypersonics / C5ISR"},
+        {"ticker": "KTOS", "name": "Kratos Defense", "score": 9, "action": "HOLD pending May 6", "thesis": "Hypersonics / C5ISR"},
     ],
 }
 
