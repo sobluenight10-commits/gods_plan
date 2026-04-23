@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "meta": {
+    "policy": "Bench = pre-vetted research queue only. No automatic buys, no sector 'quota' fills. Arm a limit only after: (1) company-specific catalyst, (2) thesis line written in ledger, (3) liquidity gate allows adds.",
+    "last_review_suggestion": "Sunday journal — pick one bench name per month to deep-read; ignore the rest.",
+    "updated": "2026-04-23"
+  },
+  "sectors": [
+    {
+      "id": "space",
+      "name": "Space / Logistics",
+      "context": "You already hold PL + RKLB; ASTS on watch. Bench adds optionality without diluting conviction count.",
+      "candidates": [
+        {
+          "ticker": "LMT",
+          "name": "Lockheed Martin",
+          "hook": "Prime / classified backlog — stabilizer when pure-plays gap on sentiment",
+          "catalyst_watch": "DoD budget · classified awards · space division mix",
+          "status": "bench"
+        },
+        {
+          "ticker": "RDW",
+          "name": "Redwire",
+          "hook": "Space infrastructure components — smaller cap, higher idiosyncratic risk",
+          "catalyst_watch": "NASA / defense subsystem orders",
+          "status": "bench"
+        }
+      ]
+    },
+    {
+      "id": "bio",
+      "name": "Bio-Engineering",
+      "context": "TMO + gene-edit trio (BEAM, NTLA, CRSP). Bench = large-cap derisk or adjacent modality.",
+      "candidates": [
+        {
+          "ticker": "REGN",
+          "name": "Regeneron",
+          "hook": "Antibody engine + cash-rich — ballast vs clinical-stage CRISPR names",
+          "catalyst_watch": "Dupixent / oncology readouts · guidance",
+          "status": "bench"
+        },
+        {
+          "ticker": "VRTX",
+          "name": "Vertex",
+          "hook": "CF monopoly cash — use as quality bar when sizing speculative bio",
+          "catalyst_watch": "Non-CF pipeline (pain, sickle) milestones",
+          "status": "bench"
+        }
+      ]
+    },
+    {
+      "id": "infrastructure",
+      "name": "Infrastructure",
+      "context": "ASML, VRT, COHR, AMAT held. Bench = semi-cap equipment / networking depth.",
+      "candidates": [
+        {
+          "ticker": "LRCX",
+          "name": "Lam Research",
+          "hook": "Etch/deposit duopoly — WFE spend levered",
+          "catalyst_watch": "China export rules · NAND cap spend",
+          "status": "bench"
+        },
+        {
+          "ticker": "KLAC",
+          "name": "KLA",
+          "hook": "Process control — highest margins in WFE",
+          "catalyst_watch": "Advanced packaging inspection demand",
+          "status": "bench"
+        }
+      ]
+    },
+    {
+      "id": "global",
+      "name": "Global Issue Radar",
+      "context": "NTR + FCX = deliberate concentration. Bench = regime hedges / adjacent commodities, not 'three more stocks'.",
+      "candidates": [
+        {
+          "ticker": "MOS",
+          "name": "Mosaic",
+          "hook": "Fertilizer peer to NTR — potash/phosphate spread plays",
+          "catalyst_watch": "Brazil/India import demand · nutrient pricing",
+          "status": "bench"
+        },
+        {
+          "ticker": "COPX",
+          "name": "Global X Copper Miners ETF",
+          "hook": "Broad copper exposure without single-mine risk (pairs with FCX thesis)",
+          "catalyst_watch": "China stimulus · grid spend · scrap tightness",
+          "status": "bench"
+        },
+        {
+          "ticker": "GLD",
+          "name": "SPDR Gold Shares",
+          "hook": "Liquidity / currency stress hedge — not a 'stock pick'",
+          "catalyst_watch": "Real rates · central bank buying",
+          "status": "bench"
+        }
+      ]
+    }
+  ]
+}

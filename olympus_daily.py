@@ -54,7 +54,7 @@ def _publish_watchlist_bench() -> None:
     """Ship watchlist_bench.json to webroot (research queue, not quota fills)."""
     try:
         import shutil
-        src = os.path.join(BASE, "data", "watchlist_bench.json")
+        src = os.path.join(BASE, "gem_inputs", "watchlist_bench.json")
         dst = "/var/www/html/watchlist_bench.json"
         if os.path.isfile(src):
             shutil.copy2(src, dst)
