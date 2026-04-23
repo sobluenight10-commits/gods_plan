@@ -1024,6 +1024,135 @@ td.mx-eval.oly-tip::after {
 })();
 </script>
 
+<!-- ═══════════════════════════════════════════════════════════════════
+     CATALYST RADAR — forward event map with base-rate asymmetry
+     Institutions have this for 500 stocks diluted. We have it for 30
+     stocks dense. This is where event-driven alpha is earned.
+     ═══════════════════════════════════════════════════════════════════ -->
+<div id="radar-panel" style="padding:14px 40px 12px;background:linear-gradient(180deg,#0e1a2a 0%,#142236 100%);border-top:1px solid #25354a;border-bottom:1px solid #25354a;color:#d6e1f0;">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#efc56a;margin-bottom:8px;line-height:1.5;">
+    🎯 CATALYST RADAR
+    <span style="font-weight:500;color:#9fb3cc;font-size:11px;letter-spacing:0.02em;text-transform:none;display:inline-block;margin-left:10px;">
+      — next 30 days · base-rate asymmetry · setup flags · attention overlay
+      <span id="radar-meta" style="color:#7a8fa8;margin-left:8px;"></span>
+    </span>
+  </div>
+  <div id="radar-warnings" style="font-family:'DM Mono',monospace;font-size:11px;color:#ffb14a;margin-bottom:6px;"></div>
+  <div id="radar-counts" style="font-family:'DM Mono',monospace;font-size:11px;color:#9fb3cc;margin-bottom:8px;"></div>
+  <table id="radar-table" style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-variant-numeric:tabular-nums;font-size:11px;color:#d6e1f0;">
+    <thead><tr style="border-bottom:1.5px solid #3b4a66;color:#efc56a;">
+      <th style="text-align:left;padding:4px 6px;">T−</th>
+      <th style="text-align:left;padding:4px 6px;">DATE</th>
+      <th style="text-align:left;padding:4px 6px;">TICKER</th>
+      <th style="text-align:left;padding:4px 6px;">EVENT</th>
+      <th style="text-align:right;padding:4px 6px;" title="Historical base-rate asymmetry score (−100..+100)">ASYM</th>
+      <th style="text-align:left;padding:4px 6px;" title="Base rate from last 4-8 similar events">BASE RATE</th>
+      <th style="text-align:center;padding:4px 6px;" title="Retail attention (Google Trends 0-100, 2yr baseline)">ATT</th>
+      <th style="text-align:right;padding:4px 6px;" title="Current price vs 50-day moving average">vs 50d</th>
+      <th style="text-align:left;padding:4px 6px;">SETUP</th>
+      <th style="text-align:center;padding:4px 6px;">THESIS</th>
+    </tr></thead>
+    <tbody id="radar-body"><tr><td colspan="10" style="padding:8px;color:#9fb3cc;">Loading…</td></tr></tbody>
+  </table>
+  <div style="font-family:'DM Mono',monospace;font-size:10px;color:#7a8fa8;margin-top:6px;line-height:1.6;">
+    Refresh: <code style="background:#1d2b42;padding:1px 4px;color:#d6e1f0;">python3 tools/catalyst_radar.py</code>
+    · Telegram digest: <code style="background:#1d2b42;padding:1px 4px;color:#d6e1f0;">python3 tools/catalyst_digest.py</code>
+    · Cron fires daily 05:15 UTC (pre-open).
+  </div>
+</div>
+
+<script>
+(function(){
+  function fmtPct(v){ if(v==null) return "—"; return (v>=0?"+":"")+v.toFixed(0)+"%"; }
+  function esc(s){ return (s==null?"":String(s)).replace(/"/g,"&quot;").replace(/</g,"&lt;"); }
+  function loadRadar(){
+    fetch("/catalyst_radar.json?ts="+Date.now())
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        var body = document.getElementById("radar-body");
+        var metaEl = document.getElementById("radar-meta");
+        var warnEl = document.getElementById("radar-warnings");
+        var cntEl  = document.getElementById("radar-counts");
+        if(!d || !d.events){ body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#ffb14a;">radar not published — run <code>python3 tools/catalyst_publish.py</code></td></tr>'; return; }
+        var asOf = (d.as_of||"").replace("T"," ").replace("+00:00"," UTC");
+        if(metaEl) metaEl.textContent = "as of " + asOf;
+
+        var warns = d.concentration_warnings || [];
+        warnEl.innerHTML = warns.length
+          ? warns.map(function(w){ return '⚠ '+esc(w); }).join("<br>")
+          : "";
+
+        var c = d.counts||{};
+        cntEl.textContent =
+          "events: " + (c.total||0) +
+          " · next 7d: " + (c.next_7d||0) +
+          " · 14d: " + (c.next_14d||0) +
+          " · 30d: " + (c.next_30d||0) +
+          "  │  under-positioned " + (c.under_positioned||0) +
+          " · elevated " + (c.elevated||0) +
+          " · quiet " + (c.quiet||0) +
+          " · thesis-risk " + (c.thesis_risk||0);
+
+        var events = (d.events||[]).filter(function(e){ return e.days>=0 && e.days<=30; });
+        if(!events.length){ body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#9fb3cc;">No events inside 30-day horizon.</td></tr>'; return; }
+
+        var rows = events.map(function(e){
+          var tLabel = e.days===0 ? "TODAY" : ("T−"+e.days);
+          var tCol = e.days<=1 ? "#ff9e3d" : (e.days<=7 ? "#efc56a" : "#9fb3cc");
+          var asym = e.asymmetry_score||0;
+          var asymCol = asym>=30 ? "#4caf50" : (asym>=10 ? "#8bc34a" : (asym<=-30 ? "#e53935" : (asym<=-10 ? "#ef5350" : "#9fb3cc")));
+          var br = e.base_rate||{};
+          var baseText = "—";
+          if(br && br.n){
+            baseText = (br.win_rate*100).toFixed(0)+"% win · |"+br.mean_abs_move_pct.toFixed(1)+"%| · "
+                     + (br.best_pct>=0?"+":"")+br.best_pct.toFixed(0)+"/"+(br.worst_pct>=0?"+":"")+br.worst_pct.toFixed(0);
+          }
+          var att = e.attention_score;
+          var attCol = att==null ? "#607d8b" : (att>=80 ? "#ff9e3d" : (att<=30 ? "#4caf50" : "#efc56a"));
+          var pc = e.price_context||{};
+          var p50 = pc.pct_vs_50;
+          var p50Col = p50==null ? "#9fb3cc" : (p50>=12 ? "#ef5350" : (p50<=-8 ? "#8bc34a" : "#d6e1f0"));
+          var flag = e.setup_flag||"NEUTRAL";
+          var flagMap = {
+            "ELEVATED_EXPECTATIONS":"⚠️ ELEVATED",
+            "UNDER_POSITIONED":     "✅ UNDER-POS",
+            "QUIET_PRE_EVENT":      "🔇 QUIET",
+            "CROWDED":              "🚨 CROWDED",
+            "THESIS_RISK":          "🔴 THESIS",
+            "NEUTRAL":              "· neutral"
+          };
+          var flagText = flagMap[flag]||flag;
+          var flagCol = flag==="UNDER_POSITIONED"?"#8bc34a":flag==="ELEVATED_EXPECTATIONS"?"#ff9e3d":flag==="CROWDED"?"#e53935":flag==="THESIS_RISK"?"#e53935":flag==="QUIET_PRE_EVENT"?"#efc56a":"#9fb3cc";
+          var thesis = e.thesis_state||"intact";
+          var thCol = thesis==="intact"?"#8bc34a":thesis==="wounded"?"#ff9e3d":"#e53935";
+          var tipReasons = (e.setup_reasons||[]).join("; ");
+          var tooltip = esc(e.title||"") + (e.notes?("\n"+esc(e.notes)):"") + (tipReasons?("\n\nSETUP: "+tipReasons):"");
+          return '<tr style="border-bottom:1px solid #25354a;">' +
+            '<td style="padding:4px 6px;color:'+tCol+';font-weight:700;">'+tLabel+'</td>' +
+            '<td style="padding:4px 6px;color:#9fb3cc;">'+esc(e.date)+'</td>' +
+            '<td style="padding:4px 6px;font-weight:700;">'+esc(e.ticker)+'</td>' +
+            '<td style="padding:4px 6px;color:#d6e1f0;max-width:240px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help;" title="'+tooltip+'">'+esc(e.title||e.type)+'</td>' +
+            '<td style="padding:4px 6px;text-align:right;color:'+asymCol+';font-weight:700;">'+(asym>=0?"+":"")+asym+'</td>' +
+            '<td style="padding:4px 6px;color:#d6e1f0;">'+baseText+'</td>' +
+            '<td style="padding:4px 6px;text-align:center;color:'+attCol+';">'+(att==null?"—":att)+'</td>' +
+            '<td style="padding:4px 6px;text-align:right;color:'+p50Col+';">'+fmtPct(p50)+'</td>' +
+            '<td style="padding:4px 6px;color:'+flagCol+';">'+flagText+'</td>' +
+            '<td style="padding:4px 6px;text-align:center;color:'+thCol+';">'+thesis+'</td>' +
+            '</tr>';
+        }).join("");
+        body.innerHTML = rows;
+      })
+      .catch(function(e){
+        var body = document.getElementById("radar-body");
+        if(body) body.innerHTML = '<tr><td colspan="10" style="padding:8px;color:#ffb14a;">radar fetch error: '+(e&&e.message||e)+'</td></tr>';
+      });
+  }
+  document.addEventListener("DOMContentLoaded", loadRadar);
+  setTimeout(loadRadar, 3500);
+  setInterval(loadRadar, 120000);
+})();
+</script>
+
 <div id="grade-summary-panel" style="padding:16px 40px 14px;background:linear-gradient(180deg,#faf9f6 0%,#f5f3ee 100%);border-bottom:1px solid #dcd6cc;">
   <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#5c4810;margin-bottom:10px;line-height:1.5;">GEM GRADE SUMMARY <span style="font-weight:500;color:#4a4a4a;font-size:11px;letter-spacing:0.02em;text-transform:none;display:inline-block;margin-top:4px;">— Risk-Integrated v5 · <span style="color:#2d7a2d">●</span> I <span style="color:#b8860b">●</span> II <span style="color:#a32d2d">●</span> III · Downside penalty + 9-dim risk scoring</span></div>
   <table id="grade-summary-table" style="border-collapse:collapse;width:100%;font-family:'DM Mono',monospace;font-variant-numeric:tabular-nums;">

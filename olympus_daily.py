@@ -50,6 +50,33 @@ def _publish_ledger() -> None:
         print(f"[LEDGER] publish failed: {exc}")
 
 
+def _build_catalyst_radar() -> None:
+    """Build unified catalyst radar (base rates + asymmetry + attention)."""
+    try:
+        from tools.catalyst_radar import build_radar
+        build_radar()
+    except Exception as exc:
+        print(f"[RADAR] build failed: {exc}")
+
+
+def _publish_catalyst_radar() -> None:
+    """Ship catalyst radar JSON to the webroot."""
+    try:
+        from tools.catalyst_publish import main as _pub_radar
+        _pub_radar()
+    except Exception as exc:
+        print(f"[RADAR] publish failed: {exc}")
+
+
+def _catalyst_digest() -> None:
+    """Send Telegram T-minus pre-event digest (silent if empty)."""
+    try:
+        from tools.catalyst_digest import run as _run_digest
+        _run_digest(horizon=14)
+    except Exception as exc:
+        print(f"[RADAR] digest failed: {exc}")
+
+
 def main():
     print("=== OLYMPUS DAILY PIPELINE ===")
     _refresh_fred_liquidity()
@@ -64,6 +91,9 @@ def main():
     generate_outputs(state)
     _grade_diff_digest()
     _publish_ledger()
+    _build_catalyst_radar()
+    _publish_catalyst_radar()
+    _catalyst_digest()
     print("=== DONE ===")
 
 
