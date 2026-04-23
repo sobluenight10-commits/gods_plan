@@ -1025,6 +1025,136 @@ td.mx-eval.oly-tip::after {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════
+     §CODEX — HOW TO READ OLYMPUS
+     Every index, what it measures, how to interpret, what action it implies.
+     This is the ground truth. If output contradicts this chapter, output is
+     wrong. Referenced by calendar event "OLYMPUS Codex — Apr 23 2026".
+     ═══════════════════════════════════════════════════════════════════ -->
+<details id="codex-panel" style="padding:14px 40px 12px;background:linear-gradient(180deg,#141a26 0%,#0f1520 100%);border-top:1px solid #25354a;border-bottom:1px solid #25354a;color:#d6e1f0;">
+  <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#efc56a;line-height:1.5;outline:none;">
+    📜 §CODEX — HOW TO READ OLYMPUS
+    <span style="font-weight:500;color:#9fb3cc;font-size:11px;letter-spacing:0.02em;text-transform:none;display:inline-block;margin-left:10px;">
+      — every index, definition, interpretation, implied action · click to expand
+    </span>
+  </summary>
+  <div style="font-family:'DM Mono',monospace;font-size:11.5px;line-height:1.65;color:#d6e1f0;margin-top:10px;">
+
+    <div style="color:#efc56a;font-weight:700;margin:8px 0 4px;">① GEM GRADE (A / B+ / B / C)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">What:</strong> Monte-Carlo Heston projection ranking a stock by 1-5yr expected value distribution.<br>
+      <strong style="color:#d6e1f0;">Read:</strong>
+      <code style="color:#4caf50;">A</code> = top-quartile asymmetry
+      · <code style="color:#c4a84f;">B+</code> = above-median edge
+      · <code style="color:#e07b39;">B</code> = edge thinning
+      · <code style="color:#e05252;">C</code> = negative expected value.<br>
+      <strong style="color:#d6e1f0;">1Y EV</strong> = 1-year expected return (median of sim paths).
+      <strong style="color:#d6e1f0;">5Y EV</strong> = 5-year compounded EV.<br>
+      <strong style="color:#d6e1f0;">Use:</strong> A-grades → candidate for ADD. B-grades with negative 1Y EV → TRIM watchlist.
+      Downgrade A→B in one day → investigate the driver, don't auto-sell.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">② CATALYST RADAR — ASYMMETRY SCORE (−100 to +100)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">What:</strong> Combines historical base rate (last 4-8 similar events) with forward signals (analyst tone, static event direction).<br>
+      <strong style="color:#d6e1f0;">Read:</strong>
+      <code style="color:#4caf50;">&gt;+40</code> skew upside
+      · <code style="color:#c4a84f;">±20</code> symmetric
+      · <code style="color:#e05252;">&lt;−40</code> skew downside.<br>
+      <strong style="color:#d6e1f0;">Use:</strong> Positive asymmetry + UNDER_POSITIONED flag = pre-event add.
+      Negative asymmetry + ELEVATED_EXPECTATIONS = trim before print.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">③ CATALYST RADAR — BASE RATE</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">What:</strong> Historical T−1 to T+1 close move across last 4-8 earnings.<br>
+      <strong style="color:#d6e1f0;">Shows:</strong> mean_abs_move · win_rate · best/worst pct.<br>
+      <strong style="color:#d6e1f0;">Use:</strong> If base-rate win_rate &gt;70% AND current &lt;50d MA → high-conviction pre-event add.
+      If win_rate &lt;40% AND current &gt;50d MA → skip or trim.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">④ CATALYST RADAR — SETUP FLAG</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <code style="color:#4caf50;">UNDER_POSITIONED</code> = quiet attention + below MA → buy setup.<br>
+      <code style="color:#e07b39;">ELEVATED_EXPECTATIONS</code> = high attention + above MA → fade setup.<br>
+      <code style="color:#c4a84f;">QUIET_PRE_EVENT</code> = no attention spike yet → watch.<br>
+      <code style="color:#e05252;">CROWDED</code> = retail attention percentile &gt;90 → reduce.<br>
+      <code style="color:#e05252;">THESIS_RISK</code> = thesis is WOUNDED/DEAD → do nothing additive.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑤ ATTENTION SIGNAL (0-100)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">What:</strong> Google Trends retail search interest for the ticker, normalized over 2-year baseline.<br>
+      <strong style="color:#d6e1f0;">Read:</strong>
+      <code style="color:#9fb3cc;">0-30</code> ignored
+      · <code style="color:#c4a84f;">30-60</code> normal
+      · <code style="color:#e07b39;">60-85</code> elevated
+      · <code style="color:#e05252;">85+</code> parabolic retail chase.<br>
+      <strong style="color:#d6e1f0;">Use:</strong> Attention ≥85 + fundamentals unchanged = fade the crowd.
+      Attention ≤30 on high-conviction name = institutional window.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑥ NET LIQUIDITY (§11)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">Formula:</strong> Reserves − TGA − RRP (all FRED, weekly).<br>
+      <strong style="color:#d6e1f0;">Zones:</strong>
+      <code style="color:#e05252;">DANGER &lt;$2.0T</code> (SVB corridor)
+      · <code style="color:#e07b39;">WARNING $2.0-2.5T</code>
+      · <code style="color:#c4a84f;">NORMAL $2.5-3.5T</code>
+      · <code style="color:#4caf50;">ABUNDANCE &gt;$3.5T</code>.<br>
+      <strong style="color:#d6e1f0;">Direction:</strong> EXPANDING ↑ = deploy window. CONTRACTING ↓ = reduce.<br>
+      <strong style="color:#d6e1f0;">Corridor:</strong> ABOVE / INSIDE / BELOW the rolling p25-p75 band.
+      BELOW = liquidity shock, risk-off. ABOVE = fuel for rally.<br>
+      <strong style="color:#d6e1f0;">Regime:</strong> tight / neutral / loose (GEM feeds from this).<br>
+      <strong style="color:#d6e1f0;">Rule:</strong> When DANGER + CONTRACTING + BELOW corridor → freeze all adds regardless of individual GEM grades.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑦ THESIS STATE (guard-enforced)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <code style="color:#4caf50;">INTACT</code> = original reason still valid, no disqualifying event.<br>
+      <code style="color:#e07b39;">WOUNDED</code> = partial invalidation (competitive loss, guidance cut, key exec exit, regulatory setback).<br>
+      <code style="color:#e05252;">DEAD</code> = bankruptcy, fraud, total TAM collapse, competitor kill-shot.<br>
+      <strong style="color:#d6e1f0;">Invalid triggers (blocked):</strong>
+      price_dropping, analyst_downgrade, valuation_too_high, sector_peers_dropping, technical_breakdown.<br>
+      <strong style="color:#d6e1f0;">Use:</strong> Only DEAD → full EXIT. WOUNDED → TRIM and observe.
+      INTACT + price drop → this is an ADD candidate, not a panic.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑧ DECISION LEDGER (FEEL / LEARN / CONVICTION / HORIZON)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">FEEL</strong> = free text captured at decision time (FOMO, fear, doubt, conviction, regret, greed).<br>
+      <strong style="color:#d6e1f0;">LEARN</strong> = post-hoc lesson from the outcome.<br>
+      <strong style="color:#d6e1f0;">CONVICTION</strong> = 1-5, audited by weekly review vs hit rate.<br>
+      <strong style="color:#d6e1f0;">HORIZON</strong> = expected holding period (1-3mo / 6-12mo / multi-year).<br>
+      <strong style="color:#d6e1f0;">Use:</strong> Sunday 09:00 Berlin — paste Keep notes, ledger_ingest.py parses them.
+      Weekly review shows which emotional state wins and loses.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑨ PRE-ALERT (Telegram)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">STOCKS</strong> = tickers extracted from blog/news themes.<br>
+      <strong style="color:#d6e1f0;">ESTIMATES</strong> = expected direction + magnitude if catalyst confirms.<br>
+      <strong style="color:#d6e1f0;">TIMING</strong> = ACT / WATCH / SKIP.<br>
+      <strong style="color:#d6e1f0;">Rule:</strong> ACT only when STOCKS ≠ NONE AND ESTIMATES has numbers. Otherwise WATCH.
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑩ PRIORITY OF SIGNALS (when conflict)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      1. <strong style="color:#e05252;">THESIS GUARD</strong> — overrides everything. DEAD = exit regardless.<br>
+      2. <strong style="color:#e07b39;">LIQUIDITY ZONE</strong> — DANGER freezes adds.<br>
+      3. <strong style="color:#c4a84f;">CATALYST RADAR</strong> — sets timing (pre-event setup).<br>
+      4. <strong style="color:#4caf50;">GEM GRADE</strong> — sets position sizing.<br>
+      5. <strong style="color:#9fb3cc;">ATTENTION + PRICE vs MA</strong> — sets entry price discipline.<br>
+      <em>If any layer contradicts the one below, the higher layer wins.</em>
+    </div>
+
+    <div style="margin-top:12px;padding:8px 10px;background:#1d2b42;border-left:3px solid #efc56a;color:#d6e1f0;font-size:11px;">
+      <strong>Burned into system:</strong> Apr 23 2026 · calendar event "OLYMPUS Codex"
+      · also visible on mobile via Google Calendar.
+    </div>
+  </div>
+</details>
+
+<!-- ═══════════════════════════════════════════════════════════════════
      CATALYST RADAR — forward event map with base-rate asymmetry
      Institutions have this for 500 stocks diluted. We have it for 30
      stocks dense. This is where event-driven alpha is earned.

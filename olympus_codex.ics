@@ -1,0 +1,22 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//OLYMPUS//CODEX//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+BEGIN:VEVENT
+UID:olympus-codex-2026-04-23@minerva
+DTSTAMP:20260423T210000Z
+DTSTART;TZID=Europe/Berlin:20260423T210000
+DTEND;TZID=Europe/Berlin:20260423T220000
+SUMMARY:📜 OLYMPUS CODEX — how to read every index
+DESCRIPTION:Permanent reference. Dashboard §CODEX panel mirrors this.\n\n=== ① GEM GRADE ===\nA = top-quartile asymmetry · B+ = above-median · B = edge thinning · C = negative EV.\n1Y EV = 1yr expected return. 5Y EV = 5yr compounded.\nUSE: A → ADD candidate. B with negative 1Y EV → TRIM watchlist. Downgrade in one day → investigate, don't auto-sell.\n\n=== ② CATALYST RADAR — ASYMMETRY (-100..+100) ===\n>+40 upside skew · ±20 symmetric · <-40 downside skew.\nUSE: Positive asym + UNDER_POSITIONED = pre-event add. Negative asym + ELEVATED_EXPECTATIONS = trim before print.\n\n=== ③ BASE RATE ===\nLast 4-8 earnings T-1 to T+1 close move. Shows mean_abs_move · win_rate · best/worst pct.\nUSE: win_rate >70% + below 50d MA = high-conviction add. win_rate <40% + above MA = skip.\n\n=== ④ SETUP FLAG ===\nUNDER_POSITIONED = quiet + below MA → buy setup.\nELEVATED_EXPECTATIONS = loud + above MA → fade.\nQUIET_PRE_EVENT = no spike yet → watch.\nCROWDED = attention percentile >90 → reduce.\nTHESIS_RISK = WOUNDED/DEAD → no adds.\n\n=== ⑤ ATTENTION (Google Trends 0-100) ===\n0-30 ignored · 30-60 normal · 60-85 elevated · 85+ parabolic.\nUSE: ≥85 + unchanged fundamentals = fade crowd. ≤30 on high-conviction name = institutional window.\n\n=== ⑥ NET LIQUIDITY (§11) ===\nFormula: Reserves − TGA − RRP (FRED weekly).\nZones: DANGER <$2T · WARNING $2-2.5T · NORMAL $2.5-3.5T · ABUNDANCE >$3.5T.\nDirection: EXPANDING ↑ deploy · CONTRACTING ↓ reduce.\nCorridor: ABOVE / INSIDE / BELOW rolling p25-p75 band.\nRule: DANGER + CONTRACTING + BELOW → freeze ALL adds regardless of individual grades.\n\n=== ⑦ THESIS STATE ===\nINTACT = reason valid. WOUNDED = partial invalidation. DEAD = bankruptcy/fraud/TAM collapse.\nInvalid triggers (BLOCKED): price_dropping, analyst_downgrade, valuation_too_high, sector_peers_dropping, technical_breakdown.\nUSE: Only DEAD = full EXIT. WOUNDED = TRIM. INTACT + price drop = ADD candidate, NOT panic.\n\n=== ⑧ LEDGER (FEEL/LEARN/CONVICTION/HORIZON) ===\nFEEL = emotion at decision. LEARN = post-hoc lesson. CONVICTION 1-5. HORIZON = expected hold.\nSunday 09:00 Berlin → paste Keep notes → ledger_ingest.py parses → weekly review shows which feels win.\n\n=== ⑨ PRE-ALERT ===\nSTOCKS = tickers from theme. ESTIMATES = direction+magnitude. TIMING = ACT/WATCH/SKIP.\nACT only when STOCKS≠NONE AND ESTIMATES has numbers.\n\n=== ⑩ PRIORITY (conflict resolution) ===\n1. THESIS GUARD (overrides all)\n2. LIQUIDITY ZONE (DANGER freezes adds)\n3. CATALYST RADAR (timing)\n4. GEM GRADE (sizing)\n5. ATTENTION + PRICE vs MA (entry discipline)\nHigher layer always wins.\n\nSource of truth: http://5.189.176.185 §CODEX panel.
+LOCATION:OLYMPUS Dashboard — §CODEX panel
+STATUS:CONFIRMED
+TRANSP:OPAQUE
+BEGIN:VALARM
+TRIGGER:-PT0M
+ACTION:DISPLAY
+DESCRIPTION:OLYMPUS CODEX — read before any decision today
+END:VALARM
+END:VEVENT
+END:VCALENDAR
