@@ -49,24 +49,63 @@ def write_liquidity_to_directives(net_liq, reserves, tga, rrp, vs_last_week=0):
         zone, color = "NORMAL", "#c4a84f"
     else:
         zone, color = "ABUNDANCE", "#4caf50"
+    direction = "EXPANDING" if vs_last_week > 0 else "CONTRACTING"
+    dir_sym = "↑" if vs_last_week > 0 else "↓"
+    sign = "+" if vs_last_week > 0 else "-"
+    abs_vs = abs(round(vs_last_week))
+
+    # Outlook & action text — reads the ACTUAL liquidity state, not a stale
+    # calendar reference. These are the text fields the dashboard renders.
+    if zone == "DANGER":
+        outlook_text = f"{direction} {dir_sym} | Net liq below $2T — crisis corridor | SVB-parallel"
+        action_text  = "HOLD CASH — danger zone. No new deploy until reserves rebuild."
+    elif zone == "WARNING" and direction == "CONTRACTING":
+        outlook_text = f"{direction} {dir_sym} | Reserves draining, TGA building | caution"
+        action_text  = "REDUCE exposure adds. Wait for TGA drain + RRP floor."
+    elif zone == "WARNING" and direction == "EXPANDING":
+        outlook_text = f"{direction} {dir_sym} | TGA drain underway | selective deploy"
+        action_text  = "DEPLOY selectively — only high-conviction adds, not watchlist fills."
+    elif zone == "NORMAL" and direction == "EXPANDING":
+        outlook_text = f"{direction} {dir_sym} | Reserves rebuilding | deploy window open"
+        action_text  = "DEPLOY dry powder — watchlist fills active."
+    elif zone == "ABUNDANCE":
+        outlook_text = f"{direction} {dir_sym} | Peak liquidity | full deploy regime"
+        action_text  = "FULL DEPLOY — maximum exposure, watchlist aggressive."
+    else:
+        outlook_text = f"{direction} {dir_sym} | {zone} zone"
+        action_text  = "HOLD base — await clearer corridor direction."
+
+    # Historical parallel (dashboard surfaces this)
+    if net_liq < 2000:     hist = "2023 SVB banking crisis level"
+    elif net_liq < 2500:   hist = "Mid-2023 post-debt-ceiling drain"
+    elif net_liq < 3000:   hist = "2024 average — stable bull market"
+    elif net_liq < 4000:   hist = "2025 peak — strong conditions"
+    else:                  hist = "2020-2021 COVID liquidity peak"
+
+    net_liq_text = f"${round(net_liq):,}B"
+
     d["liquidity"] = {
+        # --- new schema (analytics) ---
         "net_liq_b": round(net_liq),
         "reserves_b": round(reserves),
         "tga_b": round(tga),
         "rrp_b": round(rrp),
+        "direction": direction,
+        "direction_symbol": dir_sym,
+        "vs_last_week_b": abs_vs,
+        "vs_last_week_sign": sign,
+        "action": action_text,
+        "source": "FRED auto-fetch",
+        # --- legacy schema keys the dashboard HTML renders ---
+        "net_liq_value": round(net_liq),
+        "net_liq_text": net_liq_text,
         "zone": zone,
         "zone_color": color,
-        "direction": "EXPANDING" if vs_last_week > 0 else "CONTRACTING",
-        "direction_symbol": "↑" if vs_last_week > 0 else "↓",
-        "vs_last_week_b": abs(round(vs_last_week)),
-        "vs_last_week_sign": "+" if vs_last_week > 0 else "-",
-        "action": (
-            "DEPLOY dry powder"
-            if (net_liq > 2500 or vs_last_week > 0)
-            else "HOLD CASH"
-        ),
+        "outlook_text": outlook_text,
+        "action_text": action_text,
+        "change_text": f"vs last week: {sign}${abs_vs}B {dir_sym}",
+        "hist_parallel": hist,
         "last_updated": _dt.datetime.now().strftime("%Y-%m-%d %H:%M CET"),
-        "source": "FRED auto-fetch",
     }
     d["last_updated"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%M CET")
     with open(directives_path, "w", encoding="utf-8") as f:
