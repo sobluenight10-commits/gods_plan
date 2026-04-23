@@ -50,6 +50,19 @@ def _publish_ledger() -> None:
         print(f"[LEDGER] publish failed: {exc}")
 
 
+def _publish_watchlist_bench() -> None:
+    """Ship watchlist_bench.json to webroot (research queue, not quota fills)."""
+    try:
+        import shutil
+        src = os.path.join(BASE, "data", "watchlist_bench.json")
+        dst = "/var/www/html/watchlist_bench.json"
+        if os.path.isfile(src):
+            shutil.copy2(src, dst)
+            print("[BENCH] published → webroot")
+    except Exception as exc:
+        print(f"[BENCH] publish failed: {exc}")
+
+
 def _build_catalyst_radar() -> None:
     """Build unified catalyst radar (base rates + asymmetry + attention)."""
     try:
@@ -100,6 +113,7 @@ def main():
     generate_outputs(state)
     _grade_diff_digest()
     _publish_ledger()
+    _publish_watchlist_bench()
     _build_catalyst_radar()
     _publish_catalyst_radar()
     _catalyst_digest()
