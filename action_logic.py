@@ -38,7 +38,16 @@ def compute_action(data: dict) -> dict:
     ticker       = data.get("ticker", "")
     P0           = float(data.get("current_price", 0))
     entry        = float(data.get("entry_price", 0) or 0)
-    thesis       = data.get("thesis_status", "intact")
+    # THESIS GUARD — authoritative source
+    try:
+        from thesis_guard import validate
+        _proposed = data.get("thesis_status","intact")
+        _event    = data.get("company_event","")
+        _force    = data.get("force_thesis", False)
+        _guard    = validate(ticker, _proposed, _event, _force)
+        thesis    = _guard["authoritative_thesis"]
+    except ImportError:
+        thesis    = data.get("thesis_status","intact")
     macro        = data.get("macro_status", "neutral")
     soros_gap    = float(data.get("soros_gap_pct", 0) or 0)
     soros_type   = data.get("soros_type", "")
@@ -242,10 +251,12 @@ if __name__ == "__main__":
             "expected_action": "ARMED"
         },
         {
-            "label": "AVAV — thesis dead",
+            "label": "AVAV — thesis dead (via valid trigger + force)",
             "data": {
-                "ticker": "AVAV", "current_price": 170, "entry_price": 180,
-                "thesis_status": "dead", "macro_status": "tailwind",
+                "ticker": "AVAV_TEST", "current_price": 170, "entry_price": 180,
+                "thesis_status": "dead", "company_event": "bankruptcy_filed",
+                "force_thesis": True,
+                "macro_status": "tailwind",
                 "soros_gap_pct": 0, "soros_type": "",
                 "gem_grade": "D", "gem_1y_ev_pct": -20, "gem_5y_ev_pct": -10,
                 "position_status": "held"

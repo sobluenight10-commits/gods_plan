@@ -817,6 +817,13 @@ def _fetch_live_context() -> Dict:
     today = _berlin_now().strftime("%Y-%m-%d")
     earnings_today = [e for e in config.EARNINGS_CALENDAR if e.get("date") == today]
 
+    # Append authoritative thesis status to context
+    try:
+        from thesis_guard import report_all
+        portfolio_lines = portfolio_lines + ["\n" + report_all()]
+    except Exception:
+        pass
+
     return {
         "prices": prices, "fx_rate": fx_rate, "vix": vix_val,
         "regime": regime, "deploy_pct": deploy_pct, "composite": composite,

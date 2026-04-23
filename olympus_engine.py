@@ -25,7 +25,23 @@ def get_gem_projections():
 
 def compute_action(pos_cfg, price, gem, macro):
     ticker     = pos_cfg.get("ticker","")
-    thesis     = pos_cfg.get("thesis","intact")
+    # THESIS GUARD — single source of truth
+    # thesis in fetch_data.py is a HINT, not authoritative.
+    # thesis_guard.py is authoritative.
+    try:
+        from thesis_guard import validate
+        _proposed = pos_cfg.get("thesis","intact")
+        _event    = pos_cfg.get("company_event","")
+        _force    = pos_cfg.get("force_thesis", False)
+        _guard    = validate(ticker, _proposed, _event, _force)
+        thesis    = _guard["authoritative_thesis"]
+        if _guard["blocked"]:
+            import logging
+            logging.getLogger("olympus_engine").warning(
+                f"THESIS BLOCKED {ticker}: {_guard['reason']}"
+            )
+    except ImportError:
+        thesis = pos_cfg.get("thesis","intact")
     stop       = pos_cfg.get("stop",0)
     ez_low     = pos_cfg.get("ez_low",0)
     ez_high    = pos_cfg.get("ez_high",0)
