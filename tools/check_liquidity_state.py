@@ -50,16 +50,18 @@ def main() -> None:
 
         if p.endswith("directives.json"):
             liq = (data or {}).get("liquidity") or {}
-            keys = [
-                "net_liq_value", "net_liq_b", "net_liq_text",
-                "zone", "last_updated", "change_text",
-                "velocity_7d_b", "velocity_4w_b",
-                "expectation_low_b", "expectation_high_b", "expectation_mid_b",
-                "surprise_score", "macro_liquidity_regime",
-            ]
-            for k in keys:
-                print(f"      liquidity.{k} = {liq.get(k)!r}")
+            print("      --- full liquidity block ---")
+            for k in sorted(liq.keys()):
+                val = liq[k]
+                if isinstance(val, (dict, list)):
+                    print(f"      liquidity.{k} = <{type(val).__name__} len={len(val)}>")
+                else:
+                    sval = repr(val)
+                    if len(sval) > 120:
+                        sval = sval[:120] + "..."
+                    print(f"      liquidity.{k} = {sval}")
             print(f"      top-level as_of = {data.get('as_of')!r}")
+            print(f"      top-level last_updated = {data.get('last_updated')!r}")
             print(f"      top-level generated_utc = {data.get('generated_utc')!r}")
         elif p.endswith("liquidity_state.json"):
             for k in ("as_of", "net_liq_b", "net_liq_value", "last_updated",
