@@ -85,12 +85,12 @@ def evaluate() -> Dict[str, Any]:
         triggers.append(f"Liquidity print {liq_age:.0f}h old (>36h)")
         level_score += 2
 
-    fx_age = _age_hours((fx.get("as_of") or fx.get("built_at") or "").replace(" UTC", ""))
+    fx_age = _age_hours((fx.get("as_of") or fx.get("built_at") or fx.get("generated_utc") or "").replace(" UTC", ""))
     if fx_age is not None and fx_age > 48:
         triggers.append(f"Forecasts file {fx_age:.0f}h old (>48h)")
         level_score += 2
 
-    gm_age = _age_hours(gm.get("last_run_utc"))
+    gm_age = _age_hours(gm.get("last_run_utc") or ((gm.get("run_date") or "") + " " + (gm.get("run_time") or "00:00")).strip())
     if gm_age is not None and gm_age > 48:
         triggers.append(f"GEM last run {gm_age:.0f}h old (>48h)")
         level_score += 1
