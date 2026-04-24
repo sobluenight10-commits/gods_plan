@@ -52,6 +52,41 @@ Per-ticker 1-year forecasts now come from three independent voices, Bayesian-ave
 
 **Daily wiring** (`olympus_daily.py`): `_refit_weights → _run_forecasters → _build_active_actions`.
 
+## OLYMPUS-SENTINEL — PORTFOLIO GUARDS + KILL-SWITCH (PHASE 3)
+
+Phase 1 guarded each position. Phase 2 produced calibrated forecasts. Phase 3 guards the **portfolio as a whole** and the **system's own trustworthiness**.
+
+- **Correlation Auditor** (`risk/correlation_auditor.py`) — eigendecomposes the daily-return correlation matrix of the held book. Publishes `pc1_share`, `pc2_share`, `eff_bets = exp(H[λ])`, `top_cluster`. For every expansionary verb (BUY/ADD) it also runs `check_candidate(tk)`:
+  - `VETO_NEIGHBOR` when the candidate's mean correlation to the book ≥ **0.70**.
+  - `VETO_PC1` when PC1 share ≥ **0.55** (the book is already one bet).
+  - `VETO_DOUBLE` when PC1 ≥ 0.45 **and** ρ ≥ 0.55 (adding doubles the bet).
+  - Dashboard: `CORE DIGEST · PC1` pill, red when concentration state = RED.
+- **Stop Engine** (`risk/stop_engine.py`) — per-position stop plan, tightest of:
+  - `ATR × 2.0` below spot (or trailing below 60d high once up ≥ 15%),
+  - `18%` hard floor below entry (satellite) or `35%` (core),
+  - Explicit `thesis_invalidation_price` from `portfolio_all.json`.
+  - Cores honor only HARD + THESIS, never ATR — we hold winners through vol; we do not hold them through thesis death. Kind flags: `trailing | hard | thesis | triggered`.
+- **Tail Hedger** (`risk/tail_hedger.py`) — composite score over VIX/VIX3M inversion, HYG 20d drawdown, SPY-vs-200DMA, equal-weight-vs-cap-weight 20d ratio, QQQ−SPY vol gap. Maps to **DEFCON 5→1**:
+  - `3`: cash floor 7%, arm watchlist, no new satellite entries.
+  - `2`: cash floor 10%, stage SPY puts, freeze satellite adds.
+  - `1`: cash floor 15%, execute puts, core-only, tighten all stops.
+  - Publishes `cash_floor_override_pct` that **raises** (never lowers) kernel cash floor.
+- **Sentinel Watchdog** (`risk/sentinel_watchdog.py`) — Layer 7 kill-switch. Final check each build:
+  - Staleness (liquidity > 36h, forecasts > 48h, GEM > 48h).
+  - Model disagreement (≥ 3 tickers with ensemble p50 spread > 60pp).
+  - Veto storm (≥ 5 active vetoes).
+  - Kernel breach or Drawdown RED/ORANGE.
+  - Composite score → `GREEN | YELLOW | ORANGE | RED | FREEZE`. FREEZE downgrades every BUY/ADD to WATCH and stamps `sentinel_freeze` into blocks.
+
+**Wiring** (`tools/build_active_actions.py`): after the Phase 1 sizer loop we run the correlation audit, stop engine (per-ticker), tail hedger, then the watchdog as a final pass. Payload now carries `correlation_audit`, `tail_hedger`, `sentinel_watchdog`, plus a `groups` block with `core / satellite / rules` for the dashboard.
+
+**Dashboard**:
+- `CORE DIGEST` header bar replaces the static MINERVA_GEM grade summary. It pulls from `active_actions.json` every 2 min and shows WATCHDOG level, DD state, DEFCON, PC1, `so_what_mandate`, and the current top-5 BUY/ADD and top-5 TRIM/EXIT/VETO candidates. Staleness of GEM surfaces as a red note with the exact command to run.
+- `CORE vs SATELLITE` panel (open by default) renders each ticker with live gate badges (`OPS ≤120`, `thesis ✓`, `EV ≥35`, `ES5`, conviction, verb).
+- Matrix tooltip: when GEM projections are missing, falls back to `/forecasts.json` ensemble (EV / p05 / p50 / p95 + weights used) so the tooltip never reads `GEM projections loading…`.
+
+**Rule**: If `sentinel_watchdog.level = FREEZE`, no ADD/BUY survives regardless of source (directives, radar, override) — only EXITs and explicit TRIMs pass through. This is the one switch that overrides GOD — and only until the root cause (stale data, kernel breach, DD red) is cleared.
+
 ## VECTOR LIQUIDITY ENGINE v2 + OPS (ENFORCED)
 
 - **Level zones (net $B):** DANGER &lt;1,900 · SELECTIVE 1,900–2,200 · DEPLOY ≥2,200. Institutions optimize range; OLYMPUS optimizes **vector** (7d Δ net liq).

@@ -42,6 +42,10 @@ if BASE not in sys.path:
 from kernel.prime_directive import evaluate_portfolio, invariants as kernel_invariants  # noqa: E402
 from risk.drawdown_guardian import evaluate as evaluate_dd  # noqa: E402
 from risk.position_sizer import size_position  # noqa: E402
+from risk.correlation_auditor import audit_portfolio as audit_corr, check_candidate as check_corr_candidate  # noqa: E402
+from risk.stop_engine import compute_stop  # noqa: E402
+from risk.tail_hedger import evaluate as evaluate_tail  # noqa: E402
+from risk.sentinel_watchdog import evaluate as evaluate_sentinel  # noqa: E402
 
 PORTFOLIO = os.path.join(BASE, "gem_inputs", "portfolio_all.json")
 DIRECTIVES = os.path.join(BASE, "data", "directives.json")
@@ -51,6 +55,7 @@ PREMIUM = os.path.join(BASE, "data", "premium_scores.json")
 FORECASTS = os.path.join(BASE, "data", "forecasts.json")
 STATE = os.path.join(BASE, "state.json")
 GEM_DIR = os.path.join(BASE, "gem_results")
+CORE_SAT = os.path.join(BASE, "gem_inputs", "core_satellite.json")
 OUT = os.path.join(BASE, "data", "active_actions.json")
 WEBROOT_OUT = "/var/www/html/active_actions.json"
 
@@ -89,6 +94,9 @@ def build():
     state_file = _load(STATE, {})
     gem_alerts = _latest_gem_alerts()
     forecasts = _load(FORECASTS, {"tickers": {}}).get("tickers", {})
+    core_sat = _load(CORE_SAT, {"core_tickers": [], "satellite_tickers": [], "rules": {}})
+    core_set = set(core_sat.get("core_tickers") or [])
+    sat_set = set(core_sat.get("satellite_tickers") or [])
 
     liq = directives.get("liquidity", {})
     zone = liq.get("zone", "NORMAL")
@@ -369,6 +377,84 @@ def build():
             if "sentinel_veto" not in a["blocks"]:
                 a["blocks"].append("sentinel_veto")
 
+    # =====================================================================
+    # PHASE 3 SENTINEL STACK
+    # Ring 2: Stop Engine (per-position ATR/hard/thesis stop)
+    # Ring 4: Correlation Auditor (PCA concentration veto)
+    # Ring 6: Tail Hedger (DEFCON posture + cash floor override)
+    # Layer 7: Sentinel Watchdog (staleness + disagreement + veto storm)
+    # =====================================================================
+    held_tickers = [t for t in actions.keys() if t]
+    try:
+        corr_audit = audit_corr(held_tickers)
+    except Exception as _ce:
+        corr_audit = {"concentration_state": "UNKNOWN", "note": f"auditor err: {_ce}"}
+
+    try:
+        tail = evaluate_tail()
+    except Exception as _te:
+        tail = {"defcon": 5, "posture_label": "CALM", "cash_floor_override_pct": 5,
+                "hedge_instruction": "no tail data", "signals": [f"err: {_te}"],
+                "freeze_satellite_adds": False, "block_new_cores": False}
+
+    # Apply tail-hedger cash-floor override upward
+    tail_cash_floor = (tail.get("cash_floor_override_pct") or 5) / 100.0
+    if cash_pct < tail_cash_floor:
+        if not freeze_adds:
+            freeze_adds = True  # we need to raise cash before new buys
+
+    # Per-ticker enrichment: stops + correlation candidate-check for expansionary verbs
+    for tk, a in actions.items():
+        prow = portfolio_by_tk.get(tk) or {}
+        is_core = tk in core_set
+        try:
+            thesis_price = prow.get("thesis_invalidation_price") or prow.get("thesis_stop")
+            stop_plan = compute_stop(
+                ticker=tk,
+                entry_price=prow.get("entry_price"),
+                current_price=prow.get("current_price"),
+                is_core=is_core,
+                thesis_price=thesis_price,
+            )
+        except Exception as _se:
+            stop_plan = {"stop_price": None, "notes": f"stop err: {_se}"}
+        a["stop_plan"] = stop_plan
+        # Prefer the explicit stop plan over the sizer's 2σ floor when available.
+        if stop_plan.get("stop_price"):
+            a["stop_price"] = stop_plan["stop_price"]
+
+        a["group"] = "CORE" if is_core else ("SATELLITE" if tk in sat_set else "UNCLASSIFIED")
+
+        # Correlation gate only for expansionary verbs (don't spam yfinance for HOLDs)
+        if a.get("verb") in ("BUY", "ADD"):
+            try:
+                cc = check_corr_candidate(tk, [t for t in held_tickers if t != tk])
+            except Exception as _cce:
+                cc = {"verdict": "OK", "reason": f"corr err: {_cce}"}
+            a["correlation_check"] = cc
+            if cc.get("verdict") == "VETO":
+                a["verb"] = "WATCH"
+                bl = list(a.get("blocks") or [])
+                if "correlation_veto" not in bl:
+                    bl.append("correlation_veto")
+                a["blocks"] = bl
+                a["reason"] = (a.get("reason") or "") + f" — VETO correlation: {cc.get('reason','')}"
+
+        # Tail hedger blocks new cores at DEFCON 1 and satellite adds at DEFCON ≤ 2
+        if a.get("verb") in ("BUY", "ADD"):
+            if tail.get("block_new_cores") and is_core and a.get("verb") == "BUY":
+                a["verb"] = "WATCH"
+                bl = list(a.get("blocks") or [])
+                if "tail_defcon1" not in bl:
+                    bl.append("tail_defcon1")
+                a["blocks"] = bl
+            elif tail.get("freeze_satellite_adds") and not is_core:
+                a["verb"] = "WATCH"
+                bl = list(a.get("blocks") or [])
+                if "tail_defcon2" not in bl:
+                    bl.append("tail_defcon2")
+                a["blocks"] = bl
+
     payload = {
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "liquidity_gate": {
@@ -391,8 +477,48 @@ def build():
             "powder_eur": powder_eur,
         },
         "drawdown_guardian": dd,
+        "correlation_audit": corr_audit,
+        "tail_hedger": tail,
+        "groups": {
+            "core": sorted(core_set),
+            "satellite": sorted(sat_set),
+            "core_count": len(core_set),
+            "satellite_count": len(sat_set),
+            "rules": core_sat.get("rules") or {},
+        },
         "actions": actions,
         "ticker_count": len(actions),
+    }
+
+    # Sentinel watchdog (reads actions we just wrote + data files) — then patch payload.
+    try:
+        # write-then-reread pattern not needed: sentinel can look at the in-mem payload
+        # but for parity with standalone runs we temporarily dump it first.
+        os.makedirs(os.path.dirname(OUT), exist_ok=True)
+        with open(OUT, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2, ensure_ascii=False)
+        watch = evaluate_sentinel()
+    except Exception as _we:
+        watch = {"level": "UNKNOWN", "freeze": False, "triggers": [f"err: {_we}"]}
+    payload["sentinel_watchdog"] = watch
+
+    # FREEZE propagation: kill every expansionary verb
+    if watch.get("freeze"):
+        for tk, a in actions.items():
+            if a.get("verb") in ("BUY", "ADD"):
+                a["verb"] = "WATCH"
+                bl = list(a.get("blocks") or [])
+                if "sentinel_freeze" not in bl:
+                    bl.append("sentinel_freeze")
+                a["blocks"] = bl
+
+    # Also expose a flat "sentinel" block the dashboard already reads
+    payload["sentinel"] = {
+        "kernel": payload["kernel"],
+        "drawdown": payload["drawdown_guardian"],
+        "correlation": payload["correlation_audit"],
+        "tail": payload["tail_hedger"],
+        "watchdog": payload["sentinel_watchdog"],
     }
 
     os.makedirs(os.path.dirname(OUT), exist_ok=True)

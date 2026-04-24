@@ -1232,34 +1232,92 @@ td.mx-eval.oly-tip::after {
 })();
 </script>
 
-<details id="core-sat-panel" style="padding:12px 40px;background:linear-gradient(180deg,#151d2a 0%,#101820 100%);border-top:1px solid #25354a;color:#d6e1f0;">
+<details id="core-sat-panel" open style="padding:12px 40px;background:linear-gradient(180deg,#151d2a 0%,#101820 100%);border-top:1px solid #25354a;color:#d6e1f0;">
   <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#9fb3cc;">
-    ⚖ CORE vs SATELLITE — compounding vs tactical recycling
+    ⚖ CORE vs SATELLITE — why each ticker is where it is
   </summary>
-  <div id="core-sat-body" style="font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;line-height:1.6;"></div>
+  <div id="core-sat-body" style="font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;line-height:1.6;">Loading live core/satellite split…</div>
 </details>
 <script>
 (function(){
+  // Render a ticker "chip" with its live qualification badges.
+  function chip(tk, info, group){
+    var ev = info && info.ev_pct != null ? info.ev_pct : null;
+    var es5 = info && info.es5_pct != null ? info.es5_pct : null;
+    var ops = info && info.ops != null ? info.ops : null;
+    var conv = info && info.conviction != null ? info.conviction : null;
+    var thes = info && info.thesis ? info.thesis : "intact";
+    var verb = info && info.verb ? info.verb : "";
+
+    var badges = [];
+    function badge(text, col){
+      return '<span style="background:'+col+';color:#0b1420;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;margin-right:4px;">'+text+'</span>';
+    }
+
+    // Gate outcomes vs the live criteria (shown inline under each group)
+    if (group === 'CORE') {
+      if (ops != null) {
+        badges.push(ops <= 120 ? badge('OPS '+ops+' ≤120 ✓', '#8dc26f') : badge('OPS '+ops+' >120 ✗', '#e8a14c'));
+      }
+      if (thes === 'intact') badges.push(badge('thesis ✓', '#8dc26f'));
+      else if (thes === 'wounded') badges.push(badge('thesis ≈', '#e8a14c'));
+      else badges.push(badge('thesis ✗', '#e88c6f'));
+    } else if (group === 'SAT') {
+      if (ev != null) {
+        var evNum = Number(ev);
+        badges.push(evNum >= 35 ? badge('EV '+evNum.toFixed(0)+'% ≥35 ✓', '#8dc26f')
+                                : badge('EV '+evNum.toFixed(0)+'% <35', '#c9b37a'));
+      }
+      if (es5 != null) badges.push(badge('ES5 '+Number(es5).toFixed(0)+'%', '#c2a6c2'));
+    }
+    if (conv != null) badges.push(badge('C'+Number(conv).toFixed(0), '#a9c7e8'));
+    if (verb) {
+      var verbCol = (verb==='BUY'||verb==='ADD') ? '#8dc26f' : (verb==='EXIT'||verb==='TRIM') ? '#e88c6f' : '#b8c9dc';
+      badges.push(badge(verb, verbCol));
+    }
+    return '<div style="margin:4px 0;padding:4px 6px;background:#0e1a2a;border-left:3px solid '
+      + (group==='CORE' ? '#7eb8d4' : '#c4a84f') + ';border-radius:2px;">'
+      + '<strong style="color:#efc56a;font-size:12px;">'+tk+'</strong> ' + badges.join('')
+      + '</div>';
+  }
+
+  function render(coreSat, actions){
+    var el = document.getElementById("core-sat-body");
+    if (!el) return;
+    var rules = coreSat.rules || {};
+    var acts = (actions && actions.actions) || {};
+
+    var coreTk = coreSat.core_tickers || [];
+    var satTk = coreSat.satellite_tickers || [];
+
+    var coreCritHTML =
+      '<div style="color:#7eb8d4;font-weight:700;margin:4px 0 3px;font-size:11px;">CORE — add-only, never sell on profit alone</div>' +
+      '<div style="color:#9fb3cc;font-size:10px;margin-bottom:6px;">Criteria to ADD on dip: GOD≥'+(rules.core_min_god_score||70)+
+      ' · OPS ≤'+(rules.core_max_ops||120)+' · thesis INTACT · dip ≥'+Math.abs(rules.core_dip_add_pct||-5)+'% from last add or 30d high · liquidity vector allows</div>';
+
+    var satCritHTML =
+      '<div style="color:#c4a84f;font-weight:700;margin:10px 0 3px;font-size:11px;">SATELLITE — tactical recycling</div>' +
+      '<div style="color:#9fb3cc;font-size:10px;margin-bottom:6px;">Harvest threshold: <strong style="color:#efc56a;">≥'+(rules.satellite_harvest_gross_pct_default||35)+'% gross</strong> default · floor '+(rules.satellite_harvest_gross_pct_floor||20)+'%  ·  Only sell if (a) position ≥threshold AND (b) clearly better OPS+GEM setup available this week  ·  Vector Liquidity v2 gates trims/fills.</div>';
+
+    var coreChips = coreTk.map(function(tk){ return chip(tk, acts[tk], 'CORE'); }).join('');
+    var satChips = satTk.map(function(tk){ return chip(tk, acts[tk], 'SAT'); }).join('');
+
+    el.innerHTML =
+      '<div style="color:#efc56a;margin-bottom:6px;">' + (coreSat.policy || '') + '</div>' +
+      coreCritHTML + coreChips +
+      satCritHTML +
+      '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:4px;">' + satChips + '</div>' +
+      '<div style="margin-top:8px;color:#7a8fa8;font-size:10px;">Source: <code style="background:#1d2b42;padding:1px 4px;">gem_inputs/core_satellite.json</code> (membership) + <code style="background:#1d2b42;padding:1px 4px;">active_actions.json</code> (live OPS/EV/ES5/verb).</div>';
+  }
+
   function loadCoreSat(){
-    fetch("/core_satellite.json?t=" + Date.now())
-      .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
-      .then(function(d){
-        var el = document.getElementById("core-sat-body");
-        if (!el) return;
-        var rules = d.rules || {};
-        el.innerHTML =
-          "<div style=\"color:#efc56a;margin-bottom:6px;\">" + (d.policy || "") + "</div>" +
-          "<div><strong style=\"color:#7eb8d4;\">CORE</strong> — " + (d.core_tickers || []).join(", ") + "</div>" +
-          "<div style=\"margin:6px 0;color:#9fb3cc;font-size:10px;\">" + (rules.core_note || "") + "</div>" +
-          "<div><strong style=\"color:#c4a84f;\">SATELLITE</strong> — " + (d.satellite_tickers || []).length + " names (see JSON for full list)</div>" +
-          "<div style=\"margin-top:6px;color:#9fb3cc;font-size:10px;\">Harvest: default <strong>" + (rules.satellite_harvest_gross_pct_default || 35) + "%+</strong> gross · floor " +
-          (rules.satellite_harvest_gross_pct_floor || 20) + "% · " + (rules.satellite_note || "") + "</div>" +
-          "<div style=\"margin-top:6px;color:#7a8fa8;font-size:10px;\">Edit: <code style=\"background:#1d2b42;padding:1px 4px;\">gem_inputs/core_satellite.json</code></div>";
-      })
-      .catch(function(){
-        var el = document.getElementById("core-sat-body");
-        if (el) el.textContent = "core_satellite.json not on server yet — run olympus_daily.";
-      });
+    var t = Date.now();
+    Promise.all([
+      fetch("/core_satellite.json?t="+t).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
+      fetch("/active_actions.json?t="+t).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
+    ]).then(function(res){
+      render(res[0] || {}, res[1] || {});
+    });
   }
   document.addEventListener("DOMContentLoaded", loadCoreSat);
   setInterval(loadCoreSat, 600000);
@@ -2578,12 +2636,28 @@ setInterval(loadLivePrices, 60 * 1000);
 // ══════════════════════════════════════════════════════════════════
 async function loadActiveActions() {
   try {
-    const resp = await fetch("/active_actions.json?t=" + Date.now());
+    const [resp, fxResp] = await Promise.all([
+      fetch("/active_actions.json?t=" + Date.now()),
+      fetch("/forecasts.json?t=" + Date.now()).catch(function(){ return null; }),
+    ]);
     if (!resp.ok) throw new Error("HTTP " + resp.status);
     const data = await resp.json();
     const actions = data.actions || {};
     const liqGate = data.liquidity_gate || {};
     window.__active_actions = actions;
+    window.__active_actions_meta = data;
+
+    // Cache ensemble forecasts for the matrix tooltip fallback.
+    try {
+      if (fxResp && fxResp.ok) {
+        var fxData = await fxResp.json();
+        window._FORECASTS_DATA = fxData.tickers || fxData.forecasts || {};
+        window._FORECASTS_META = {
+          as_of: fxData.as_of || fxData.built_at,
+          count: Object.keys(window._FORECASTS_DATA || {}).length,
+        };
+      }
+    } catch(_fe) {}
 
     var swEl = document.getElementById("so-what-mandate-body");
     if (swEl) {
@@ -3671,7 +3745,29 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     var versus = vparts.length ? '<div class="mx-versus">' + vparts.join('') + '</div>' : '';
 
     if (!hasData) {
-      return '<div style="padding:8px;color:#999;font-size:11px;text-align:center;font-style:italic">GEM projections loading\u2026<br>Run olympus_daily.py</div>';
+      // Fallback to live ensemble forecast (forecasts.json, mirrored by run_forecasters.py).
+      try {
+        var fx = (window._FORECASTS_DATA && window._FORECASTS_DATA[ticker]) || null;
+        var ens = fx && fx.ensemble ? fx.ensemble : null;
+        if (ens) {
+          var ev = ens.ev_pct != null ? ens.ev_pct : null;
+          var p05 = ens.p05 != null ? (ens.p05*100) : null;
+          var p50 = ens.p50 != null ? (ens.p50*100) : null;
+          var p95 = ens.p95 != null ? (ens.p95*100) : null;
+          var w = ens.weights_used || {};
+          var wStr = Object.keys(w).map(function(k){ return k+' '+Math.round((w[k]||0)*100)+'%'; }).join(' · ');
+          var color = (ev||0)>=0 ? '#2d7a2d' : '#c0392b';
+          return '<div style="padding:8px;font-size:11px;line-height:1.55">' +
+            '<div style="font-weight:700;color:'+color+';font-size:13px">EV 1y: ' + (ev!=null?((ev>=0?'+':'')+ev.toFixed(1)+'%'):'—') + '</div>' +
+            '<div style="color:#888">p05 ' + (p05!=null?p05.toFixed(0)+'%':'—') +
+            '  ·  p50 ' + (p50!=null?p50.toFixed(0)+'%':'—') +
+            '  ·  p95 ' + (p95!=null?p95.toFixed(0)+'%':'—') + '</div>' +
+            '<div style="color:#aaa;font-size:10px;margin-top:3px">ensemble: ' + (wStr||'gem/analog/ml') + '</div>' +
+            '<div style="color:#aaa;font-size:10px;margin-top:2px">Source: forecasts.json (GEM + analog kNN + OLS bootstrap)</div>' +
+          '</div>';
+        }
+      } catch(_e){}
+      return '<div style="padding:8px;color:#999;font-size:11px;text-align:center;font-style:italic">Projection data not on server yet.<br><span style="color:#7eb8d4">Last nightly pipeline writes /forecasts.json + /active_actions.json</span></div>';
     }
 
     return table + verdictShort + versus;
@@ -4409,23 +4505,134 @@ window.addEventListener('load', function () {
 });
 </script>
 
-<div id="gem-header-bar" style="background:#f8f9fa;border:0.5px solid #ddd;border-radius:6px;padding:8px 12px;margin-bottom:10px;font-size:12px">
-  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px">
-    <div>
-      <span style="font-weight:600;color:#333">MINERVA_GEM</span>
-      <span style="color:#888;margin:0 6px">·</span>
-      <span id="gem-grade-bar"><span style="background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">A+: 1</span> &nbsp; <span style="background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">A: 8</span> &nbsp; <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">B+: 14</span> &nbsp; <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">B: 3</span> &nbsp; <span style="background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">C+: 3</span> &nbsp; <span style="background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">C: 1</span></span>
+<!-- CORE ACTION DIGEST — replaces the old static MINERVA_GEM grade bar.
+     Pulls live from active_actions.json every 2min: top adds, top trims, sentinel state. -->
+<div id="core-digest-bar" style="background:#0b1420;border:1px solid #25354a;border-radius:6px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#d6e1f0;font-family:'DM Mono',monospace;">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:6px;">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <span style="font-weight:800;color:#efc56a;letter-spacing:0.08em;">CORE DIGEST · SO WHAT NOW</span>
+      <span id="digest-sentinel" style="font-size:10px;padding:2px 8px;border-radius:3px;background:#1d2b42;color:#9fb3cc;">WATCHDOG —</span>
+      <span id="digest-dd" style="font-size:10px;padding:2px 8px;border-radius:3px;background:#1d2b42;color:#9fb3cc;">DD —</span>
+      <span id="digest-tail" style="font-size:10px;padding:2px 8px;border-radius:3px;background:#1d2b42;color:#9fb3cc;">DEFCON —</span>
+      <span id="digest-corr" style="font-size:10px;padding:2px 8px;border-radius:3px;background:#1d2b42;color:#9fb3cc;">PC1 —</span>
     </div>
-    <div style="color:#888;font-size:11px">
-      Last run: <span id="gem-last-run">—</span>
-      <span style="color:#854F0B;margin-left:8px">⚡ auto 07:05 Berlin</span>
+    <div id="digest-last-updated" style="color:#7a8fa8;font-size:10px;">Built —</div>
+  </div>
+  <div id="digest-mandate" style="color:#efc56a;font-size:11px;margin-bottom:6px;line-height:1.45;">—</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <div>
+      <div style="color:#8dc26f;font-weight:700;margin-bottom:3px;font-size:11px;">↑ HIGHEST CONVICTION ADDS</div>
+      <div id="digest-adds" style="color:#b8c9dc;font-size:11px;">—</div>
+    </div>
+    <div>
+      <div style="color:#e88c6f;font-weight:700;margin-bottom:3px;font-size:11px;">↓ TRIM / EXIT / VETO</div>
+      <div id="digest-trims" style="color:#b8c9dc;font-size:11px;">—</div>
     </div>
   </div>
-  <div style="background:#FAEEDA;border-left:3px solid #EF9F27;padding:4px 10px;margin-bottom:6px;font-size:11px;border-radius:0 4px 4px 0">GRADE CHANGES: <span style="color:#854F0B">⚡ RKLB: B→B+</span></div>
-  <div style="margin-top:6px;font-size:11px;color:#888">
-    Columns injected on all [data-ticker] elements · Grade = 40/40/20 Worst/Normal/Bull weighted GEM Score
+  <div id="digest-gem-footer" style="margin-top:6px;color:#7a8fa8;font-size:10px;display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+    <span>Source: <code style="background:#1d2b42;padding:1px 4px;">active_actions.json</code> (built per run of <code>olympus_daily.py</code>)</span>
+    <span id="digest-gem-note">MINERVA_GEM: —</span>
   </div>
 </div>
+<script>
+(function(){
+  function pct(n){ if(n==null||isNaN(n)) return '—'; var s=n>=0?'+':''; return s+Number(n).toFixed(0)+'%'; }
+  function verbColor(v){ return (v==='BUY'||v==='ADD')?'#8dc26f' : (v==='TRIM'||v==='EXIT')?'#e88c6f' : '#b8c9dc'; }
+  function pill(text, col){ return '<span style="background:'+col+';color:#0b1420;padding:1px 6px;border-radius:3px;font-size:10px;font-weight:700;margin-right:4px;">'+text+'</span>'; }
+
+  function hoursAgo(iso){
+    if(!iso) return null;
+    try{ var t=new Date(iso.replace(' ', 'T').replace(' UTC','Z').replace(' CET','+01:00').replace(' CEST','+02:00'));
+         var h=(Date.now() - t.getTime())/3600000; return isFinite(h)?h:null; }
+    catch(_){ return null; }
+  }
+
+  function updateDigest(){
+    var data = window.__active_actions_meta || null;
+    if (!data) { setTimeout(updateDigest, 500); return; }
+    var acts = data.actions || {};
+    var sentinel = data.sentinel_watchdog || data.sentinel && data.sentinel.watchdog || {};
+    var dd = data.drawdown_guardian || {};
+    var tail = data.tail_hedger || (data.sentinel && data.sentinel.tail) || {};
+    var corr = data.correlation_audit || (data.sentinel && data.sentinel.correlation) || {};
+
+    var sColor = {GREEN:'#2ecc71', YELLOW:'#f4c243', ORANGE:'#e89432', RED:'#e05252', FREEZE:'#c0392b', UNKNOWN:'#8fa3bc'}[sentinel.level||'UNKNOWN']||'#8fa3bc';
+    var sEl = document.getElementById('digest-sentinel');
+    if (sEl) { sEl.style.background = sColor; sEl.style.color = '#0b1420'; sEl.textContent = 'WATCHDOG ' + (sentinel.level||'—') + (sentinel.freeze?' · FROZEN':''); }
+
+    var ddColor = {GREEN:'#2ecc71', YELLOW:'#f4c243', ORANGE:'#e89432', RED:'#e05252', UNKNOWN:'#8fa3bc'}[dd.state||'UNKNOWN']||'#8fa3bc';
+    var ddEl = document.getElementById('digest-dd');
+    if (ddEl) { ddEl.style.background = ddColor; ddEl.style.color='#0b1420'; ddEl.textContent='DD ' + (dd.state||'—') + ' ' + (dd.dd_pct!=null?(dd.dd_pct*100).toFixed(1)+'%':'—'); }
+
+    var defcon = tail.defcon || 5;
+    var tColor = {1:'#c0392b', 2:'#e05252', 3:'#e89432', 4:'#f4c243', 5:'#2ecc71'}[defcon] || '#8fa3bc';
+    var tEl = document.getElementById('digest-tail');
+    if (tEl) { tEl.style.background = tColor; tEl.style.color='#0b1420'; tEl.textContent='DEFCON ' + defcon + ' ' + (tail.posture_label||''); }
+
+    var pc1 = corr.pc1_share;
+    var cColor = {RED:'#c0392b', ORANGE:'#e89432', YELLOW:'#f4c243', GREEN:'#2ecc71', UNKNOWN:'#8fa3bc'}[corr.concentration_state||'UNKNOWN'];
+    var cEl = document.getElementById('digest-corr');
+    if (cEl) { cEl.style.background = cColor; cEl.style.color='#0b1420'; cEl.textContent='PC1 ' + (pc1!=null?Math.round(pc1*100)+'%':'—') + ' · ' + (corr.concentration_state||'?'); }
+
+    var mEl = document.getElementById('digest-mandate');
+    var mandate = data.so_what_mandate || '';
+    if (sentinel.level === 'FREEZE') mandate = 'SENTINEL FREEZE · ' + (sentinel.triggers||[]).slice(0,2).join(' · ');
+    else if (defcon <= 2) mandate = 'DEFCON ' + defcon + ' — ' + (tail.hedge_instruction || '');
+    if (mEl) mEl.textContent = mandate || '—';
+
+    var adds = [], trims = [];
+    Object.keys(acts).forEach(function(tk){
+      var a = acts[tk];
+      if (!a) return;
+      var ev = a.ev_pct || 0;
+      var conv = a.conviction || 0;
+      var vetoed = (a.vetoes && a.vetoes.length) || (a.blocks && a.blocks.length);
+      if ((a.verb==='BUY' || a.verb==='ADD') && !vetoed) adds.push({tk:tk, a:a, score: ev*0.6 + conv*0.4});
+      else if (a.verb==='EXIT' || a.verb==='TRIM' || (vetoed && (a.verb==='WATCH' || a.verb==='HOLD'))) trims.push({tk:tk, a:a, score: -ev + (vetoed?50:0)});
+    });
+    adds.sort(function(x,y){ return y.score - x.score; });
+    trims.sort(function(x,y){ return y.score - x.score; });
+    function renderRow(x, isTrim){
+      var a = x.a;
+      var bits = [];
+      bits.push('<strong style="color:#efc56a;">'+x.tk+'</strong>');
+      bits.push(pill(a.verb, verbColor(a.verb)));
+      if (a.group) bits.push('<span style="color:#7a8fa8;">['+a.group.toLowerCase()+']</span>');
+      if (a.ev_pct != null) bits.push('<span style="color:'+(a.ev_pct>=0?'#8dc26f':'#e88c6f')+';">EV '+pct(a.ev_pct)+'</span>');
+      if (a.es5_pct != null) bits.push('<span style="color:#c2a6c2;">ES5 '+pct(a.es5_pct)+'</span>');
+      if (a.ops != null) bits.push('<span style="color:#9fb3cc;">OPS '+a.ops+'</span>');
+      if (isTrim && a.blocks && a.blocks.length) bits.push('<span style="color:#e05252;font-size:10px;">['+a.blocks.slice(0,2).join(',')+']</span>');
+      if (a.stop_price) bits.push('<span style="color:#7a8fa8;">stop '+a.stop_price+'</span>');
+      return '<div style="margin:2px 0;">' + bits.join(' ') + '</div>';
+    }
+    var addsEl = document.getElementById('digest-adds');
+    var trimsEl = document.getElementById('digest-trims');
+    if (addsEl) addsEl.innerHTML = adds.slice(0,5).map(function(x){ return renderRow(x,false); }).join('') || '<span style="color:#7a8fa8;">No clean BUY/ADD right now — liquidity/kernel is gating all adds.</span>';
+    if (trimsEl) trimsEl.innerHTML = trims.slice(0,5).map(function(x){ return renderRow(x,true); }).join('') || '<span style="color:#7a8fa8;">No forced trims.</span>';
+
+    var luEl = document.getElementById('digest-last-updated');
+    if (luEl && data.generated_utc) {
+      var h = hoursAgo(data.generated_utc);
+      var age = h==null ? '' : (h<1 ? Math.round(h*60)+'m ago' : h.toFixed(1)+'h ago');
+      luEl.textContent = 'Built ' + data.generated_utc + (age?' · '+age:'');
+    }
+
+    var gf = document.getElementById('digest-gem-note');
+    if (gf) {
+      var meta = window._GEM_META || {};
+      var gh = hoursAgo(meta.run_date + ' ' + (meta.run_time||'00:00'));
+      var stale = gh != null && gh > 36;
+      gf.innerHTML = 'MINERVA_GEM: ' + (meta.run_date || '—') + ' ' + (meta.run_time||'') +
+        (stale ? ' <span style="color:#e05252;">(STALE > ' + Math.round(gh) + 'h) — run <code>python3 run_gem_daily.py</code> on server</span>' : '');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    updateDigest();
+    setInterval(updateDigest, 120000);
+  });
+})();
+</script>
 <!-- GEM_INJECT_END -->
 </body>
 </html>
