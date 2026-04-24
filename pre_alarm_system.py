@@ -256,6 +256,12 @@ def enrich_liquidity_directives_and_alarm(fred_out: Dict[str, Any]) -> None:
             )
         else:
             liq["change_text"] = "—"
+    try:
+        from vector_liquidity import attach_to_liquidity_dict
+
+        attach_to_liquidity_dict(liq, float(net), v7)
+    except Exception as _ve:
+        logger.warning("vector_liquidity: %s", _ve)
     d["liquidity"] = liq
     d["pre_alarm"] = {
         "last_run_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),

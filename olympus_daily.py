@@ -50,6 +50,49 @@ def _publish_ledger() -> None:
         print(f"[LEDGER] publish failed: {exc}")
 
 
+def _run_premium_scores() -> None:
+    """Sector-relative OPS (premium) — closes KTOS-style blind spot."""
+    try:
+        from tools.premium_score import main as _ops_main
+
+        _ops_main()
+    except Exception as exc:
+        print(f"[OPS] failed: {exc}")
+
+
+def _publish_premium_scores() -> None:
+    try:
+        import shutil
+
+        src = os.path.join(BASE, "data", "premium_scores.json")
+        if os.path.isfile(src):
+            shutil.copy2(src, "/var/www/html/premium_scores.json")
+            print("[OPS] published → webroot")
+    except Exception as exc:
+        print(f"[OPS] publish failed: {exc}")
+
+
+def _publish_gem_meta() -> None:
+    try:
+        from tools.publish_gem_meta import main as _gem_meta
+
+        _gem_meta()
+    except Exception as exc:
+        print(f"[GEM_META] failed: {exc}")
+
+
+def _publish_core_satellite() -> None:
+    try:
+        import shutil
+
+        src = os.path.join(BASE, "gem_inputs", "core_satellite.json")
+        if os.path.isfile(src):
+            shutil.copy2(src, "/var/www/html/core_satellite.json")
+            print("[CORE] published core_satellite.json")
+    except Exception as exc:
+        print(f"[CORE] publish failed: {exc}")
+
+
 def _publish_watchlist_bench() -> None:
     """Ship watchlist_bench.json to webroot (research queue, not quota fills)."""
     try:
@@ -103,6 +146,10 @@ def main():
     print("=== OLYMPUS DAILY PIPELINE ===")
     _refresh_fred_liquidity()
     _enrich_catalysts()
+    _run_premium_scores()
+    _publish_premium_scores()
+    _publish_gem_meta()
+    _publish_core_satellite()
     from fetch_data import get_all_data
     from olympus_engine import run_engine
     from output_factory import generate_outputs

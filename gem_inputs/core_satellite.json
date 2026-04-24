@@ -1,0 +1,48 @@
+{
+  "version": 1,
+  "policy": "Core = compounding sleeve (thesis-death exit only). Satellite = tactical recycling with higher harvest threshold to beat tax drag.",
+  "core_tickers": [
+    "000660.KS",
+    "272210.KS",
+    "TSM",
+    "PLTR",
+    "NVDA"
+  ],
+  "satellite_tickers": [
+    "KTOS",
+    "UEC",
+    "URNM",
+    "OKLO",
+    "ARKQ",
+    "BOTZ",
+    "RKLB",
+    "PL",
+    "CWEN",
+    "UUUU",
+    "FCX",
+    "NTR",
+    "IAU",
+    "1810.HK",
+    "TMO",
+    "COHR",
+    "VRT",
+    "AMAT",
+    "ASML",
+    "ASTS",
+    "BEAM",
+    "NTLA",
+    "CRSP",
+    "CCJ",
+    "MC.PA"
+  ],
+  "rules": {
+    "core_min_god_score": 70,
+    "core_max_ops": 120,
+    "core_dip_add_pct": -5,
+    "core_note": "Add only on ≥5% dip from last add or fresh 30d high, liquidity vector allows, thesis INTACT, OPS ≤ core_max_ops.",
+    "satellite_harvest_gross_pct_default": 35,
+    "satellite_harvest_gross_pct_floor": 20,
+    "satellite_note": "Harvest at ≥35% gross preferred (DE Abgeltung ~25% makes 20% net thin). At 20–34% only if recycling into strictly better OPS+GEM setup same week.",
+    "liquidity_vector": "Satellite trims/fills require vector state ≤4 or 6 per Vector Liquidity Engine v2 — never fight DEPLOY+EXPanding with cash raises unless taking profit."
+  }
+}

@@ -17,6 +17,14 @@ Before changing any stock action in `OLYMPUS_UNIFIED.html`:
 4. **KTOS example:** Another defense name exiting (e.g. AVAV) is not a KTOS thesis break — different companies, different contracts.
 5. **UEC example:** A live limit at €11 is **ARMED**, not HOLD and not ADD — the system waits for the fill; GOD does not second-guess the order.
 
+## VECTOR LIQUIDITY ENGINE v2 + OPS (ENFORCED)
+
+- **Level zones (net $B):** DANGER &lt;1,900 · SELECTIVE 1,900–2,200 · DEPLOY ≥2,200. Institutions optimize range; OLYMPUS optimizes **vector** (7d Δ net liq).
+- **States 1–6** live in `vector_liquidity.py` and are written into `directives.json` → §11 dashboard. **State 2** (DANGER + EXPANDING) = selective strike window; **State 6** (DEPLOY + CONTRACTING) = secure tactical profits — not panic-selling core into weakness.
+- **`active_actions.json`** freezes broad BUYs in states **1, 4, 6** only. It does **not** freeze State 2 strikes (still gated by thesis + GOD score + OPS).
+- **OPS (OLYMPUS Premium Score):** `tools/premium_score.py` — stock vs **sector peer median** P/S and forward P/E. GEM “fair value” can still be **expensive vs peers** (KTOS lesson). **OPS ≥ 180** forces BUY → WATCH in `build_active_actions.py` regardless of letter grade.
+- **Core vs satellite:** `gem_inputs/core_satellite.json`. Core = compounders — do not sell on profit alone (thesis death only). Satellite = tactical sleeve; harvest default **≥35% gross** before recycle (20% is structurally thin after DE Abgeltungsteuer + opportunity cost).
+
 ## CURSOR STANDING RESPONSIBILITIES
 
 ### EVERY SUNDAY

@@ -38,6 +38,7 @@ PORTFOLIO = os.path.join(BASE, "gem_inputs", "portfolio_all.json")
 DIRECTIVES = os.path.join(BASE, "data", "directives.json")
 THESIS_HIST = os.path.join(BASE, "data", "thesis_history.json")
 RADAR = os.path.join(BASE, "data", "catalyst_radar.json")
+PREMIUM = os.path.join(BASE, "data", "premium_scores.json")
 OUT = os.path.join(BASE, "data", "active_actions.json")
 WEBROOT_OUT = "/var/www/html/active_actions.json"
 
@@ -58,10 +59,16 @@ def build():
 
     liq = directives.get("liquidity", {})
     zone = liq.get("zone", "NORMAL")
-    direction = liq.get("direction", "EXPANDING")
-    freeze_adds = zone == "DANGER" or (
-        zone == "WARNING" and direction == "CONTRACTING"
-    )
+    direction = liq.get("direction") or "EXPANDING"
+    lve = liq.get("liquidity_vector_engine") or {}
+    sid = lve.get("state_id")
+    # Vector Liquidity v2: freeze broad BUYs in states 1,4,6 — never in state 2 (strike window)
+    if sid is not None:
+        freeze_adds = sid in (1, 4, 6)
+    else:
+        freeze_adds = zone == "DANGER" or (
+            zone == "WARNING" and direction == "CONTRACTING"
+        )
 
     # Index strategic actions from directives.json (explicit user intent wins)
     strategic = {}
@@ -207,13 +214,39 @@ def build():
             "source": "default",
         }
 
+    prem = _load(PREMIUM, {})
+    pt = prem.get("tickers") or {}
+    for tk, a in actions.items():
+        pr = pt.get(tk)
+        if not pr:
+            continue
+        a["ops"] = pr.get("ops")
+        a["ops_band"] = pr.get("band")
+        a["ops_hint"] = pr.get("hint")
+        if float(pr.get("ops") or 0) >= 180 and a.get("verb") in ("BUY", "ADD"):
+            bl = list(a.get("blocks") or [])
+            if "ops_extreme" not in bl:
+                bl.append("ops_extreme")
+            a["blocks"] = bl
+            a["verb"] = "WATCH"
+            a["reason"] = (
+                (a.get("reason") or "directive")
+                + " — BLOCKED: OPS≥180 (extreme premium vs peers). "
+                "GEM 'cheap' vs DCF can still be expensive vs sector — wait for multiple compression or thesis catalyst."
+            )
+            a["source"] = (a.get("source") or "") + "+ops_gate"
+
     payload = {
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "liquidity_gate": {
             "zone": zone,
             "direction": direction,
             "freeze_adds": freeze_adds,
+            "vector_state_id": sid,
+            "vector_title": lve.get("state_title"),
         },
+        "liquidity_vector_engine": lve,
+        "so_what_mandate": liq.get("so_what_consolidated") or "",
         "actions": actions,
         "ticker_count": len(actions),
     }

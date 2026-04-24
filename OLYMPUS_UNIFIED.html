@@ -529,9 +529,6 @@ body{font-family:'Barlow',sans-serif;background:var(--bg);color:var(--ink);min-h
 .de-tk{font-weight:800;color:#fff;}
 
 /* ── ALERTS ── */
-.alert-bar{background:#fffbf0;border-bottom:1px solid #e8d090;padding:8px 40px;display:flex;gap:16px;align-items:center;overflow-x:auto;white-space:nowrap;}
-.alert-lbl{font-family:'Syne',sans-serif;font-weight:700;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:#c06000;flex-shrink:0;}
-.alert-chip{font-size:10px;color:var(--es-ink2);padding:2px 9px;background:white;border:1px solid #e8d090;flex-shrink:0;}
 
 /* ── REFLEXIVITY + IPO (monthly upgrade) ── */
 .reflex-wrap{background:var(--es-paper2);border-bottom:1px solid var(--es-rule);padding:10px 40px;display:grid;grid-template-columns:1.2fr 0.8fr;gap:12px;align-items:stretch;}
@@ -1151,7 +1148,26 @@ td.mx-eval.oly-tip::after {
     <div style="color:#9fb3cc;padding-left:14px;">
       <strong style="color:#d6e1f0;">What:</strong> Pre-vetted names per sector you may research when a catalyst hits — <em>not</em> a rule to “fill five per sector.”<br>
       <strong style="color:#d6e1f0;">Use:</strong> Pick one bench name per month to read; arm a limit only after thesis line + ledger entry + liquidity gate OK.<br>
-      <strong style="color:#d6e1f0;">Live panel:</strong> <code style="background:#1d2b42;padding:1px 4px;">§ WATCHLIST BENCH</code> below (loads <code style="background:#1d2b42;padding:1px 4px;">watchlist_bench.json</code>).
+      <strong style="color:#d6e1f0;">Live panel:</strong> <code style="background:#1d2b42;padding:1px 4px;">§ WATCHLIST BENCH</code> below (source <code style="background:#1d2b42;padding:1px 4px;">gem_inputs/watchlist_bench.json</code>).
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑫ OLYMPUS PREMIUM SCORE (OPS)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">What:</strong> Stock vs <em>sector peer median</em> on P/S and forward P/E — not analyst DCF “fair value.”<br>
+      <strong style="color:#d6e1f0;">Read:</strong>
+      <code style="color:#4caf50;">&lt;80</code> CHEAP vs peers
+      · <code style="color:#c4a84f;">80–120</code> FAIR
+      · <code style="color:#e07b39;">120–180</code> PREMIUM
+      · <code style="color:#e05252;">≥180</code> EXTREME — “dip” may be fair multiple compression, not a gift.<br>
+      <strong style="color:#d6e1f0;">Rule:</strong> GEM grade never overrides OPS≥180 for new adds — <code style="background:#1d2b42;padding:1px 4px;">active_actions.json</code> degrades BUY→WATCH automatically.<br>
+      <strong style="color:#d6e1f0;">Refresh:</strong> <code style="background:#1d2b42;padding:1px 4px;">python3 tools/premium_score.py</code> (daily pipeline).
+    </div>
+
+    <div style="color:#efc56a;font-weight:700;margin:10px 0 4px;">⑬ VECTOR LIQUIDITY (level × 7d Δ)</div>
+    <div style="color:#9fb3cc;padding-left:14px;">
+      <strong style="color:#d6e1f0;">Zones:</strong> DANGER &lt;$1,900B · SELECTIVE $1,900–$2,200B · DEPLOY ≥$2,200B.<br>
+      <strong style="color:#d6e1f0;">Vector:</strong> 7d net-liq change — EXPANDING vs CONTRACTING (see §11 card <em>Vector Liquidity Engine v2</em>).<br>
+      <strong style="color:#d6e1f0;">Edge:</strong> State 2 (DANGER+EXPANDING) = selective strike window; State 6 (DEPLOY+CONTRACTING) = secure tactical profits — not panic-selling core into weakness.
     </div>
 
     <div style="margin-top:12px;padding:8px 10px;background:#1d2b42;border-left:3px solid #efc56a;color:#d6e1f0;font-size:11px;">
@@ -1213,6 +1229,40 @@ td.mx-eval.oly-tip::after {
   }
   document.addEventListener("DOMContentLoaded", loadBench);
   setInterval(loadBench, 300000);
+})();
+</script>
+
+<details id="core-sat-panel" style="padding:12px 40px;background:linear-gradient(180deg,#151d2a 0%,#101820 100%);border-top:1px solid #25354a;color:#d6e1f0;">
+  <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#9fb3cc;">
+    ⚖ CORE vs SATELLITE — compounding vs tactical recycling
+  </summary>
+  <div id="core-sat-body" style="font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;line-height:1.6;"></div>
+</details>
+<script>
+(function(){
+  function loadCoreSat(){
+    fetch("/core_satellite.json?t=" + Date.now())
+      .then(function(r){ return r.ok ? r.json() : Promise.reject(); })
+      .then(function(d){
+        var el = document.getElementById("core-sat-body");
+        if (!el) return;
+        var rules = d.rules || {};
+        el.innerHTML =
+          "<div style=\"color:#efc56a;margin-bottom:6px;\">" + (d.policy || "") + "</div>" +
+          "<div><strong style=\"color:#7eb8d4;\">CORE</strong> — " + (d.core_tickers || []).join(", ") + "</div>" +
+          "<div style=\"margin:6px 0;color:#9fb3cc;font-size:10px;\">" + (rules.core_note || "") + "</div>" +
+          "<div><strong style=\"color:#c4a84f;\">SATELLITE</strong> — " + (d.satellite_tickers || []).length + " names (see JSON for full list)</div>" +
+          "<div style=\"margin-top:6px;color:#9fb3cc;font-size:10px;\">Harvest: default <strong>" + (rules.satellite_harvest_gross_pct_default || 35) + "%+</strong> gross · floor " +
+          (rules.satellite_harvest_gross_pct_floor || 20) + "% · " + (rules.satellite_note || "") + "</div>" +
+          "<div style=\"margin-top:6px;color:#7a8fa8;font-size:10px;\">Edit: <code style=\"background:#1d2b42;padding:1px 4px;\">gem_inputs/core_satellite.json</code></div>";
+      })
+      .catch(function(){
+        var el = document.getElementById("core-sat-body");
+        if (el) el.textContent = "core_satellite.json not on server yet — run olympus_daily.";
+      });
+  }
+  document.addEventListener("DOMContentLoaded", loadCoreSat);
+  setInterval(loadCoreSat, 600000);
 })();
 </script>
 
@@ -1436,15 +1486,9 @@ td.mx-eval.oly-tip::after {
   </div>
 </header>
 
-<div class="alert-bar">
-  <div class="alert-lbl">⚑ Alerts</div>
-  <div class="alert-chip">🟡 OKLO $57 armed — Meta 1.2GW + NRC 2026 (raised from $44)</div>
-  <div class="alert-chip">🟡 CCJ €105 market armed — uranium blue chip (raised from $100)</div>
-  <div class="alert-chip">🟡 UEC €11 armed — spot leverage</div>
-  <div class="alert-chip">🔵 PLTR stop €95 — thesis intact</div>
-  <div class="alert-chip">🟠 ASML April 16 — beat=buy, miss=wait</div>
-  <div class="alert-chip">🟢 SpaceX IPO June 2026 — prepare capital</div>
-  <div class="alert-chip">🟢 Anthropic IPO Oct 2026 — prepare capital</div>
+<div id="so-what-mandate" style="margin:6px 40px 8px;padding:12px 16px;background:linear-gradient(95deg,#141c28 0%,#0f1824 100%);border-left:4px solid #d4af37;border-radius:0 6px 6px 0;color:#e8eef5;font-family:'DM Mono',monospace;font-size:12px;line-height:1.55;box-shadow:0 1px 3px rgba(0,0,0,.12);">
+  <span style="font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.14em;color:#d4af37;display:block;margin-bottom:6px;">⚡ SO WHAT — CONSOLIDATED MANDATE</span>
+  <span id="so-what-mandate-body" style="color:#d6e1f0;">Loading liquidity vector + active_actions…</span>
 </div>
 
 <div id="liqBar" style="
@@ -2039,6 +2083,11 @@ MINERVA ACTION CHANGE RULE (permanent):
     <div class="liq-updated" id="liqUpdated">Last updated: —</div>
   </div>
 
+  <div class="card" style="margin-top:18px;padding:16px 18px;border:1px solid rgba(212,175,55,0.5);">
+    <div class="sec-t" style="margin-bottom:8px;">VECTOR LIQUIDITY ENGINE v2</div>
+    <div id="liqVectorEngine" style="font-size:13px;line-height:1.65;color:var(--ink2);">Loading vector state…</div>
+  </div>
+
   <div class="card" style="margin-top:18px;padding:16px 18px;border:1px solid rgba(196,168,79,0.35);">
     <div class="sec-t" style="margin-bottom:8px;">AUTO EXPECTATION ENGINE</div>
     <div id="liqCorridorTrend" style="font-size:14px;font-weight:800;letter-spacing:0.03em;margin-bottom:10px;line-height:1.4;">—</div>
@@ -2050,9 +2099,9 @@ MINERVA ACTION CHANGE RULE (permanent):
   </div>
 
   <div class="card" style="margin-top:16px;padding:16px 18px;border:1px solid rgba(79,70,229,0.35);">
-    <div class="sec-t" style="margin-bottom:8px;">TECH RADAR · AUTO RSS</div>
+    <div class="sec-t" style="margin-bottom:8px;">TECH RADAR · FILTERED</div>
     <div id="techRadarList" style="font-size:12px;line-height:1.5;color:var(--ink2);">Loading…</div>
-    <div style="font-size:11px;color:var(--ink3);margin-top:10px;">Feeds: HN, TechCrunch, Verge, Ars, NYT Tech — high-score items also ping Telegram.</div>
+    <div style="font-size:11px;color:var(--ink3);margin-top:10px;">Noise gate: score ≥14 only (max 5). Actionable intel lives in <strong>Catalyst Radar</strong> + Telegram pre-alerts — not generic tech headlines.</div>
   </div>
 
   <div class="liq-scale">
@@ -2089,28 +2138,14 @@ MINERVA ACTION CHANGE RULE (permanent):
       <tr><td>2023 SVB Crisis</td><td>TGA rebuilt $600B in 3 months</td><td class="red">~$2,200B</td><td>SVB, Signature Bank failures. BTFP rescue.</td></tr>
       <tr><td>2024 Average</td><td>RRP draining, stable reserves</td><td class="yellow">~$2,400B</td><td>Bull market. AI rally begins.</td></tr>
       <tr><td>2025 Jan</td><td>TGA drain → reserves +$97B</td><td class="yellow">~$2,800B</td><td>Strong markets. QT ended Dec 2025.</td></tr>
-      <tr class="today-row"><td>TODAY Apr 2026</td><td>April tax season — TGA building</td><td id="liqTodayHist" class="orange">Loading...</td><td>TGA drains post-April 15 → risk-on coming</td></tr>
+      <tr class="today-row"><td>TODAY</td><td>FRED net liquidity (live)</td><td id="liqTodayHist" class="orange">Loading...</td><td>Use <strong>7d vector</strong> in Engine v2 — not calendar slogans</td></tr>
       <tr><td>DANGER THRESHOLD</td><td>Reserves below ample range</td><td class="red">&lt; $2,000B</td><td>Repo market stress. Rate spikes. QE forced.</td></tr>
     </tbody>
   </table>
 
   <div class="liq-forecast">
-    <h3>📈 NEXT 2 WEEKS PROJECTION</h3>
-    <div class="liq-proj-item">
-      <span class="proj-date">April 15</span>
-      <span class="proj-event">Tax deadline — TGA peaks, then drains</span>
-      <span class="proj-impact">Expected: +$200-400B liquidity expansion</span>
-    </div>
-    <div class="liq-proj-item">
-      <span class="proj-date">April 15-30</span>
-      <span class="proj-event">TGA normalizes → reserves increase</span>
-      <span class="proj-impact">Net Liq target: $2,500-2,700B → 🟡 NORMAL zone</span>
-    </div>
-    <div class="liq-proj-item">
-      <span class="proj-date">May 2026</span>
-      <span class="proj-event">QT stopped Dec 2025 → RMPs $40B/month</span>
-      <span class="proj-impact">Structural expansion continues → risk-on sustained</span>
-    </div>
+    <h3>📈 ROLLING PROJECTION (vector-driven · no stale dates)</h3>
+    <div id="liqProjDynamic" style="font-size:12px;line-height:1.65;color:var(--ink2);">Loading from liquidity_vector_engine…</div>
   </div>
 
   <div class="liq-action">
@@ -2531,6 +2566,22 @@ async function loadActiveActions() {
     const liqGate = data.liquidity_gate || {};
     window.__active_actions = actions;
 
+    var swEl = document.getElementById("so-what-mandate-body");
+    if (swEl) {
+      var parts = [];
+      if (data.so_what_mandate) parts.push(data.so_what_mandate);
+      if (liqGate.vector_title) parts.push("Vector state: " + liqGate.vector_title);
+      var opw = [];
+      Object.keys(actions).forEach(function (tk) {
+        var x = actions[tk];
+        if (x && x.ops != null && x.ops >= 180 && x.blocks && x.blocks.indexOf("ops_extreme") >= 0) {
+          opw.push(tk + " OPS " + x.ops);
+        }
+      });
+      if (opw.length) parts.push("Premium gate: " + opw.join(", "));
+      swEl.textContent = parts.join(" · ") || "—";
+    }
+
     // 1. Master Matrix action cell override
     document.querySelectorAll('tr.mx-row[data-ticker]').forEach(function(tr){
       const tk = tr.getAttribute('data-ticker');
@@ -2567,8 +2618,9 @@ async function loadActiveActions() {
       const b = document.createElement('div');
       b.id = 'liquidity-gate-banner';
       b.style.cssText = 'background:#e05252;color:#fff;padding:6px 16px;font-family:DM Mono,monospace;font-size:11px;font-weight:700;letter-spacing:0.05em;text-align:center;';
-      b.textContent = '⚠ LIQUIDITY GATE: ' + liqGate.zone + ' / ' + liqGate.direction +
-        ' — new ADDs frozen. BUY directives degraded to WATCH until reserves rebuild.';
+      b.textContent = '⚠ VECTOR / LIQUIDITY GATE · state ' + (liqGate.vector_state_id != null ? liqGate.vector_state_id : '?') +
+        ' — ' + (liqGate.vector_title || liqGate.zone) +
+        '. Broad BUYs frozen per engine v2 (see §11).';
       bannerHost.parentNode.insertBefore(b, bannerHost);
     } else if (!liqGate.freeze_adds && banner) {
       banner.remove();
@@ -3066,17 +3118,43 @@ async function loadLiqTab() {
     if (lr) lr.textContent = "Regime → " + String(liq.macro_liquidity_regime || "—").toUpperCase() + " (tight / neutral / loose)";
     if (ln) ln.textContent = liq.expectation_note || "";
 
+    var lve = liq.liquidity_vector_engine || {};
+    var lvEl = document.getElementById("liqVectorEngine");
+    if (lvEl && lve.state_title) {
+      var lines = (lve.actions || []).map(function (x) { return "• " + x; });
+      lvEl.innerHTML =
+        "<div style=\"font-weight:800;color:#c4a84f;margin-bottom:6px;\">" + String(lve.state_title || "") + "</div>" +
+        "<div style=\"color:var(--ink3);margin-bottom:8px;\">Zone <strong>" + String(lve.zone_band || "—") + "</strong> · 7d vector <strong>" +
+        String(lve.vector_7d || "—") + "</strong> · Δ <strong>" + (lve.velocity_7d_b != null ? lve.velocity_7d_b + "B" : "—") + "</strong></div>" +
+        "<div>" + lines.join("<br>") + "</div>" +
+        (lve.so_what_one_liner ? "<div style=\"margin-top:10px;padding:8px;background:#f5f0e6;border-radius:4px;color:#3d2914;font-weight:600;\">" +
+          String(lve.so_what_one_liner) + "</div>" : "");
+    } else if (lvEl) {
+      lvEl.textContent = "Vector engine pending — run FRED refresh + pre_alarm (olympus_daily).";
+    }
+    var proj = document.getElementById("liqProjDynamic");
+    if (proj && lve.projection_items && lve.projection_items.length) {
+      proj.innerHTML = lve.projection_items.map(function (p) {
+        return "<div class=\"liq-proj-item\" style=\"margin-bottom:10px;\"><span class=\"proj-date\">" + String(p.date || "") + "</span> " +
+          "<span class=\"proj-event\">" + String(p.event || "") + "</span> " +
+          "<span class=\"proj-impact\">" + String(p.impact || "") + "</span></div>";
+      }).join("");
+    } else if (proj) {
+      proj.textContent = "No projection items yet — refresh liquidity JSON.";
+    }
+
     const tr = document.getElementById("techRadarList");
     if (tr) {
       var hdrs = (d.tech_radar && d.tech_radar.headlines) ? d.tech_radar.headlines : [];
-      if (hdrs.length) {
-        tr.innerHTML = hdrs.map(function(h) {
+      var filtered = hdrs.filter(function (h) { return (h.score || 0) >= 14; }).slice(0, 5);
+      if (filtered.length) {
+        tr.innerHTML = filtered.map(function(h) {
           return "<div style=\"margin-bottom:10px;\"><span style=\"color:var(--gold);\">[" + (h.score || 0) + "]</span> " +
             "<a href=\"" + String(h.link || "#").replace(/"/g, "&quot;") + "\" target=\"_blank\" rel=\"noopener\" style=\"color:var(--blue);\">" +
             String(h.title || "").replace(/</g, "&lt;") + "</a> <span style=\"color:var(--ink3);\">· " + String(h.source || "") + "</span></div>";
         }).join("");
       } else {
-        tr.textContent = "No tech headlines yet — scheduler will populate (or run: python main.py --radar on server).";
+        tr.innerHTML = "<span style=\"color:var(--ink3);\">No headlines passed the noise gate (score≥14). Use <strong>Catalyst Radar</strong> + blog pre-alerts for tradable themes.</span>";
       }
     }
 
@@ -3622,7 +3700,7 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
 <script>
 /* MINERVA_GEM — data block replaced by inject_gem.py only; do not remove markers */
 // OLYMPUS_GEM_DATA_BEGIN
-/* MINERVA_GEM v5 (risk-integrated) · Auto-injected 2026-04-14 22:31 from gem_20260414.json */
+/* MINERVA_GEM v5 (risk-integrated) · Auto-injected 2026-04-24 20:42 from gem_20260414.json */
 const GEM_DATA = {
   "BEAM": {grade:"A+",gem_score:72.1,u1y:10.32,u5y:1165.76,worst1y:-85.28,unreal:null,cur_vs_1y:10.33,mos:null,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + rev_ps_1y3y5y"},
   "UEC": {grade:"A",gem_score:65.9,u1y:7.92,u5y:266.15,worst1y:-71.70,unreal:15.34,cur_vs_1y:7.89,mos:21.82,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
@@ -3755,9 +3833,15 @@ function applyMatrixGodEvalHoverTips(tr, d, ticker, rl) {
   var thesis = typeof matrixThesisLine === "function" ? matrixThesisLine(ticker) : "";
   var gNum = tr.querySelector(".god-num");
   var gtxt = gNum ? gNum.textContent.trim() : "";
+  var odg = (typeof window !== "undefined" && window.__OPS_DATA) ? window.__OPS_DATA[ticker] : null;
+  var opsGod = "";
+  if (odg && odg.ops != null) {
+    opsGod = "OPS " + odg.ops + " (" + (odg.band || "") + ") — sector-relative premium, not DCF fair value.";
+  }
   var godLines = [
     "GOD " + gtxt + " — qualitative thesis strength (0–100). Separate from MINERVA_GEM letter/score in EVAL →",
     thesis ? "Matrix thesis: " + thesis : "",
+    opsGod,
     "",
     "SO WHAT — " + sow.line,
     sow.tip,
@@ -3773,17 +3857,24 @@ function applyMatrixGodEvalHoverTips(tr, d, ticker, rl) {
   }
   var evalCell = tr.querySelector(".mx-eval");
   if (!evalCell) return;
+  var od = (typeof window !== "undefined" && window.__OPS_DATA) ? window.__OPS_DATA[ticker] : null;
+  var opsLine = "";
+  if (od && od.ops != null) {
+    opsLine = "OPS " + od.ops + " (" + (od.band || "") + ") — " + (od.hint || "") +
+      (od.ops >= 180 ? " · GEM letter can look strong while you pay extreme sector premium." : "");
+  }
   var evalLines = [
     "MINERVA_GEM — this column",
     "Letter " + d.grade + " · " + (d.gem_score != null ? d.gem_score.toFixed(1) + "/100" : "—"),
     "Risk (9-dim): " + rl,
     "1Y EV: " + (d.u1y != null ? d.u1y.toFixed(1) + "%" : "—") + " · 5Y EV: " + (d.u5y != null ? d.u5y.toFixed(1) + "%" : "—"),
+    opsLine,
     "",
     "SO WHAT — " + sow.line,
     sow.tip,
     "",
     "Same logic as § GEM Grade Summary · Not personalized advice.",
-  ].join("\n");
+  ].filter(function (x) { return x !== ""; }).join("\n");
   evalCell.classList.add("oly-tip");
   evalCell.setAttribute("data-tip", evalLines);
 }
@@ -4121,9 +4212,39 @@ function loadRiskHeatmap() {
 }
 setInterval(loadRiskHeatmap, 5 * 60 * 1000);
 
+window.__OPS_DATA = window.__OPS_DATA || {};
+
+function loadPremiumForMatrix(cb) {
+  fetch("/premium_scores.json?t=" + Date.now())
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("premium http")); })
+    .then(function (d) {
+      window.__OPS_DATA = d.tickers || {};
+      if (cb) cb();
+    })
+    .catch(function () { if (cb) cb(); });
+}
+
+function updateGemMetaHeader() {
+  var el = document.getElementById("gem-last-run");
+  if (!el) return;
+  if (window._GEM_META && window._GEM_META.run_date) {
+    el.textContent = window._GEM_META.run_date + " " + (window._GEM_META.run_time || "");
+    return;
+  }
+  fetch("/gem_meta.json?t=" + Date.now())
+    .then(function (r) { return r.json(); })
+    .then(function (m) {
+      el.textContent = (m.run_date || "—") + " " + (m.run_time || "");
+    })
+    .catch(function () {
+      el.textContent = "— (run inject_gem.py + pipeline)";
+    });
+}
+
 /* GEM + risk panels: inside <body>; readyState boot + window.load + watchdog if panels still show Loading */
 function runGemPanelsOnce() {
   try {
+    updateGemMetaHeader();
     if (typeof injectGemIntoTables === 'function') injectGemIntoTables();
     if (typeof syncEvalWithGem === 'function') syncEvalWithGem();
     if (typeof updateGemGradeBar === 'function') updateGemGradeBar();
@@ -4138,10 +4259,12 @@ function runGemPanelsOnce() {
   }
 }
 function scheduleGemBoot() {
-  runGemPanelsOnce();
-  setTimeout(runGemPanelsOnce, 80);
-  setTimeout(runGemPanelsOnce, 400);
-  setTimeout(runGemPanelsOnce, 1200);
+  loadPremiumForMatrix(function () {
+    runGemPanelsOnce();
+  });
+  setTimeout(function () { loadPremiumForMatrix(function () { runGemPanelsOnce(); }); }, 80);
+  setTimeout(function () { loadPremiumForMatrix(function () { runGemPanelsOnce(); }); }, 400);
+  setTimeout(function () { loadPremiumForMatrix(function () { runGemPanelsOnce(); }); }, 1200);
   var tries = 0;
   var watchdog = setInterval(function () {
     tries++;
@@ -4149,7 +4272,7 @@ function scheduleGemBoot() {
     var rh = document.getElementById('risk-heatmap-rows');
     var gStuck = gb && /Loading/i.test(gb.textContent || '');
     var rStuck = rh && /Loading/i.test(rh.textContent || '');
-    if (gStuck || rStuck) runGemPanelsOnce();
+    if (gStuck || rStuck) loadPremiumForMatrix(function () { runGemPanelsOnce(); });
     if (tries >= 24 || (!gStuck && !rStuck)) clearInterval(watchdog);
   }, 1500);
 }
@@ -4195,7 +4318,7 @@ window.addEventListener('load', function () {
       <span id="gem-grade-bar"><span style="background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">A+: 1</span> &nbsp; <span style="background:#EAF3DE;color:#3B6D11;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">A: 8</span> &nbsp; <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">B+: 14</span> &nbsp; <span style="background:#E6F1FB;color:#185FA5;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">B: 3</span> &nbsp; <span style="background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">C+: 3</span> &nbsp; <span style="background:#FAEEDA;color:#854F0B;font-size:11px;font-weight:600;padding:2px 8px;border-radius:3px">C: 1</span></span>
     </div>
     <div style="color:#888;font-size:11px">
-      Last run: 2026-04-14 18:06
+      Last run: <span id="gem-last-run">—</span>
       <span style="color:#854F0B;margin-left:8px">⚡ auto 07:05 Berlin</span>
     </div>
   </div>
