@@ -36,6 +36,22 @@ The Sentinel stack is **above** prediction. A forecaster cannot buy. A risk agen
 
 **Rule above all rules**: every action in `active_actions.json` must carry its EV **and** its ES5. If ES5 > EV in magnitude and vetoes ≠ empty, the ticker is `WATCH` regardless of grade or narrative.
 
+## OLYMPUS-SENTINEL — FORECASTER ENSEMBLE (PHASE 2)
+
+Per-ticker 1-year forecasts now come from three independent voices, Bayesian-averaged by forecaster track record:
+
+- **GEM / Heston** (`minerva_gem.py`) — stochastic-vol Monte Carlo with sector-aware multiples.
+- **Analog k-NN** (`agents/analog_forecaster.py`) — empirical forward-return distribution from the same ticker's 40 nearest historical windows (cosine distance in z-scored feature space: mom_21/63/252, vol_21, dd_from_52wk_hi, rsi_14).
+- **OLS + bootstrap** (`agents/ml_forecaster.py`) — pure-numpy linear regression on the same features with bootstrap residual quantiles and 20% shrinkage toward the historical mean.
+
+**Orchestrator**: `tools/run_forecasters.py` writes `data/forecasts.json` with per-ticker ensemble quantiles (p05/p25/p50/p75/p95), EV, ES5, p_win, and the weight each voice received. Cache lasts 12 h unless `--force`. Webroot mirror at `/var/www/html/forecasts.json`.
+
+**Weights**: `data/model_weights.json` seeded at `gem 0.50 / analog 0.30 / ml 0.20`. When GEM has no row for a ticker the remaining weights auto-renormalize to `analog 0.60 / ml 0.40`. `reflection/post_mortem.py` refits weights via pinball-loss / CRPS once ≥ 20 lesson cards accumulate in `data/lessons/`; until then defaults stand.
+
+**Consumption**: `tools/build_active_actions.py` constructs a "virtual GEM row" from the ensemble for every ticker and feeds it to `position_sizer`. The result: EV / ES5 / size / stop / conviction in the matrix tooltip are **ticker-specific**, not priors. The tooltip carries `Forecast: gem+analog+ml [gem=50% analog=30% ml=20%]`.
+
+**Daily wiring** (`olympus_daily.py`): `_refit_weights → _run_forecasters → _build_active_actions`.
+
 ## VECTOR LIQUIDITY ENGINE v2 + OPS (ENFORCED)
 
 - **Level zones (net $B):** DANGER &lt;1,900 · SELECTIVE 1,900–2,200 · DEPLOY ≥2,200. Institutions optimize range; OLYMPUS optimizes **vector** (7d Δ net liq).

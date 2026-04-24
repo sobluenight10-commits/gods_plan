@@ -133,6 +133,24 @@ def _catalyst_digest() -> None:
         print(f"[RADAR] digest failed: {exc}")
 
 
+def _run_forecasters() -> None:
+    """Phase 2 forecaster ensemble: GEM + analog k-NN + OLS bootstrap."""
+    try:
+        from tools.run_forecasters import run as _run
+        _run(force=False)
+    except Exception as exc:
+        print(f"[FORECASTERS] failed: {exc}")
+
+
+def _refit_weights() -> None:
+    """Phase 2 reflection: update forecaster weights from lesson cards."""
+    try:
+        from reflection.post_mortem import refit_weights
+        refit_weights()
+    except Exception as exc:
+        print(f"[REFLECTION] refit failed: {exc}")
+
+
 def _build_active_actions() -> None:
     """Single-source action layer — reconciles every panel to one truth."""
     try:
@@ -164,7 +182,10 @@ def main():
     _build_catalyst_radar()
     _publish_catalyst_radar()
     _catalyst_digest()
-    # Must run LAST — consumes directives, portfolio, thesis_history, radar
+    # Phase 2: reflection → ensemble forecasts → consumed by build_active_actions
+    _refit_weights()
+    _run_forecasters()
+    # Must run LAST — consumes directives, portfolio, thesis_history, radar, forecasts
     _build_active_actions()
     print("=== DONE ===")
 

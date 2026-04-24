@@ -2679,7 +2679,7 @@ async function loadActiveActions() {
         if (!tgt && a.reason) tgt = a.reason.slice(0, 50);
         if (tgt) tgtCell.textContent = tgt;
       }
-      // Sentinel SO-WHAT tooltip — the 4 numbers that matter
+      // Sentinel SO-WHAT tooltip — the 4 numbers that matter + ensemble source
       var tipLines = [];
       tipLines.push(tk + " — " + a.verb + (a.size_pct_nav != null ? " (size " + a.size_pct_nav + "% NAV)" : ""));
       if (a.ev_pct != null && a.es5_pct != null) {
@@ -2688,6 +2688,15 @@ async function loadActiveActions() {
       if (a.conviction != null) tipLines.push("Conviction " + a.conviction + "/10");
       if (a.stop_price != null) tipLines.push("Stop " + (a.currency === 'EUR' ? '€' : '$') + a.stop_price);
       if (a.ops != null) tipLines.push("OPS " + a.ops + " (" + (a.ops_band||"?") + ")");
+      if (a.forecast_source) {
+        var weightsStr = "";
+        if (a.forecast_weights) {
+          weightsStr = " [" + Object.keys(a.forecast_weights).map(function(k){
+            return k+"="+Math.round(a.forecast_weights[k]*100)+"%";
+          }).join(" ") + "]";
+        }
+        tipLines.push("Forecast: " + a.forecast_source + weightsStr);
+      }
       var allBlocks = (a.blocks||[]).concat(a.vetoes||[]);
       if (allBlocks.length) tipLines.push("Vetoes: " + Array.from(new Set(allBlocks)).join(", "));
       if (a.reason) tipLines.push("Why: " + a.reason);

@@ -48,6 +48,7 @@ DIRECTIVES = os.path.join(BASE, "data", "directives.json")
 THESIS_HIST = os.path.join(BASE, "data", "thesis_history.json")
 RADAR = os.path.join(BASE, "data", "catalyst_radar.json")
 PREMIUM = os.path.join(BASE, "data", "premium_scores.json")
+FORECASTS = os.path.join(BASE, "data", "forecasts.json")
 STATE = os.path.join(BASE, "state.json")
 GEM_DIR = os.path.join(BASE, "gem_results")
 OUT = os.path.join(BASE, "data", "active_actions.json")
@@ -87,6 +88,7 @@ def build():
     radar = _load(RADAR, {"events": []})
     state_file = _load(STATE, {})
     gem_alerts = _latest_gem_alerts()
+    forecasts = _load(FORECASTS, {"tickers": {}}).get("tickers", {})
 
     liq = directives.get("liquidity", {})
     zone = liq.get("zone", "NORMAL")
@@ -313,10 +315,31 @@ def build():
     for tk, a in actions.items():
         gem_row = gem_alerts.get(tk)
         prow = portfolio_by_tk.get(tk)
+
+        # If the ensemble forecast exists, synthesize a "virtual GEM row" for
+        # the sizer — it speaks the same {projections.1y.upside_pct,worst_drop_pct,
+        # bull_gain_pct} dialect, so we don't have to change the sizer interface.
+        fc = forecasts.get(tk, {}).get("ensemble") or {}
+        if fc:
+            virtual_row = dict(gem_row or {})
+            virtual_row.setdefault("current_price", prow.get("current_price") if prow else None)
+            virtual_row.setdefault("entry_price", prow.get("entry_price") if prow else None)
+            virtual_row.setdefault("god_score", prow.get("god_score") if prow else None)
+            virtual_row["projections"] = {
+                "1y": {
+                    "upside_pct": fc.get("ev_pct", 0.0),
+                    "worst_drop_pct": fc.get("es5_pct", -20.0),
+                    "bull_gain_pct": round((fc.get("p95") or 0.3) * 100.0, 2),
+                }
+            }
+            sizer_gem_row = virtual_row
+        else:
+            sizer_gem_row = gem_row
+
         sizer = size_position(
             ticker=tk,
             verb=a.get("verb", "HOLD"),
-            gem_row=gem_row,
+            gem_row=sizer_gem_row,
             portfolio_row=prow,
             ops=a.get("ops"),
             thesis=a.get("thesis") or "intact",
@@ -338,6 +361,8 @@ def build():
         a["conviction"] = sizer["conviction"]
         a["stop_price"] = sizer["stop_price"]
         a["vetoes"] = sizer["vetoes"]
+        a["forecast_source"] = fc.get("source") if fc else ("gem" if gem_row else "prior")
+        a["forecast_weights"] = fc.get("weights_used") if fc else None
         # If kernel / guardian veto and the verb is expansionary, downgrade it.
         if sizer["vetoes"] and a.get("verb") in ("BUY", "ADD"):
             a["verb"] = "WATCH"
