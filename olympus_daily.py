@@ -248,6 +248,8 @@ def _deploy_optimiser() -> None:
 
 def _publish_lessons_index() -> None:
     try:
+        from tools import close_trade as _ct
+        _ct.write_index()
         import shutil
         src = os.path.join(BASE, "data", "lessons_index.json")
         if os.path.isfile(src):
