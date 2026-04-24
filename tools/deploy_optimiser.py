@@ -76,12 +76,11 @@ def _load(path: str, default: Any) -> Any:
 def _eligibility(action: Dict[str, Any]) -> Optional[str]:
     """Return a rejection reason, or None if eligible.
 
-    Only BUY / ADD get sized. HOLD means "don't add more", not "deploy more" —
-    the optimiser used to size HOLDs which contradicted the liquidity gate.
+    Order matters for readable gate_reason: liquidity/tail/sentinel blocks get
+    surfaced before the verb rejection, because a HOLD that is *caused by* a
+    liquidity_freeze should be reported as the liquidity gate, not "wrong verb".
+    Only BUY / ADD get sized. HOLD means "don't add more", not "deploy more".
     """
-    verb = (action.get("verb") or "").upper()
-    if verb not in ("BUY", "ADD"):
-        return f"verb={verb or 'NONE'} (only BUY/ADD deployable)"
     blocks = action.get("blocks") or []
     vetoes = action.get("vetoes") or []
     killers = {
@@ -97,6 +96,9 @@ def _eligibility(action: Dict[str, Any]) -> Optional[str]:
     hit = [b for b in list(blocks) + list(vetoes) if b in killers]
     if hit:
         return f"blocked:{','.join(hit)}"
+    verb = (action.get("verb") or "").upper()
+    if verb not in ("BUY", "ADD"):
+        return f"verb={verb or 'NONE'} (only BUY/ADD deployable)"
     ops = action.get("ops")
     if ops is not None and float(ops) >= MAX_OPS_FOR_DEPLOY:
         return f"ops={ops}"
@@ -210,9 +212,14 @@ def run(monthly_contribution_eur: Optional[float] = None) -> Dict[str, Any]:
         zone = (liq.get("zone") or "").upper()
         vec = (liq.get("vector_7d") or "").upper()
         freeze = bool(liq.get("freeze"))
-        if freeze or zone == "DANGER" or vec == "CONTRACTING":
-            gate_reason = (f"LIQUIDITY GATE — zone {zone or '?'} / vector {vec or '?'}. "
-                           "Hold powder, wait for vector reversal.")
+        liq_blocked = any("liquidity" in r or "vector_freeze" in r for r in reasons)
+        if freeze or zone == "DANGER" or vec == "CONTRACTING" or liq_blocked:
+            if zone or vec:
+                label = f"zone {zone or '?'} / vector {vec or '?'}"
+            else:
+                label = "liquidity_freeze on every candidate"
+            gate_reason = (f"LIQUIDITY GATE — {label}. Hold powder, "
+                           f"wait for vector reversal.")
         elif any("tail_defcon" in r for r in reasons):
             gate_reason = "TAIL DEFCON — market stress elevated. Hold powder."
         elif any("sentinel" in r for r in reasons):
