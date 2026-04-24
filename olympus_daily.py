@@ -13,14 +13,50 @@ sys.path.insert(0, BASE)
 
 
 def _refresh_fred_liquidity() -> None:
-    """Pull latest FRED reserves/TGA/RRP into data/directives.json."""
+    """Pull latest FRED reserves/TGA/RRP into data/directives.json, then publish.
+
+    A silent failure here was what caused the April-14 liquidity to re-surface
+    on the dashboard. We now (a) verify FRED returned all three series,
+    (b) verify the file was rewritten, (c) mirror to /var/www/html/directives.json
+    so both the local and nginx `/data/` alias routes stay consistent.
+    """
+    import json
+    import shutil
+    from datetime import datetime, timezone
+
+    directives_local = os.path.join(BASE, "data", "directives.json")
+    directives_web = "/var/www/html/directives.json"
+
     try:
         from battle_rhythm import fetch_fred_liquidity
-        out = fetch_fred_liquidity()
-        net = (out or {}).get("net_liq_value") or (out or {}).get("net")
-        print(f"[FRED] refresh OK: net_liq ≈ ${net}B" if net else "[FRED] refresh ran")
-    except Exception as exc:
-        print(f"[FRED] refresh failed: {exc}")
+        out = fetch_fred_liquidity() or {}
+    except Exception as exc:  # noqa: BLE001
+        print(f"[FRED] fetch failed: {exc}")
+        return
+
+    missing = [k for k in ("reserves", "tga", "rrp") if out.get(k) is None]
+    if missing:
+        print(f"[FRED] incomplete — missing {missing}. Directives NOT overwritten.")
+        return
+
+    try:
+        with open(directives_local, "r", encoding="utf-8") as f:
+            d = json.load(f)
+        liq = (d or {}).get("liquidity") or {}
+        net = liq.get("net_liq_b") or liq.get("net_liq_value")
+        last = liq.get("last_updated")
+        vel7 = liq.get("velocity_7d_b")
+        zone = liq.get("zone")
+        print(f"[FRED] refresh OK: net ${net}B · zone {zone} · 7d Δ {vel7}B · last_updated {last}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[FRED] post-write inspection failed: {exc}")
+
+    try:
+        if os.path.isfile(directives_local) and os.path.isdir(os.path.dirname(directives_web)):
+            shutil.copy2(directives_local, directives_web)
+            print(f"[FRED] mirrored -> {directives_web}")
+    except Exception as exc:  # noqa: BLE001
+        print(f"[FRED] webroot mirror failed: {exc}")
 
 
 def _enrich_catalysts() -> None:
