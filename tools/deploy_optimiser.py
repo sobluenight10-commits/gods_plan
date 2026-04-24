@@ -74,15 +74,26 @@ def _load(path: str, default: Any) -> Any:
 
 
 def _eligibility(action: Dict[str, Any]) -> Optional[str]:
-    """Return a rejection reason, or None if eligible."""
+    """Return a rejection reason, or None if eligible.
+
+    Only BUY / ADD get sized. HOLD means "don't add more", not "deploy more" —
+    the optimiser used to size HOLDs which contradicted the liquidity gate.
+    """
     verb = (action.get("verb") or "").upper()
-    if verb in ("EXIT", "TRIM"):
-        return f"verb={verb}"
+    if verb not in ("BUY", "ADD"):
+        return f"verb={verb or 'NONE'} (only BUY/ADD deployable)"
     blocks = action.get("blocks") or []
     vetoes = action.get("vetoes") or []
-    killers = {"sentinel_freeze", "sentinel_veto", "correlation_veto",
-               "ops_extreme", "pending_catalyst", "tail_defcon1",
-               "tail_defcon2", "kernel_freeze", "liquidity_danger_freeze"}
+    killers = {
+        "sentinel_freeze", "sentinel_veto", "correlation_veto",
+        "ops_extreme", "pending_catalyst",
+        "tail_defcon1", "tail_defcon2",
+        "kernel_freeze",
+        # every name the liquidity gate actually emits
+        "liquidity_freeze", "liquidity_danger_freeze",
+        "liquidity_contracting_freeze",
+        "vector_freeze",
+    }
     hit = [b for b in list(blocks) + list(vetoes) if b in killers]
     if hit:
         return f"blocked:{','.join(hit)}"
@@ -190,6 +201,18 @@ def run(monthly_contribution_eur: Optional[float] = None) -> Dict[str, Any]:
         })
 
     status = "READY" if picks else "NO_CANDIDATES"
+    # Inspect rejections to produce an honest mandate even when nothing is eligible.
+    gate_reason = None
+    if not picks:
+        reasons = [r.get("reason", "") for r in rejected]
+        if any("liquidity" in r for r in reasons):
+            gate_reason = "LIQUIDITY GATE — DANGER + CONTRACTING. Hold powder, wait for vector reversal."
+        elif any("tail_defcon" in r for r in reasons):
+            gate_reason = "TAIL DEFCON — market stress elevated. Hold powder."
+        elif any("sentinel" in r for r in reasons):
+            gate_reason = "SENTINEL — system integrity flagged. Do not deploy."
+        elif any(r.startswith("verb=HOLD") for r in reasons):
+            gate_reason = "No BUY/ADD directives live. HOLDs are not add-signals."
     plan = {
         "schema_version": 1,
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -206,15 +229,19 @@ def run(monthly_contribution_eur: Optional[float] = None) -> Dict[str, Any]:
             "min_p_win": MIN_P_WIN,
             "conviction_multipliers": CONV_MULT,
         },
-        "mandate": _mandate_line(picks, deployable),
+        "gate_reason": gate_reason,
+        "mandate": _mandate_line(picks, deployable, gate_reason),
     }
     _write(plan)
     return plan
 
 
-def _mandate_line(picks: List[Dict[str, Any]], deployable: float) -> str:
+def _mandate_line(picks: List[Dict[str, Any]], deployable: float,
+                   gate_reason: Optional[str] = None) -> str:
     if not picks:
-        return "No eligible deploy candidates — raise dry powder or wait for gates to clear."
+        tail = f" — {gate_reason}" if gate_reason else ""
+        return (f"HOLD €{deployable:.0f} dry powder — no eligible deploy "
+                f"candidates right now{tail}.")
     parts = []
     for p in picks:
         parts.append(f"{p['ticker']} €{p['allocation_eur']:.0f}")
