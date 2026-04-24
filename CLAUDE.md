@@ -17,6 +17,25 @@ Before changing any stock action in `OLYMPUS_UNIFIED.html`:
 4. **KTOS example:** Another defense name exiting (e.g. AVAV) is not a KTOS thesis break — different companies, different contracts.
 5. **UEC example:** A live limit at €11 is **ARMED**, not HOLD and not ADD — the system waits for the fill; GOD does not second-guess the order.
 
+## OLYMPUS-SENTINEL — PRIME DIRECTIVE KERNEL (PHASE 1)
+
+The Sentinel stack is **above** prediction. A forecaster cannot buy. A risk agent can always refuse. Order of evaluation: `kernel → drawdown_guardian → liquidity_gate → ops_gate → position_sizer → PRIME_MINISTER` in `tools/build_active_actions.py`.
+
+**Four immutable invariants** (`kernel/prime_directive.py`):
+
+- **I1 — PORTFOLIO_DD_HARD_CAP = 15%** · trailing drawdown ≥ cap → `freeze_all`.
+- **I2 — SINGLE_POSITION_CAP = 20%** · no position may exceed 20% of NAV.
+- **I3 — SECTOR_CAP = 35%** · no sector may exceed 35% of NAV.
+- **I4 — CASH_FLOOR = 5%** · dry powder must never fall below 5% of NAV.
+
+**Ring enforcement**:
+
+- **Drawdown Guardian** (`risk/drawdown_guardian.py`) — state machine GREEN / YELLOW / ORANGE / RED with risk-budget multipliers `1.00 / 0.75 / 0.40 / 0.00`. Feeds `risk_budget_multiplier` into sizer.
+- **Position Sizer** (`risk/position_sizer.py`) — fractional Kelly (×0.25), loss aversion λ=1.5, CVaR penalty on ES5 > 25%, ambiguity shrinkage when conviction < 5/10. Emits `ev_pct, es5_pct, p_win, kelly_frac, size_pct_nav, conviction, stop_price, vetoes`.
+- **Dashboard** — `#sentinel-strip` shows DD / kernel / cash / liquidity status; matrix tooltip shows per-ticker EV / ES5 / p_win / conviction / stop / vetoes.
+
+**Rule above all rules**: every action in `active_actions.json` must carry its EV **and** its ES5. If ES5 > EV in magnitude and vetoes ≠ empty, the ticker is `WATCH` regardless of grade or narrative.
+
 ## VECTOR LIQUIDITY ENGINE v2 + OPS (ENFORCED)
 
 - **Level zones (net $B):** DANGER &lt;1,900 · SELECTIVE 1,900–2,200 · DEPLOY ≥2,200. Institutions optimize range; OLYMPUS optimizes **vector** (7d Δ net liq).

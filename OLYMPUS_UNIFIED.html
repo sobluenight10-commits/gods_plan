@@ -1491,6 +1491,25 @@ td.mx-eval.oly-tip::after {
   <span id="so-what-mandate-body" style="color:#d6e1f0;">Loading liquidity vector + active_actions…</span>
 </div>
 
+<div id="sentinel-strip" style="margin:0 40px 10px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;font-family:'DM Mono',monospace;font-size:11px;">
+  <div class="sentinel-cell" id="sentinel-dd" style="background:#0f1824;border:1px solid #1e2b3c;border-left:3px solid #2ecc71;padding:8px 10px;border-radius:4px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.14em;color:#8fa3bc;">DRAWDOWN GUARDIAN</div>
+    <div id="sentinel-dd-body" style="color:#e8eef5;margin-top:3px;">—</div>
+  </div>
+  <div class="sentinel-cell" id="sentinel-kernel" style="background:#0f1824;border:1px solid #1e2b3c;border-left:3px solid #d4af37;padding:8px 10px;border-radius:4px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.14em;color:#8fa3bc;">PRIME DIRECTIVE KERNEL</div>
+    <div id="sentinel-kernel-body" style="color:#e8eef5;margin-top:3px;">—</div>
+  </div>
+  <div class="sentinel-cell" id="sentinel-cash" style="background:#0f1824;border:1px solid #1e2b3c;border-left:3px solid #6ab7ff;padding:8px 10px;border-radius:4px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.14em;color:#8fa3bc;">CASH FLOOR (I4)</div>
+    <div id="sentinel-cash-body" style="color:#e8eef5;margin-top:3px;">—</div>
+  </div>
+  <div class="sentinel-cell" id="sentinel-liq" style="background:#0f1824;border:1px solid #1e2b3c;border-left:3px solid #a88bff;padding:8px 10px;border-radius:4px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:9px;letter-spacing:0.14em;color:#8fa3bc;">LIQUIDITY GATE</div>
+    <div id="sentinel-liq-body" style="color:#e8eef5;margin-top:3px;">—</div>
+  </div>
+</div>
+
 <div id="liqBar" style="
   border-left: 3px solid var(--es-accent);
   padding: 8px 16px;
@@ -2570,7 +2589,7 @@ async function loadActiveActions() {
     if (swEl) {
       var parts = [];
       if (data.so_what_mandate) parts.push(data.so_what_mandate);
-      if (liqGate.vector_title) parts.push("Vector state: " + liqGate.vector_title);
+      if (liqGate.vector_title) parts.push("Vector: " + liqGate.vector_title);
       var opw = [];
       Object.keys(actions).forEach(function (tk) {
         var x = actions[tk];
@@ -2578,11 +2597,67 @@ async function loadActiveActions() {
           opw.push(tk + " OPS " + x.ops);
         }
       });
-      if (opw.length) parts.push("Premium gate: " + opw.join(", "));
+      if (opw.length) parts.push("OPS≥180: " + opw.join(", "));
+      var vetoedCount = 0;
+      Object.keys(actions).forEach(function (tk) {
+        var x = actions[tk];
+        if (x && x.vetoes && x.vetoes.length) vetoedCount++;
+      });
+      if (vetoedCount) parts.push("Sentinel vetoes: " + vetoedCount + " ticker(s)");
+      if (data.kernel && data.kernel.freeze_all) parts.push("KERNEL FREEZE ALL");
       swEl.textContent = parts.join(" · ") || "—";
     }
 
-    // 1. Master Matrix action cell override
+    // ─── Sentinel strip ──────────────────────────────────────────────
+    var dd = data.drawdown_guardian || {};
+    var krn = data.kernel || {};
+    var ddBody = document.getElementById("sentinel-dd-body");
+    var ddCell = document.getElementById("sentinel-dd");
+    if (ddBody && ddCell) {
+      var ddColor = { GREEN:"#2ecc71", YELLOW:"#f4c243", ORANGE:"#e89432", RED:"#e05252", UNKNOWN:"#8fa3bc" }[dd.state || "UNKNOWN"];
+      ddCell.style.borderLeftColor = ddColor;
+      var ddPct = dd.dd_pct == null ? "n/a" : (dd.dd_pct * 100).toFixed(1) + "%";
+      var mult = dd.risk_budget_multiplier == null ? "—" : ("×" + dd.risk_budget_multiplier.toFixed(2));
+      ddBody.innerHTML = "<b style='color:" + ddColor + "'>" + (dd.state || "?") + "</b> · DD " + ddPct +
+        " · risk budget " + mult + "<br><span style='color:#8fa3bc;font-size:10px'>" + (dd.note || "") + "</span>";
+    }
+    var krnBody = document.getElementById("sentinel-kernel-body");
+    var krnCell = document.getElementById("sentinel-kernel");
+    if (krnBody && krnCell) {
+      var freeze = !!krn.freeze_all;
+      krnCell.style.borderLeftColor = freeze ? "#e05252" : "#d4af37";
+      var breaches = (krn.breaches || []).join(", ") || "none";
+      var inv = krn.invariants || {};
+      krnBody.innerHTML = "<b style='color:" + (freeze ? "#e05252" : "#d4af37") + "'>" +
+        (freeze ? "FREEZE ALL" : "OK") + "</b> · breaches: " + breaches +
+        "<br><span style='color:#8fa3bc;font-size:10px'>I1≤" + (inv.I1_portfolio_dd_hard_cap*100).toFixed(0) +
+        "% · I2≤" + (inv.I2_single_position_cap*100).toFixed(0) +
+        "% · I3≤" + (inv.I3_sector_cap*100).toFixed(0) +
+        "% · I4≥" + (inv.I4_cash_floor*100).toFixed(0) + "%</span>";
+    }
+    var cashBody = document.getElementById("sentinel-cash-body");
+    var cashCell = document.getElementById("sentinel-cash");
+    if (cashBody && cashCell) {
+      var cp = krn.cash_pct == null ? null : krn.cash_pct;
+      var cashColor = (cp != null && cp < 0.05) ? "#e05252" : "#6ab7ff";
+      cashCell.style.borderLeftColor = cashColor;
+      var powder = krn.powder_eur != null ? ("€" + Math.round(krn.powder_eur).toLocaleString()) : "—";
+      var nav = krn.nav_proxy_eur != null ? ("€" + Math.round(krn.nav_proxy_eur).toLocaleString()) : "—";
+      cashBody.innerHTML = "<b style='color:" + cashColor + "'>" + (cp == null ? "—" : (cp*100).toFixed(1) + "%") + "</b> dry powder" +
+        "<br><span style='color:#8fa3bc;font-size:10px'>" + powder + " of " + nav + " NAV proxy</span>";
+    }
+    var liqBody = document.getElementById("sentinel-liq-body");
+    var liqCell = document.getElementById("sentinel-liq");
+    if (liqBody && liqCell) {
+      var fz = !!liqGate.freeze_adds;
+      liqCell.style.borderLeftColor = fz ? "#e05252" : "#a88bff";
+      liqBody.innerHTML = "<b style='color:" + (fz ? "#e05252" : "#a88bff") + "'>" +
+        (liqGate.vector_title || liqGate.zone || "—") + "</b>" +
+        "<br><span style='color:#8fa3bc;font-size:10px'>" +
+        (fz ? "Broad BUYs FROZEN" : "Broad BUYs permitted (thesis + OPS still gate)") + "</span>";
+    }
+
+    // 1. Master Matrix action cell override + Sentinel SO-WHAT tooltip
     document.querySelectorAll('tr.mx-row[data-ticker]').forEach(function(tr){
       const tk = tr.getAttribute('data-ticker');
       const a = actions[tk];
@@ -2604,10 +2679,25 @@ async function loadActiveActions() {
         if (!tgt && a.reason) tgt = a.reason.slice(0, 50);
         if (tgt) tgtCell.textContent = tgt;
       }
-      // Block reason as tooltip
-      if (a.blocks && a.blocks.length) {
-        tr.setAttribute('title',
-          (tr.getAttribute('title') || '') + ' [blocks: ' + a.blocks.join(', ') + ']');
+      // Sentinel SO-WHAT tooltip — the 4 numbers that matter
+      var tipLines = [];
+      tipLines.push(tk + " — " + a.verb + (a.size_pct_nav != null ? " (size " + a.size_pct_nav + "% NAV)" : ""));
+      if (a.ev_pct != null && a.es5_pct != null) {
+        tipLines.push("EV +" + a.ev_pct + "% | ES5 " + a.es5_pct + "% | p_win " + (a.p_win != null ? (a.p_win*100).toFixed(0) + "%" : "—"));
+      }
+      if (a.conviction != null) tipLines.push("Conviction " + a.conviction + "/10");
+      if (a.stop_price != null) tipLines.push("Stop " + (a.currency === 'EUR' ? '€' : '$') + a.stop_price);
+      if (a.ops != null) tipLines.push("OPS " + a.ops + " (" + (a.ops_band||"?") + ")");
+      var allBlocks = (a.blocks||[]).concat(a.vetoes||[]);
+      if (allBlocks.length) tipLines.push("Vetoes: " + Array.from(new Set(allBlocks)).join(", "));
+      if (a.reason) tipLines.push("Why: " + a.reason);
+      tr.setAttribute('title', tipLines.join("\n"));
+      // Visual veto marker on row
+      if ((a.vetoes||[]).length) {
+        tr.style.outline = "1px dashed #e05252";
+        tr.style.outlineOffset = "-1px";
+      } else {
+        tr.style.outline = "";
       }
     });
 
