@@ -1324,6 +1324,71 @@ td.mx-eval.oly-tip::after {
 })();
 </script>
 
+<details id="eval-stack-panel" style="padding:12px 40px;background:linear-gradient(180deg,#121a28 0%,#0d1520 100%);border-top:1px solid #25354a;color:#d6e1f0;">
+  <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:10px;letter-spacing:0.16em;text-transform:uppercase;color:#9fb3cc;">
+    ⚙ EVALUATION STACK — criteria by weight (Sovereign vs Tactical groups)
+  </summary>
+  <div style="font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;line-height:1.65;">
+    <div style="color:#efc56a;margin-bottom:8px;"><strong>How OLYMPUS ranks a name</strong> — highest row wins on conflict. “Veto” blocks adds regardless of letter grade.</div>
+    <table style="width:100%;border-collapse:collapse;font-size:11px;">
+      <thead><tr style="color:#7eb8d4;text-align:left;"><th style="padding:4px 6px;">#</th><th style="padding:4px 6px;">Criterion</th><th style="padding:4px 6px;">Weight / role</th></tr></thead>
+      <tbody style="color:#b8c9dc;">
+        <tr style="border-top:1px solid #25354a;"><td style="padding:4px 6px;">0</td><td>Sentinel FREEZE / watchdog</td><td>∞ veto — blocks all BUY/ADD if tripwire fires</td></tr>
+        <tr><td style="padding:4px 6px;">1</td><td>Prime Directive kernel (I1–I4)</td><td>∞ veto on breach — DD cap, single-name cap, sector cap, cash floor</td></tr>
+        <tr><td style="padding:4px 6px;">2</td><td>Thesis guard (dead / wounded / intact)</td><td>∞ veto — DEAD forces EXIT</td></tr>
+        <tr><td style="padding:4px 6px;">3</td><td>Liquidity Vector Engine v2</td><td>~25% gate — states 1/4/6 freeze broad adds (State 2 strike window preserved)</td></tr>
+        <tr><td style="padding:4px 6px;">4</td><td>OPS ≥ 180 (peer premium)</td><td>~15% veto on BUY/ADD — KTOS lesson</td></tr>
+        <tr><td style="padding:4px 6px;">5</td><td>Drawdown Guardian</td><td>×1.00 / 0.75 / 0.40 / 0.00 risk budget</td></tr>
+        <tr><td style="padding:4px 6px;">6</td><td>Ensemble forecast (GEM + analog + ML)</td><td>~20% — default weights GEM 50% · analog 30% · ML 20% (renormalize if GEM missing)</td></tr>
+        <tr><td style="padding:4px 6px;">7</td><td>Position sizer (Kelly ×0.25, λ=1.5, ES5 CVaR penalty)</td><td>~15% — turns EV/ES5 into size, conviction, stop</td></tr>
+        <tr><td style="padding:4px 6px;">8</td><td>Correlation auditor (PC1 / ρ to book)</td><td>~10% veto on clustered adds</td></tr>
+        <tr><td style="padding:4px 6px;">9</td><td>Tail hedger (DEFCON)</td><td>~8% — raises cash floor; freezes satellite adds at DEFCON ≤2</td></tr>
+        <tr><td style="padding:4px 6px;">10</td><td>GOD Score + Legend / Paradigm gates</td><td>~7% qualitative — track A vs B rules</td></tr>
+        <tr><td style="padding:4px 6px;">11</td><td>MINERVA_GEM letter</td><td>~5% — scenario blend 40% worst / 40% normal / 20% bull on score</td></tr>
+        <tr><td style="padding:4px 6px;">12</td><td>9-dim risk heatmap</td><td>~3% — tightens “so what” copy</td></tr>
+        <tr><td style="padding:4px 6px;">13</td><td>Blog / Kiwoom tactical sleeve score</td><td>~2% — macro overlay only; does not override OPS or kernel</td></tr>
+      </tbody>
+    </table>
+    <div id="eval-two-groups-body" style="margin-top:12px;padding:10px;background:#0e1a2a;border-radius:6px;border:1px solid #25354a;color:#9fb3cc;font-size:10px;">Loading Group I / II split…</div>
+  </div>
+</details>
+<script>
+(function(){
+  function loadEvalGroups(){
+    var el = document.getElementById("eval-two-groups-body");
+    if (!el) return;
+    var t = Date.now();
+    Promise.all([
+      fetch("/core_satellite.json?t="+t).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
+      fetch("/blog_tickers.json?t="+t).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
+      fetch("/data/blog_tickers.json?t="+t).then(function(r){ return r.ok ? r.json() : {}; }).catch(function(){ return {}; }),
+    ]).then(function(ress){
+      var cs = ress[0] || {};
+      var blog = ress[1] && (ress[1].tactical_sleeve||[]).length ? ress[1] : (ress[2] || {});
+      var core = cs.core_tickers || [];
+      var sat = cs.satellite_tickers || [];
+      var sleeve = (blog.tactical_sleeve || []).map(function(x){ return x && x.ticker ? x.ticker : null; }).filter(Boolean);
+      var g1 = core.slice();
+      var inCore = {};
+      g1.forEach(function(x){ inCore[x] = 1; });
+      var g2 = [];
+      sat.forEach(function(x){ if (x && !inCore[x] && g2.indexOf(x) < 0) g2.push(x); });
+      sleeve.forEach(function(x){ if (x && !inCore[x] && g2.indexOf(x) < 0) g2.push(x); });
+      el.innerHTML =
+        "<div style=\"color:#7eb8d4;font-weight:700;margin-bottom:4px;\">GROUP I — SOVEREIGN (criteria #0–12)</div>" +
+        "<div>Core compounders + full Sentinel + GEM + risk heatmap. <strong>Hold through volatility; exit only on thesis death.</strong></div>" +
+        "<div style=\"margin-top:4px;color:#d6e1f0;\"><strong>Tickers:</strong> " + (g1.length ? g1.join(", ") : "—") + "</div>" +
+        "<div style=\"color:#c4a84f;font-weight:700;margin:10px 0 4px;\">GROUP II — TACTICAL OVERLAY (criterion #13 + liquidity)</div>" +
+        "<div>Satellite recycle + blog/Kiwoom sleeve. <strong>Higher harvest threshold; liquidity vector gates size.</strong></div>" +
+        "<div style=\"margin-top:4px;color:#d6e1f0;\"><strong>Tickers:</strong> " + (g2.length ? g2.join(", ") : "—") + "</div>" +
+        "<div style=\"margin-top:8px;color:#7a8fa8;\">Split rule: Group I = <code>core_tickers</code> in core_satellite.json. Group II = <code>satellite_tickers</code> + <code>tactical_sleeve</code> in blog_tickers.json (deduped).</div>";
+    });
+  }
+  document.addEventListener("DOMContentLoaded", loadEvalGroups);
+  setInterval(loadEvalGroups, 600000);
+})();
+</script>
+
 <!-- ═══════════════════════════════════════════════════════════════════
      CATALYST RADAR — forward event map with base-rate asymmetry
      Institutions have this for 500 stocks diluted. We have it for 30
@@ -2844,6 +2909,8 @@ function gemRiskDomId(ticker) {
 }
 
 const BLOG_TICKERS_JSON_URLS = [
+  "/data/blog_tickers.json",
+  "/blog_tickers.json",
   "http://5.189.176.185/data/blog_tickers.json",
   "https://raw.githubusercontent.com/sobluenight10-commits/gods_plan/master/data/blog_tickers.json",
 ];
@@ -2915,6 +2982,7 @@ function renderTacticalBlogSleeve(blogRaw) {
     if (upd) titleBits.push("Updated: " + upd);
     if (note) titleBits.push(note);
     tr.title = titleBits.join(" · ");
+    if (note) tr.setAttribute("data-blog-note", note);
 
     var tkDisplay = tkRaw ? olyEsc(tkRaw) : "—";
     var nameDisplay = olyEsc(nm);
@@ -2941,6 +3009,9 @@ function renderTacticalBlogSleeve(blogRaw) {
 
     prev.insertAdjacentElement("afterend", tr);
     prev = tr;
+  }
+  if (typeof window.__OLY_MATRIX_REINJECT === "function") {
+    setTimeout(function () { window.__OLY_MATRIX_REINJECT(); }, 0);
   }
 }
 
@@ -3617,6 +3688,68 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     return '<span style="color:'+c+';font-size:'+(size||11)+'px;font-weight:600">'+s+v.toFixed(1)+'%</span>';
   }
 
+  /** Shared by Master Matrix + tactical blog rows — reads window._FORECASTS_DATA[ticker]. */
+  window.renderEnsembleForecastHtml = function (ticker) {
+    try {
+      var fx = (window._FORECASTS_DATA && window._FORECASTS_DATA[ticker]) || null;
+      var ens = fx && fx.ensemble ? fx.ensemble : null;
+      if (!ens) return '';
+      var ev = ens.ev_pct != null ? ens.ev_pct : null;
+      var p05 = ens.p05 != null ? ens.p05 * 100 : null;
+      var p50 = ens.p50 != null ? ens.p50 * 100 : null;
+      var p95 = ens.p95 != null ? ens.p95 * 100 : null;
+      var w = ens.weights_used || {};
+      var wStr = Object.keys(w).map(function (k) { return k + " " + Math.round((w[k] || 0) * 100) + "%"; }).join(" · ");
+      var color = (ev || 0) >= 0 ? "#2d7a2d" : "#c0392b";
+      return (
+        '<div style="padding:8px;font-size:11px;line-height:1.55">' +
+        '<div style="font-weight:700;color:' + color + ';font-size:13px">EV 1y: ' +
+        (ev != null ? (ev >= 0 ? "+" : "") + ev.toFixed(1) + "%" : "\u2014") +
+        "</div>" +
+        '<div style="color:#888">p05 ' +
+        (p05 != null ? p05.toFixed(0) + "%" : "\u2014") +
+        "  ·  p50 " +
+        (p50 != null ? p50.toFixed(0) + "%" : "\u2014") +
+        "  ·  p95 " +
+        (p95 != null ? p95.toFixed(0) + "%" : "\u2014") +
+        "</div>" +
+        '<div style="color:#aaa;font-size:10px;margin-top:3px">ensemble: ' +
+        (wStr || "gem/analog/ml") +
+        "</div>" +
+        '<div style="color:#aaa;font-size:10px;margin-top:2px">Source: forecasts.json (GEM + analog kNN + OLS bootstrap)</div>' +
+        "</div>"
+      );
+    } catch (_e) {
+      return "";
+    }
+  };
+
+  window.renderGemDataMiniHtml = function (ticker) {
+    if (typeof GEM_DATA === "undefined" || !GEM_DATA[ticker]) return "";
+    var d = GEM_DATA[ticker];
+    var c = (d.u1y || 0) >= 0 ? "#2d7a2d" : "#c0392b";
+    return (
+      '<div style="padding:8px;font-size:11px;line-height:1.5">' +
+      "<div><strong>" +
+      d.grade +
+      "</strong> · GEM " +
+      (d.gem_score != null ? d.gem_score.toFixed(1) : "\u2014") +
+      "/100</div>" +
+      '<div style="color:' +
+      c +
+      ';font-weight:700">1y mode: ' +
+      (d.u1y != null ? (d.u1y >= 0 ? "+" : "") + d.u1y.toFixed(1) + "%" : "\u2014") +
+      "</div>" +
+      '<div style="color:#888">5y: ' +
+      (d.u5y != null ? (d.u5y >= 0 ? "+" : "") + d.u5y.toFixed(1) + "%" : "\u2014") +
+      " · worst1y: " +
+      (d.worst1y != null ? d.worst1y.toFixed(1) + "%" : "\u2014") +
+      "</div>" +
+      '<div style="color:#aaa;font-size:10px">MINERVA_GEM row (scenario table needs dashboard_state projections)</div>' +
+      "</div>"
+    );
+  };
+
   /* ── Mini-thesis tooltip ── */
   function buildThesisTip(ticker, pos, proj) {
     var grade = pos.gem_grade || '?';
@@ -3745,32 +3878,62 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     var versus = vparts.length ? '<div class="mx-versus">' + vparts.join('') + '</div>' : '';
 
     if (!hasData) {
-      // Fallback to live ensemble forecast (forecasts.json, mirrored by run_forecasters.py).
-      try {
-        var fx = (window._FORECASTS_DATA && window._FORECASTS_DATA[ticker]) || null;
-        var ens = fx && fx.ensemble ? fx.ensemble : null;
-        if (ens) {
-          var ev = ens.ev_pct != null ? ens.ev_pct : null;
-          var p05 = ens.p05 != null ? (ens.p05*100) : null;
-          var p50 = ens.p50 != null ? (ens.p50*100) : null;
-          var p95 = ens.p95 != null ? (ens.p95*100) : null;
-          var w = ens.weights_used || {};
-          var wStr = Object.keys(w).map(function(k){ return k+' '+Math.round((w[k]||0)*100)+'%'; }).join(' · ');
-          var color = (ev||0)>=0 ? '#2d7a2d' : '#c0392b';
-          return '<div style="padding:8px;font-size:11px;line-height:1.55">' +
-            '<div style="font-weight:700;color:'+color+';font-size:13px">EV 1y: ' + (ev!=null?((ev>=0?'+':'')+ev.toFixed(1)+'%'):'—') + '</div>' +
-            '<div style="color:#888">p05 ' + (p05!=null?p05.toFixed(0)+'%':'—') +
-            '  ·  p50 ' + (p50!=null?p50.toFixed(0)+'%':'—') +
-            '  ·  p95 ' + (p95!=null?p95.toFixed(0)+'%':'—') + '</div>' +
-            '<div style="color:#aaa;font-size:10px;margin-top:3px">ensemble: ' + (wStr||'gem/analog/ml') + '</div>' +
-            '<div style="color:#aaa;font-size:10px;margin-top:2px">Source: forecasts.json (GEM + analog kNN + OLS bootstrap)</div>' +
-          '</div>';
-        }
-      } catch(_e){}
-      return '<div style="padding:8px;color:#999;font-size:11px;text-align:center;font-style:italic">Projection data not on server yet.<br><span style="color:#7eb8d4">Last nightly pipeline writes /forecasts.json + /active_actions.json</span></div>';
+      var fb = typeof window.renderEnsembleForecastHtml === "function" ? window.renderEnsembleForecastHtml(ticker) : "";
+      if (fb) return fb;
+      var gm = typeof window.renderGemDataMiniHtml === "function" ? window.renderGemDataMiniHtml(ticker) : "";
+      if (gm) return gm;
+      return '<div style="padding:8px;color:#999;font-size:11px;text-align:center;font-style:italic">Projection data not on server yet.<br><span style="color:#7eb8d4">Confirm <code>/forecasts.json</code> includes this ticker (tactical sleeve merged in <code>run_forecasters.py</code>).</span></div>';
     }
 
     return table + verdictShort + versus;
+  }
+
+  /** Blog / Kiwoom sleeve rows: never leave plain text in mx-scenarios — always GEM + ensemble. */
+  function injectTacticalBlogScenario(tr, ticker, pos) {
+    var cell = tr.querySelector(".mx-scenarios");
+    if (!cell) return;
+    var note = tr.getAttribute("data-blog-note") || "";
+    pos = pos || {};
+    var proj = pos.projections || {};
+    var hasProj = false;
+    var hk = ["1m", "6m", "1y", "3y", "5y"];
+    for (var i = 0; i < hk.length; i++) {
+      var p = proj[hk[i]];
+      if (p && (p.worst != null || p.normal != null || p.bull != null || p.upside_pct != null)) {
+        hasProj = true;
+        break;
+      }
+    }
+    var html = "";
+    if (hasProj) {
+      html = buildScenarioTD(ticker, proj, pos.pnl_pct, pos.gem_u1y, pos);
+    } else {
+      html =
+        (typeof window.renderEnsembleForecastHtml === "function" && window.renderEnsembleForecastHtml(ticker)) || "";
+      if (!html && typeof window.renderGemDataMiniHtml === "function") {
+        html = window.renderGemDataMiniHtml(ticker);
+      }
+      if (!html) {
+        html =
+          '<div style="padding:6px;font-size:11px;color:#9fb3cc">No forecast for <b>' +
+          ticker +
+          "</b>. Run pipeline — <code>tactical_sleeve</code> in <code>data/blog_tickers.json</code> is merged into <code>forecasts.json</code>.</div>";
+      }
+    }
+    if (note) {
+      var esc = note
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+      html +=
+        '<div style="margin-top:6px;padding-top:6px;border-top:1px solid #25354a;font-size:10px;color:#7a8fa8;">' +
+        esc +
+        "</div>";
+    }
+    cell.innerHTML = html;
+    cell.classList.add("oly-tip");
+    cell.dataset.tip = ticker + " — tactical blog sleeve\n" + note;
   }
 
   function applyEvalTip(tr, pos) {
@@ -3842,6 +4005,14 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
       var ticker = tr.getAttribute('data-ticker');
       if (!ticker) return;
       var pos = positions[ticker] || {};
+      if (tr.getAttribute('data-tactical-blog') === '1') {
+        injectTacticalBlogScenario(tr, ticker, pos);
+        updatePriceCell(tr, pos, ticker);
+        applyEvalTip(tr, pos);
+        var actionTextTB = pos.action || (tr.querySelector('.mx-act') ? tr.querySelector('.mx-act').textContent.trim() : 'WATCH');
+        applyActionTip(tr, actionTextTB);
+        return;
+      }
       var proj = pos.projections || {};
 
       var existing = tr.querySelector('.mx-scenarios');
@@ -3873,21 +4044,53 @@ setInterval(loadDecisionEngine, 5 * 60 * 1000);
     if (typeof syncEvalWithGem === 'function') syncEvalWithGem();
   }
 
-  fetch('/data/dashboard_state.json?t=' + Date.now())
-    .then(function(r) { return r.json(); })
-    .then(function(state) {
+  function prefetchForecastsForMatrix() {
+    return fetch('/forecasts.json?t=' + Date.now())
+      .then(function (r) { return r.ok ? r.json() : {}; })
+      .then(function (d) {
+        window._FORECASTS_DATA = d.tickers || {};
+        return d;
+      })
+      .catch(function () {
+        window._FORECASTS_DATA = window._FORECASTS_DATA || {};
+      });
+  }
+
+  window.__OLY_MATRIX_POSITIONS = {};
+
+  Promise.all([
+    fetch('/data/dashboard_state.json?t=' + Date.now()).then(function (r) { return r.json(); }),
+    prefetchForecastsForMatrix(),
+  ])
+    .then(function (results) {
+      var state = results[0] || {};
       var positions = state.positions || {};
-      function run() { injectAll(positions); }
+      window.__OLY_MATRIX_POSITIONS = positions;
+      function run() { injectAll(window.__OLY_MATRIX_POSITIONS); }
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', run);
-      } else { run(); }
+      } else {
+        run();
+      }
       setTimeout(run, 4000);
       setTimeout(run, 10000);
       setTimeout(run, 20000);
       setTimeout(run, 40000);
       setInterval(run, 60000);
     })
-    .catch(function(e) { console.warn('dashboard_state.json load failed:', e); });
+    .catch(function (e) {
+      console.warn('dashboard_state.json load failed:', e);
+      prefetchForecastsForMatrix().then(function () {
+        window.__OLY_MATRIX_POSITIONS = {};
+        injectAll({});
+      });
+    });
+
+  window.__OLY_MATRIX_REINJECT = function () {
+    prefetchForecastsForMatrix().then(function () {
+      injectAll(window.__OLY_MATRIX_POSITIONS || {});
+    });
+  };
 })();
 </script>
 

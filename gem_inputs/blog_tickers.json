@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "tickers": [],
+  "by_sector": {},
+  "history": [],
+  "tactical_sleeve_updated": "2026-04-24",
+  "tactical_sleeve": [
+    {"ticker": "RTX", "name": "RTX Corp", "score": 8, "note": "Defense primes — macro / Kiwoom overlay row.", "source_post": "blog macro sleeve"},
+    {"ticker": "TSLA", "name": "Tesla", "score": 8, "note": "Liquidity-sensitive large cap — overlay only.", "source_post": "blog macro sleeve"},
+    {"ticker": "LMT", "name": "Lockheed Martin", "score": 7, "note": "Defense prime — overlay only.", "source_post": "blog macro sleeve"},
+    {"ticker": "NOC", "name": "Northrop Grumman", "score": 7, "note": "Defense prime — overlay only.", "source_post": "blog macro sleeve"},
+    {"ticker": "GD", "name": "General Dynamics", "score": 6, "note": "Defense prime — overlay only.", "source_post": "blog macro sleeve"}
+  ]
+}

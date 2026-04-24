@@ -93,6 +93,25 @@ def _publish_core_satellite() -> None:
         print(f"[CORE] publish failed: {exc}")
 
 
+def _publish_blog_tickers() -> None:
+    """Ship blog / Kiwoom tactical_sleeve JSON for dashboard + forecaster merge."""
+    try:
+        import shutil
+
+        src = os.path.join(BASE, "data", "blog_tickers.json")
+        if not os.path.isfile(src):
+            src = os.path.join(BASE, "gem_inputs", "blog_tickers.json")
+        if not os.path.isfile(src):
+            return
+        shutil.copy2(src, "/var/www/html/blog_tickers.json")
+        data_dir = "/var/www/html/data"
+        os.makedirs(data_dir, exist_ok=True)
+        shutil.copy2(src, os.path.join(data_dir, "blog_tickers.json"))
+        print("[BLOG] published blog_tickers.json → webroot")
+    except Exception as exc:
+        print(f"[BLOG] publish failed: {exc}")
+
+
 def _publish_watchlist_bench() -> None:
     """Ship watchlist_bench.json to webroot (research queue, not quota fills)."""
     try:
@@ -168,6 +187,7 @@ def main():
     _publish_premium_scores()
     _publish_gem_meta()
     _publish_core_satellite()
+    _publish_blog_tickers()
     from fetch_data import get_all_data
     from olympus_engine import run_engine
     from output_factory import generate_outputs

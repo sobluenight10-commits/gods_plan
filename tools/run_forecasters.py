@@ -43,6 +43,8 @@ from agents.ml_forecaster import forecast as ml_forecast  # noqa: E402
 from reflection.post_mortem import ensure_weights, get_weights_for  # noqa: E402
 
 PORTFOLIO = os.path.join(BASE, "gem_inputs", "portfolio_all.json")
+BLOG_TICKERS_LIVE = os.path.join(BASE, "data", "blog_tickers.json")
+BLOG_TICKERS_SEED = os.path.join(BASE, "gem_inputs", "blog_tickers.json")
 GEM_DIR = os.path.join(BASE, "gem_results")
 OUT = os.path.join(BASE, "data", "forecasts.json")
 WEBROOT_OUT = "/var/www/html/forecasts.json"
@@ -151,24 +153,53 @@ def _ensemble(parts: dict, weights: dict) -> dict:
     return out
 
 
-def _is_cache_fresh() -> bool:
+def _tactical_sleeve_tickers() -> list[str]:
+    """Kiwoom / blog macro sleeve — merged from live data/ + committed gem_inputs seed."""
+    merged: list[str] = []
+    for path in (BLOG_TICKERS_LIVE, BLOG_TICKERS_SEED):
+        for x in (_load(path, {}).get("tactical_sleeve") or []):
+            if isinstance(x, dict):
+                t = (x.get("ticker") or "").strip().upper()
+                if t:
+                    merged.append(t)
+    out: list[str] = []
+    seen: set[str] = set()
+    for t in merged:
+        if t not in seen:
+            seen.add(t)
+            out.append(t)
+    return out
+
+
+def _is_cache_fresh(extra_tickers: list[str] | None = None) -> bool:
     try:
         if not os.path.exists(OUT):
             return False
         mt = datetime.fromtimestamp(os.path.getmtime(OUT), tz=timezone.utc)
-        return (datetime.now(timezone.utc) - mt) < timedelta(hours=MAX_CACHE_HOURS)
+        if (datetime.now(timezone.utc) - mt) >= timedelta(hours=MAX_CACHE_HOURS):
+            return False
+        if extra_tickers:
+            blob = _load(OUT, {})
+            have = set((blob.get("tickers") or {}).keys())
+            if any(t not in have for t in extra_tickers):
+                return False
+        return True
     except Exception:
         return False
 
 
 def run(force: bool = False, tickers: list | None = None) -> dict:
-    if _is_cache_fresh() and not force:
+    portfolio = _load(PORTFOLIO, [])
+    base = tickers if tickers is not None else [p.get("ticker") for p in portfolio if p.get("ticker")]
+    sleeve = _tactical_sleeve_tickers()
+    tks = list(dict.fromkeys([t for t in base if t] + sleeve))
+
+    if _is_cache_fresh(sleeve) and not force:
         existing = _load(OUT, {})
         print(f"[forecasters] cache < {MAX_CACHE_HOURS}h — using {OUT}")
         return existing
-
-    portfolio = _load(PORTFOLIO, [])
-    tks = tickers or [p.get("ticker") for p in portfolio if p.get("ticker")]
+    if sleeve and not force:
+        print(f"[forecasters] full run (portfolio + {len(sleeve)} tactical-sleeve names)")
     gem_map = _latest_gem()
     ensure_weights()
 
