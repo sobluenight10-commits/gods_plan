@@ -201,18 +201,26 @@ def run(monthly_contribution_eur: Optional[float] = None) -> Dict[str, Any]:
         })
 
     status = "READY" if picks else "NO_CANDIDATES"
-    # Inspect rejections to produce an honest mandate even when nothing is eligible.
+    # Inspect rejections + upstream liquidity regime to produce an honest mandate.
     gate_reason = None
     if not picks:
         reasons = [r.get("reason", "") for r in rejected]
-        if any("liquidity" in r for r in reasons):
-            gate_reason = "LIQUIDITY GATE — DANGER + CONTRACTING. Hold powder, wait for vector reversal."
+        # active_actions.json carries the live regime; prefer that over verb-inference
+        liq = active.get("liquidity") or {}
+        zone = (liq.get("zone") or "").upper()
+        vec = (liq.get("vector_7d") or "").upper()
+        freeze = bool(liq.get("freeze"))
+        if freeze or zone == "DANGER" or vec == "CONTRACTING":
+            gate_reason = (f"LIQUIDITY GATE — zone {zone or '?'} / vector {vec or '?'}. "
+                           "Hold powder, wait for vector reversal.")
         elif any("tail_defcon" in r for r in reasons):
             gate_reason = "TAIL DEFCON — market stress elevated. Hold powder."
         elif any("sentinel" in r for r in reasons):
             gate_reason = "SENTINEL — system integrity flagged. Do not deploy."
         elif any(r.startswith("verb=HOLD") for r in reasons):
             gate_reason = "No BUY/ADD directives live. HOLDs are not add-signals."
+        else:
+            gate_reason = "No ticker passed EV/OPS/p_win filters."
     plan = {
         "schema_version": 1,
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
@@ -239,9 +247,9 @@ def run(monthly_contribution_eur: Optional[float] = None) -> Dict[str, Any]:
 def _mandate_line(picks: List[Dict[str, Any]], deployable: float,
                    gate_reason: Optional[str] = None) -> str:
     if not picks:
-        tail = f" — {gate_reason}" if gate_reason else ""
-        return (f"HOLD €{deployable:.0f} dry powder — no eligible deploy "
-                f"candidates right now{tail}.")
+        if gate_reason:
+            return f"HOLD €{deployable:.0f} dry powder — {gate_reason}"
+        return f"HOLD €{deployable:.0f} dry powder — no eligible deploy candidates right now."
     parts = []
     for p in picks:
         parts.append(f"{p['ticker']} €{p['allocation_eur']:.0f}")
