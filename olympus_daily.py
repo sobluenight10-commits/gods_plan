@@ -179,6 +179,84 @@ def _build_active_actions() -> None:
         print(f"[ACTIONS] build failed: {exc}")
 
 
+# ---------------------------------------------------------------------------
+# PHASE 4 — DISCOVERY + REFLECTION + BEHAVIORAL + DEPLOY
+# ---------------------------------------------------------------------------
+
+def _insider_flow() -> None:
+    """SEC EDGAR Form-4 cluster-buy detector."""
+    try:
+        from tools.insider_flow import run as _run
+        _run()
+    except Exception as exc:
+        print(f"[INSIDER] failed: {exc}")
+
+
+def _secular_trends() -> None:
+    """8 civilisational themes, proxy-ETF alpha vs benchmark."""
+    try:
+        from tools.secular_trends import run as _run
+        _run()
+    except Exception as exc:
+        print(f"[SECULAR] failed: {exc}")
+
+
+def _patent_signal() -> None:
+    """USPTO PatentsView velocity per theme + per ticker."""
+    try:
+        from tools.patent_signal import run as _run
+        _run()
+    except Exception as exc:
+        print(f"[PATENT] failed: {exc}")
+
+
+def _ipo_radar() -> None:
+    """Upcoming IPOs + spinoffs scored against the 8 GOD sectors."""
+    try:
+        from tools.ipo_spinoff_radar import run as _run
+        _run()
+    except Exception as exc:
+        print(f"[IPO] failed: {exc}")
+
+
+def _lesson_roundup() -> None:
+    """Weekly system-error digest across all lesson cards."""
+    try:
+        from tools.lesson_roundup import run as _run
+        _run()
+    except Exception as exc:
+        print(f"[LESSONS] roundup failed: {exc}")
+
+
+def _behavioral_publish() -> None:
+    """Publish cooldowns + pending restatements + override patterns."""
+    try:
+        from behavioral.circuit_breakers import publish_state
+        publish_state()
+    except Exception as exc:
+        print(f"[BEHAV] publish failed: {exc}")
+
+
+def _deploy_optimiser() -> None:
+    """Marginal Sharpe ranking for the €1,500/mo monthly deploy decision."""
+    try:
+        from tools.deploy_optimiser import run as _run
+        _run()
+    except Exception as exc:
+        print(f"[DEPLOY] optimiser failed: {exc}")
+
+
+def _publish_lessons_index() -> None:
+    try:
+        import shutil
+        src = os.path.join(BASE, "data", "lessons_index.json")
+        if os.path.isfile(src):
+            shutil.copy2(src, "/var/www/html/lessons_index.json")
+            print("[LESSONS] index published -> webroot")
+    except Exception as exc:
+        print(f"[LESSONS] publish failed: {exc}")
+
+
 def main():
     print("=== OLYMPUS DAILY PIPELINE ===")
     _refresh_fred_liquidity()
@@ -205,8 +283,17 @@ def main():
     # Phase 2: reflection → ensemble forecasts → consumed by build_active_actions
     _refit_weights()
     _run_forecasters()
-    # Must run LAST — consumes directives, portfolio, thesis_history, radar, forecasts
+    # Must run BEFORE phase 4 modules that read active_actions.json
     _build_active_actions()
+    # Phase 4 — DISCOVERY + REFLECTION + BEHAVIORAL + DEPLOY
+    _insider_flow()
+    _secular_trends()
+    _patent_signal()
+    _ipo_radar()
+    _lesson_roundup()
+    _publish_lessons_index()
+    _behavioral_publish()
+    _deploy_optimiser()
     print("=== DONE ===")
 
 

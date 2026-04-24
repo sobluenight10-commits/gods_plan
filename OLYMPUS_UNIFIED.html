@@ -1390,6 +1390,372 @@ td.mx-eval.oly-tip::after {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 4A — DEPLOY PLAN  (where does €1,500 go this month?)
+     Top of Phase 4 stack because this is the only panel that
+     produces an actionable number you can type into the broker.
+     ═══════════════════════════════════════════════════════════════════ -->
+<details id="deploy-panel" open style="padding:12px 40px;background:linear-gradient(180deg,#10201a 0%,#0b1812 100%);border-top:1px solid #2a4a38;color:#d6e1f0;">
+  <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#6aeab3;">
+    🚀 DEPLOY PLAN — €monthly contribution, marginal-Sharpe optimal
+    <span id="deploy-meta" style="font-weight:500;color:#7a8fa8;font-size:10px;margin-left:10px;"></span>
+  </summary>
+  <div id="deploy-body" style="font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;line-height:1.55;color:#c4dccd;">Loading deploy plan…</div>
+  <div style="margin-top:8px;color:#5a7c6d;font-size:10px;">
+    Source <code style="background:#15281e;padding:1px 4px;">data/deploy_plan.json</code> — top-3 ranked by (EV/|ES5|) × p_win × conviction-mult.
+    CORE ×1.25 · SATELLITE ×1.00 · UNCLASSIFIED ×0.85. Filters: OPS&lt;180, EV&gt;5%, p_win&gt;0.45, no active vetoes.
+  </div>
+</details>
+<script>
+(function(){
+  function fmtEur(x){ if (x == null) return "—"; return "€"+Math.round(x).toLocaleString(); }
+  function fmtPct(x, digits){ if (x == null || isNaN(x)) return "—"; return (Math.round(x*Math.pow(10, digits||1))/Math.pow(10, digits||1)).toFixed(digits||1)+"%"; }
+  function groupBadge(g){
+    var color = g === "CORE" ? "#6aeab3" : (g === "SATELLITE" ? "#efc56a" : "#9fb3cc");
+    return '<span style="color:'+color+';font-weight:700;">'+g+'</span>';
+  }
+  function row(p, i){
+    return '<tr style="border-top:1px solid #25354a;">' +
+      '<td style="padding:4px 6px;color:#efc56a;font-weight:700;">#'+(i+1)+'</td>' +
+      '<td style="padding:4px 6px;"><strong style="color:#6aeab3;">'+p.ticker+'</strong> · '+groupBadge(p.group)+'</td>' +
+      '<td style="padding:4px 6px;text-align:right;color:#6aeab3;font-weight:700;">'+fmtEur(p.allocation_eur)+'</td>' +
+      '<td style="padding:4px 6px;text-align:right;color:#9fb3cc;">'+fmtPct(p.allocation_pct_of_deployable)+'</td>' +
+      '<td style="padding:4px 6px;text-align:right;">EV '+fmtPct(p.ev_pct)+' · ES5 '+fmtPct(p.es5_pct)+'</td>' +
+      '<td style="padding:4px 6px;text-align:right;color:#7eb8d4;">Sharpe '+ (p.marginal_sharpe != null ? p.marginal_sharpe.toFixed(2) : '—') +'</td>' +
+      '<td style="padding:4px 6px;color:#9fb3cc;font-size:10px;">'+(p.note||"")+'</td>' +
+    '</tr>';
+  }
+  function nextRow(p){
+    return '<li style="margin-bottom:2px;"><strong>'+p.ticker+'</strong> ('+p.group+') — adj '+(p.adj_score != null ? p.adj_score.toFixed(2) : '—')+' · EV '+fmtPct(p.ev_pct)+' · ES5 '+fmtPct(p.es5_pct)+'</li>';
+  }
+  function rejRow(r){ return '<li>'+r.ticker+' <span style="color:#ff9a7a;">'+r.reason+'</span></li>'; }
+
+  function render(plan){
+    var body = document.getElementById("deploy-body");
+    var meta = document.getElementById("deploy-meta");
+    if (!body) return;
+
+    if (!plan || !plan.generated_utc){
+      body.innerHTML = "No deploy plan yet — run olympus_daily.py or tools/deploy_optimiser.py.";
+      return;
+    }
+    meta.innerHTML = "generated " + plan.generated_utc + " · deployable " + fmtEur(plan.deployable_eur) +
+      " (powder " + fmtEur(plan.powder_eur) + " + monthly " + fmtEur(plan.monthly_contribution_eur) + ")" +
+      " · status " + (plan.status || "—");
+
+    if (plan.status === "FROZEN"){
+      body.innerHTML = '<div style="color:#ff6f6f;font-weight:700;">FROZEN — ' + (plan.reason||"sentinel freeze") + '</div>' +
+        '<div style="color:#9fb3cc;margin-top:4px;">' + (plan.triggers||[]).join(" · ") + '</div>';
+      return;
+    }
+    if (!(plan.top_picks && plan.top_picks.length)){
+      body.innerHTML = '<div style="color:#ff9a7a;">NO_CANDIDATES — every eligible name filtered out. Raise OPS/EV thresholds or wait for vetoes to clear.</div>' +
+        '<div style="color:#9fb3cc;margin-top:4px;">Rejected ('+(plan.rejected||[]).length+'): <ul style="margin:4px 0 0 18px;">' + (plan.rejected||[]).slice(0,8).map(rejRow).join("") + '</ul></div>';
+      return;
+    }
+
+    var picks = plan.top_picks.map(row).join("");
+    var nextq = (plan.next_in_queue || []).slice(0, 5).map(nextRow).join("");
+    var rejected = (plan.rejected || []).slice(0, 10).map(rejRow).join("");
+
+    body.innerHTML =
+      '<div style="color:#6aeab3;font-weight:700;font-size:13px;margin-bottom:8px;background:#15281e;padding:8px 10px;border-radius:6px;border:1px solid #2a4a38;">' +
+        '📍 ' + (plan.mandate || "") +
+      '</div>' +
+      '<table style="width:100%;border-collapse:collapse;"><thead><tr style="color:#7eb8d4;text-align:left;">' +
+        '<th style="padding:4px 6px;">#</th><th style="padding:4px 6px;">Ticker</th><th style="padding:4px 6px;text-align:right;">€ allocation</th><th style="padding:4px 6px;text-align:right;">% of deployable</th><th style="padding:4px 6px;text-align:right;">Forecast</th><th style="padding:4px 6px;text-align:right;">Marginal</th><th style="padding:4px 6px;">Note</th>' +
+      '</tr></thead><tbody>' + picks + '</tbody></table>' +
+      (nextq ? ('<div style="margin-top:10px;color:#9fb3cc;"><strong style="color:#7eb8d4;">NEXT IN QUEUE</strong><ul style="margin:4px 0 0 18px;">' + nextq + '</ul></div>') : '') +
+      (rejected ? ('<details style="margin-top:10px;"><summary style="cursor:pointer;color:#9fb3cc;font-size:10px;">Rejected ('+(plan.rejected||[]).length+')</summary><ul style="margin:4px 0 0 18px;color:#9fb3cc;font-size:10px;">'+rejected+'</ul></details>') : '');
+  }
+
+  function load(){
+    fetch("/deploy_plan.json?t="+Date.now())
+      .then(function(r){ return r.ok ? r.json() : {}; })
+      .then(render)
+      .catch(function(){ render({}); });
+  }
+  document.addEventListener("DOMContentLoaded", load);
+  setInterval(load, 180000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 4B — EARTH-SHIFTER DISCOVERY
+     Secular trends + insider-cluster flow + IPO radar + patent velocity.
+     This is where we hunt the NEXT 000660.KS before the market prices it.
+     ═══════════════════════════════════════════════════════════════════ -->
+<details id="discovery-panel" open style="padding:12px 40px;background:linear-gradient(180deg,#1a1426 0%,#140e1d 100%);border-top:1px solid #3a2a4a;color:#d6e1f0;">
+  <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#c58eff;">
+    🛰 EARTH-SHIFTER DISCOVERY — secular trends · insider flow · IPO radar · patent velocity
+    <span id="discovery-meta" style="font-weight:500;color:#7a8fa8;font-size:10px;margin-left:10px;"></span>
+  </summary>
+  <div style="margin-top:10px;display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;font-family:'DM Mono',monospace;font-size:11px;">
+    <div id="disc-secular" style="background:#18122b;border:1px solid #3a2a4a;border-radius:6px;padding:10px;">Loading secular themes…</div>
+    <div id="disc-insider" style="background:#18122b;border:1px solid #3a2a4a;border-radius:6px;padding:10px;">Loading insider cluster feed…</div>
+    <div id="disc-ipo" style="background:#18122b;border:1px solid #3a2a4a;border-radius:6px;padding:10px;">Loading IPO calendar…</div>
+    <div id="disc-patent" style="background:#18122b;border:1px solid #3a2a4a;border-radius:6px;padding:10px;">Loading patent velocity…</div>
+  </div>
+  <div style="margin-top:8px;color:#8a7a9f;font-size:10px;">
+    Sources: <code style="background:#2a1e3a;padding:1px 4px;">secular_trends.json</code> (yfinance 90d/365d alpha), <code style="background:#2a1e3a;padding:1px 4px;">insider_flow.json</code> (SEC EDGAR Form 4), <code style="background:#2a1e3a;padding:1px 4px;">ipo_radar.json</code> (curated + scored), <code style="background:#2a1e3a;padding:1px 4px;">patent_signal.json</code> (USPTO PatentsView).
+  </div>
+</details>
+<script>
+(function(){
+  function fmtPct(x, d){ if (x == null || isNaN(x)) return "—"; return (Math.round(x*Math.pow(10, d||1))/Math.pow(10, d||1)).toFixed(d||1)+"%"; }
+  function stateColor(s){ return s==='STRONG_BID'||s==='LEADING' ? '#6aeab3' : (s==='INFLECTING' ? '#efc56a' : (s==='EXITING' ? '#ff6f6f' : '#9fb3cc')); }
+
+  function renderSecular(d){
+    var el = document.getElementById("disc-secular"); if (!el) return;
+    if (!d || !d.themes || !d.themes.length){ el.innerHTML = "<div style='color:#9fb3cc;'>No secular data.</div>"; return; }
+    var rows = d.themes.map(function(t){
+      var cls = stateColor(t.state);
+      return '<tr style="border-top:1px solid #3a2a4a;">' +
+        '<td style="padding:3px 6px;color:#c58eff;font-weight:700;">'+t.id+'</td>' +
+        '<td style="padding:3px 6px;"><span style="color:'+cls+';font-weight:700;">'+t.state+'</span></td>' +
+        '<td style="padding:3px 6px;text-align:right;">'+fmtPct(t.alpha_vs_bench_90d_pct)+'</td>' +
+        '<td style="padding:3px 6px;text-align:right;color:#9fb3cc;">'+fmtPct(t.alpha_vs_bench_365d_pct)+'</td>' +
+        '<td style="padding:3px 6px;color:#9fb3cc;font-size:10px;">'+(t.leaders||[]).slice(0,5).join(" · ")+'</td>' +
+      '</tr>';
+    }).join("");
+    el.innerHTML =
+      '<div style="color:#c58eff;font-weight:700;margin-bottom:4px;">SECULAR THEMES — alpha vs benchmark</div>' +
+      '<div style="color:#efc56a;font-size:10px;margin-bottom:6px;">' + (d.mandate || "") + '</div>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:10px;"><thead><tr style="color:#7eb8d4;text-align:left;">' +
+        '<th style="padding:3px 6px;">Theme</th><th style="padding:3px 6px;">State</th><th style="padding:3px 6px;text-align:right;">α 90d</th><th style="padding:3px 6px;text-align:right;">α 365d</th><th style="padding:3px 6px;">Leaders</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function renderInsider(d){
+    var el = document.getElementById("disc-insider"); if (!el) return;
+    if (!d || !d.leaderboard || !d.leaderboard.length){ el.innerHTML = "<div style='color:#9fb3cc;'>No insider data (or EDGAR unreachable).</div>"; return; }
+    var top = d.leaderboard.slice(0, 10);
+    var rows = top.map(function(x){
+      var color = x.cluster_score >= 4 ? '#6aeab3' : (x.cluster_score >= 2 ? '#efc56a' : '#9fb3cc');
+      var date = (x.latest_utc || "").slice(0, 10);
+      return '<tr style="border-top:1px solid #3a2a4a;">' +
+        '<td style="padding:3px 6px;color:'+color+';font-weight:700;">'+x.ticker+'</td>' +
+        '<td style="padding:3px 6px;text-align:right;">'+x.n_filings_30d+'</td>' +
+        '<td style="padding:3px 6px;text-align:right;color:'+color+';font-weight:700;">'+x.cluster_score.toFixed(2)+'</td>' +
+        '<td style="padding:3px 6px;color:#9fb3cc;font-size:10px;">'+date+'</td>' +
+      '</tr>';
+    }).join("");
+    el.innerHTML =
+      '<div style="color:#c58eff;font-weight:700;margin-bottom:4px;">INSIDER CLUSTER (Form 4, 30d)</div>' +
+      '<div style="color:#efc56a;font-size:10px;margin-bottom:6px;">' + (d.top5_verdict || "") + '</div>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:10px;"><thead><tr style="color:#7eb8d4;text-align:left;">' +
+        '<th style="padding:3px 6px;">Ticker</th><th style="padding:3px 6px;text-align:right;">#filings</th><th style="padding:3px 6px;text-align:right;">cluster</th><th style="padding:3px 6px;">latest</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function renderIPO(d){
+    var el = document.getElementById("disc-ipo"); if (!el) return;
+    if (!d || !d.pending_ipos || !d.pending_ipos.length){ el.innerHTML = "<div style='color:#9fb3cc;'>No pending IPOs tracked.</div>"; return; }
+    var rows = d.pending_ipos.map(function(x){
+      var tierColor = x.tier === 'A' ? '#6aeab3' : (x.tier === 'B' ? '#efc56a' : (x.tier === 'C' ? '#9fb3cc' : '#ff9a7a'));
+      var days = x.days_to != null ? x.days_to + "d" : "—";
+      return '<tr style="border-top:1px solid #3a2a4a;">' +
+        '<td style="padding:3px 6px;"><strong>'+x.name+'</strong> ('+x.symbol+')</td>' +
+        '<td style="padding:3px 6px;color:#9fb3cc;">'+x.sector+'</td>' +
+        '<td style="padding:3px 6px;text-align:right;color:'+tierColor+';font-weight:700;">'+x.tier+' ('+x.score_total+')</td>' +
+        '<td style="padding:3px 6px;text-align:right;color:#efc56a;">'+days+'</td>' +
+      '</tr>';
+    }).join("");
+    el.innerHTML =
+      '<div style="color:#c58eff;font-weight:700;margin-bottom:4px;">IPO / SPIN RADAR</div>' +
+      '<div style="color:#efc56a;font-size:10px;margin-bottom:6px;">' + (d.mandate || "") + '</div>' +
+      '<table style="width:100%;border-collapse:collapse;font-size:10px;"><thead><tr style="color:#7eb8d4;text-align:left;">' +
+        '<th style="padding:3px 6px;">Name</th><th style="padding:3px 6px;">Sector</th><th style="padding:3px 6px;text-align:right;">Tier (score)</th><th style="padding:3px 6px;text-align:right;">Days</th>' +
+      '</tr></thead><tbody>' + rows + '</tbody></table>';
+  }
+
+  function renderPatent(d){
+    var el = document.getElementById("disc-patent"); if (!el) return;
+    var accel = ((d||{}).earth_shifter_watch||{}).accelerating_themes || [];
+    var accelT = ((d||{}).earth_shifter_watch||{}).accelerating_tickers || [];
+    if (!d || !d.themes || !d.themes.length){ el.innerHTML = "<div style='color:#9fb3cc;'>No patent data.</div>"; return; }
+    el.innerHTML =
+      '<div style="color:#c58eff;font-weight:700;margin-bottom:4px;">PATENT VELOCITY (USPTO)</div>' +
+      '<div style="color:#efc56a;font-size:10px;margin-bottom:6px;">' + (d.mandate || "—") + '</div>' +
+      (accel.length ? '<div><strong style="color:#6aeab3;">Accelerating themes:</strong> '+accel.join(", ")+'</div>' : '') +
+      (accelT.length ? '<div><strong style="color:#6aeab3;">Accelerating tickers:</strong> '+accelT.join(", ")+'</div>' : '') +
+      (!accel.length && !accelT.length ? '<div style="color:#9fb3cc;font-size:10px;">No accelerating classes — patent API may be throttled / key-gated. Scaffold active; data refreshes daily.</div>' : '');
+  }
+
+  function load(){
+    var t = Date.now();
+    fetch("/secular_trends.json?t="+t).then(function(r){return r.ok?r.json():{};}).then(renderSecular).catch(function(){renderSecular({});});
+    fetch("/insider_flow.json?t="+t).then(function(r){return r.ok?r.json():{};}).then(renderInsider).catch(function(){renderInsider({});});
+    fetch("/ipo_radar.json?t="+t).then(function(r){return r.ok?r.json():{};}).then(renderIPO).catch(function(){renderIPO({});});
+    fetch("/patent_signal.json?t="+t).then(function(r){return r.ok?r.json():{};}).then(renderPatent).catch(function(){renderPatent({});});
+    var m = document.getElementById("discovery-meta"); if (m) m.textContent = "fetched " + new Date().toISOString();
+  }
+  document.addEventListener("DOMContentLoaded", load);
+  setInterval(load, 300000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 4C — REFLECTION  (lesson cards + error patterns)
+     Without this module, Phase 2 calibration stays frozen on priors.
+     ═══════════════════════════════════════════════════════════════════ -->
+<details id="reflection-panel" style="padding:12px 40px;background:linear-gradient(180deg,#1a2415 0%,#131b0f 100%);border-top:1px solid #2a4020;color:#d6e1f0;">
+  <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#b3e86a;">
+    🪞 REFLECTION — closed-trade lesson cards · CRPS calibration
+    <span id="reflect-meta" style="font-weight:500;color:#7a8fa8;font-size:10px;margin-left:10px;"></span>
+  </summary>
+  <div style="margin-top:10px;font-family:'DM Mono',monospace;font-size:11px;">
+    <div id="reflect-summary" style="color:#c4dccd;margin-bottom:10px;">Loading lesson digest…</div>
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:10px;">
+      <div id="reflect-cards" style="background:#1a241a;border:1px solid #2a4020;border-radius:6px;padding:10px;max-height:320px;overflow-y:auto;">Loading cards…</div>
+      <div id="reflect-signals" style="background:#1a241a;border:1px solid #2a4020;border-radius:6px;padding:10px;">Loading signal scoreboard…</div>
+    </div>
+  </div>
+  <div style="margin-top:8px;color:#7a9a7a;font-size:10px;">
+    Each closed trade auto-emits a lesson card. After <strong>20 cards</strong>, the CRPS re-weighter takes over the ensemble defaults.
+    To record a new close manually: <code style="background:#1e2e18;padding:1px 4px;">python tools/close_trade.py --ticker XYZ --exit 12.34 ...</code>
+  </div>
+</details>
+<script>
+(function(){
+  function fmtPct(x, d){ if (x == null || isNaN(x)) return "—"; return (Math.round(x*Math.pow(10, d||2))/Math.pow(10, d||2)).toFixed(d||2)+"%"; }
+  function pctColor(r){ return r > 0 ? '#6aeab3' : (r < 0 ? '#ff6f6f' : '#9fb3cc'); }
+
+  function renderSummary(dig){
+    var el = document.getElementById("reflect-summary"); if (!el) return;
+    if (!dig || !dig.generated_utc){ el.textContent = "No lesson digest yet."; return; }
+    var wl = dig.win_loss || {};
+    var by = dig.by_category || {};
+    var pats = (dig.actionable_patterns || []).map(function(p){ return '<li>'+p+'</li>'; }).join("");
+    el.innerHTML =
+      '<strong style="color:#b3e86a;">STATUS:</strong> <span style="color:'+(dig.calibration_status && dig.calibration_status.indexOf('ACTIVE') >= 0 ? '#6aeab3' : '#efc56a')+';font-weight:700;">'+(dig.calibration_status || '')+'</span> · ' +
+      '<strong>Cards:</strong> '+dig.n_cards+' · ' +
+      '<strong>W/L/B:</strong> '+wl.wins+'/'+wl.losses+'/'+wl.breakeven+' · ' +
+      '<strong>Win rate:</strong> '+(wl.win_rate_pct||0).toFixed(1)+'% · ' +
+      '<strong>Avg return:</strong> <span style="color:'+pctColor(wl.avg_return_pct||0)+';">'+ (wl.avg_return_pct||0).toFixed(2)+'%</span> · ' +
+      '<strong>Median hold:</strong> '+ (wl.median_hold_days||0)+'d' +
+      (pats ? '<ul style="margin:8px 0 0 18px;color:#efc56a;">' + pats + '</ul>' : '');
+  }
+
+  function renderCards(idx){
+    var el = document.getElementById("reflect-cards"); if (!el) return;
+    if (!idx || !idx.rows || !idx.rows.length){ el.textContent = "No lesson cards yet."; return; }
+    var rows = idx.rows.slice(0, 25).map(function(c){
+      var color = pctColor(c.realized_return||0);
+      return '<div style="border-top:1px solid #2a4020;padding:6px 2px;">' +
+        '<div><strong style="color:'+color+';">'+c.ticker+'</strong> · '+(c.group||"—")+' · <span style="color:#9fb3cc;">'+c.closed_utc.slice(0,10)+'</span> · <strong style="color:'+color+';">'+fmtPct((c.realized_return||0)*100)+'</strong> · '+(c.holding_days||0)+'d</div>' +
+        '<div style="color:#efc56a;font-size:10px;">cat: '+c.category+' · outcome: '+c.thesis_outcome+(c.ops_at_entry?(' · OPS@entry '+c.ops_at_entry):'')+'</div>' +
+        (c.what_fired_first ? '<div style="color:#9fb3cc;font-size:10px;">→ '+c.what_fired_first+'</div>' : '') +
+        (c.felt ? '<div style="color:#7eb8d4;font-size:10px;font-style:italic;">"'+c.felt+'"</div>' : '') +
+      '</div>';
+    }).join("");
+    el.innerHTML = '<div style="color:#b3e86a;font-weight:700;margin-bottom:4px;">RECENT LESSON CARDS</div>' + rows;
+  }
+
+  function renderSignals(dig){
+    var el = document.getElementById("reflect-signals"); if (!el) return;
+    if (!dig || !dig.generated_utc){ el.textContent = "No signal data."; return; }
+    function list(title, rows, color){
+      if (!rows || !rows.length) return "";
+      var items = rows.slice(0,6).map(function(r){ return '<li>'+r.key+' <span style="color:#9fb3cc;">×'+r.count+'</span></li>'; }).join("");
+      return '<div style="margin-bottom:8px;"><strong style="color:'+color+';">'+title+'</strong><ul style="margin:4px 0 0 18px;color:#c4dccd;">'+items+'</ul></div>';
+    }
+    el.innerHTML =
+      list("SIGNALS RIGHT", dig.signals_right, "#6aeab3") +
+      list("SIGNALS WRONG", dig.signals_wrong, "#ff9a7a") +
+      list("SIGNALS SILENT", dig.signals_silent, "#efc56a");
+  }
+
+  function load(){
+    var t = Date.now();
+    fetch("/lesson_digest.json?t="+t).then(function(r){return r.ok?r.json():{};}).then(function(d){ renderSummary(d); renderSignals(d); }).catch(function(){});
+    fetch("/lessons_index.json?t="+t).then(function(r){return r.ok?r.json():{};}).then(renderCards).catch(function(){});
+    var m = document.getElementById("reflect-meta"); if (m) m.textContent = "fetched " + new Date().toISOString();
+  }
+  document.addEventListener("DOMContentLoaded", load);
+  setInterval(load, 300000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 4D — BEHAVIORAL CIRCUIT BREAKERS
+     The weakest link is the human. This panel surfaces every active
+     cooldown, pending thesis restatement, and override pattern.
+     ═══════════════════════════════════════════════════════════════════ -->
+<details id="behavior-panel" style="padding:12px 40px;background:linear-gradient(180deg,#241a1a 0%,#1a1211 100%);border-top:1px solid #4a2a28;color:#d6e1f0;">
+  <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#ff9a7a;">
+    🧠 BEHAVIORAL GATES — cooldowns · thesis restatement · override patterns
+    <span id="behav-meta" style="font-weight:500;color:#7a8fa8;font-size:10px;margin-left:10px;"></span>
+  </summary>
+  <div id="behav-body" style="font-family:'DM Mono',monospace;font-size:11px;margin-top:10px;line-height:1.55;color:#c4dccd;">Loading behavioral state…</div>
+  <div style="margin-top:8px;color:#9a7a75;font-size:10px;">
+    Triggers: orders &gt; €<strong id="behav-th-eur">500</strong> when the underlying moved &gt; <strong id="behav-th-move">5%</strong> that day arm a <strong id="behav-th-sec">5-minute</strong> cooldown.
+    CORE trim/exit requires a ≥20-char thesis-restatement sentence.
+  </div>
+</details>
+<script>
+(function(){
+  function row(c){
+    var mm = Math.floor(c.seconds_remaining/60);
+    var ss = c.seconds_remaining%60;
+    return '<tr style="border-top:1px solid #4a2a28;">' +
+      '<td style="padding:3px 6px;color:#ff9a7a;font-weight:700;">'+c.ticker+'</td>' +
+      '<td style="padding:3px 6px;">'+(c.side||"—")+' €'+(c.order_eur||0).toFixed(0)+'</td>' +
+      '<td style="padding:3px 6px;text-align:right;color:#efc56a;">'+ (c.day_move_pct||0).toFixed(1)+'%</td>' +
+      '<td style="padding:3px 6px;text-align:right;color:#ff6f6f;">'+mm+':'+(ss<10?'0':'')+ss+'</td>' +
+    '</tr>';
+  }
+  function render(s){
+    var el = document.getElementById("behav-body"); if (!el) return;
+    if (!s || !s.generated_utc){ el.textContent = "No behavioral data yet."; return; }
+
+    var thE = document.getElementById("behav-th-eur"); if (thE) thE.textContent = (s.thresholds||{}).cooldown_trigger_order_eur;
+    var thM = document.getElementById("behav-th-move"); if (thM) thM.textContent = ((s.thresholds||{}).cooldown_trigger_move_pct)+'%';
+    var thS = document.getElementById("behav-th-sec"); if (thS) thS.textContent = Math.round(((s.thresholds||{}).cooldown_seconds||0)/60)+'-minute';
+
+    var cds = s.active_cooldowns || [];
+    var pr = s.pending_restatements || [];
+    var kinds = s.override_kinds || {};
+    var recent = s.override_recent || [];
+
+    var cdHtml = cds.length ?
+      '<table style="width:100%;border-collapse:collapse;font-size:11px;"><thead><tr style="color:#7eb8d4;text-align:left;"><th style="padding:3px 6px;">Ticker</th><th style="padding:3px 6px;">Order</th><th style="padding:3px 6px;text-align:right;">Move</th><th style="padding:3px 6px;text-align:right;">Time left</th></tr></thead><tbody>' + cds.map(row).join("") + '</tbody></table>' :
+      '<div style="color:#9fb3cc;">No active cooldowns.</div>';
+
+    var prHtml = pr.length ?
+      '<ul style="margin:4px 0 0 18px;color:#efc56a;">' + pr.map(function(r){ return '<li><strong>'+r.ticker+'</strong> '+r.action+' — '+r.prompt+'</li>'; }).join("") + '</ul>' :
+      '<div style="color:#9fb3cc;">No pending thesis restatements.</div>';
+
+    var kindsHtml = Object.keys(kinds).length ?
+      '<ul style="margin:4px 0 0 18px;color:#c4dccd;">' + Object.keys(kinds).map(function(k){ return '<li>'+k+' <span style="color:#9fb3cc;">×'+kinds[k]+'</span></li>'; }).join("") + '</ul>' :
+      '<div style="color:#9fb3cc;">No overrides recorded yet.</div>';
+
+    var recentHtml = recent.length ?
+      '<ul style="margin:4px 0 0 18px;color:#c4dccd;">' + recent.slice(-6).reverse().map(function(r){
+        return '<li><strong>'+r.ticker+'</strong> — sys=<span style="color:#7eb8d4;">'+r.system_verb+'</span> · user=<span style="color:#efc56a;">'+r.user_verb+'</span> · <em style="color:#9fb3cc;">'+(r.delta_kind||"")+'</em></li>';
+      }).join("") + '</ul>' :
+      '';
+
+    el.innerHTML =
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+        '<div><strong style="color:#ff9a7a;">ACTIVE COOLDOWNS</strong>' + cdHtml + '</div>' +
+        '<div><strong style="color:#ff9a7a;">PENDING THESIS RESTATEMENT</strong>' + prHtml + '</div>' +
+      '</div>' +
+      '<div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:10px;">' +
+        '<div><strong style="color:#ff9a7a;">OVERRIDE PATTERN HISTOGRAM</strong>' + kindsHtml + '</div>' +
+        '<div><strong style="color:#ff9a7a;">RECENT OVERRIDES</strong>' + recentHtml + '</div>' +
+      '</div>';
+  }
+
+  function load(){
+    fetch("/behavioral_state.json?t="+Date.now()).then(function(r){return r.ok?r.json():{};}).then(render).catch(function(){render({});});
+    var m = document.getElementById("behav-meta"); if (m) m.textContent = "fetched " + new Date().toISOString();
+  }
+  document.addEventListener("DOMContentLoaded", load);
+  setInterval(load, 60000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
      CATALYST RADAR — forward event map with base-rate asymmetry
      Institutions have this for 500 stocks diluted. We have it for 30
      stocks dense. This is where event-driven alpha is earned.
@@ -4781,6 +5147,18 @@ window.addEventListener('load', function () {
     var mandate = data.so_what_mandate || '';
     if (sentinel.level === 'FREEZE') mandate = 'SENTINEL FREEZE · ' + (sentinel.triggers||[]).slice(0,2).join(' · ');
     else if (defcon <= 2) mandate = 'DEFCON ' + defcon + ' — ' + (tail.hedge_instruction || '');
+    // Phase 4 overlay: when Sentinel/Drawdown/Tail are all clean, surface the
+    // concrete deploy mandate ("DEPLOY €3700 -> CWEN €2220 · PLTR €925 · ...")
+    // so the one "so what" line is actually executable, not just advisory.
+    if (sentinel.level !== 'FREEZE' && defcon > 2) {
+      var dp = window._DEPLOY_PLAN || null;
+      if (dp && dp.status === 'READY' && dp.mandate) {
+        mandate = dp.mandate;
+      } else if (!mandate) {
+        var sec = window._SECULAR_MANDATE || '';
+        if (sec) mandate = 'THEME: ' + sec;
+      }
+    }
     if (mEl) mEl.textContent = mandate || '—';
 
     var adds = [], trims = [];
@@ -4830,9 +5208,20 @@ window.addEventListener('load', function () {
     }
   }
 
+  function refreshPhase4Feeds(){
+    var t = Date.now();
+    fetch("/deploy_plan.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      window._DEPLOY_PLAN = d || null; updateDigest();
+    }).catch(function(){});
+    fetch("/secular_trends.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      window._SECULAR_MANDATE = (d && d.mandate) || ''; updateDigest();
+    }).catch(function(){});
+  }
+
   document.addEventListener('DOMContentLoaded', function(){
+    refreshPhase4Feeds();
     updateDigest();
-    setInterval(updateDigest, 120000);
+    setInterval(function(){ refreshPhase4Feeds(); updateDigest(); }, 120000);
   });
 })();
 </script>

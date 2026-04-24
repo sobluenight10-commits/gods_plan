@@ -1,0 +1,77 @@
+{
+  "version": 1,
+  "last_updated": "2026-04-24",
+  "pending_ipos": [
+    {
+      "name": "Anthropic PBC",
+      "symbol": "ANTH",
+      "expected_date": "2026-10-15",
+      "type": "IPO",
+      "sector": "AI_COMPUTE",
+      "scale": 4,
+      "moat": 4,
+      "governance": 3,
+      "notes": "Claude franchise. Amazon + Google backers. Likely mega-cap listing. Day-1 discipline: wait for 3rd earnings print."
+    },
+    {
+      "name": "SpaceX",
+      "symbol": "SPCX",
+      "expected_date": "2026-06-30",
+      "type": "IPO",
+      "sector": "SPACE_ECON",
+      "scale": 4,
+      "moat": 4,
+      "governance": 2,
+      "notes": "Starlink alone justifies $150-200B. Lockup + dual class risk."
+    },
+    {
+      "name": "Databricks",
+      "symbol": "DBRX",
+      "expected_date": "2026-08-31",
+      "type": "IPO",
+      "sector": "AI_COMPUTE",
+      "scale": 3,
+      "moat": 3,
+      "governance": 3,
+      "notes": "Lakehouse standard. Snowflake competitor. Pre-IPO ARR ~$3B."
+    },
+    {
+      "name": "Stripe",
+      "symbol": "STRP",
+      "expected_date": "2026-11-30",
+      "type": "IPO",
+      "sector": "FINTECH",
+      "scale": 3,
+      "moat": 3,
+      "governance": 3,
+      "notes": "Out of GOD framework — pass unless sector expansion."
+    },
+    {
+      "name": "Helion Energy",
+      "symbol": "HELN",
+      "expected_date": "2027-03-31",
+      "type": "IPO",
+      "sector": "NUCLEAR",
+      "scale": 2,
+      "moat": 4,
+      "governance": 2,
+      "notes": "Fusion commercial timeline unclear — bet on optionality, not revenue."
+    }
+  ],
+  "recent_spinoffs": [
+    {
+      "parent": "General Electric",
+      "children": [
+        "GE Aerospace (GE)",
+        "GE HealthCare (GEHC)",
+        "GE Vernova (GEV)"
+      ],
+      "completed": "2024-04-02",
+      "sector_hits": [
+        "DEFENSE_AUTON",
+        "BIOTECH_INFRA"
+      ],
+      "notes": "GEV = energy transition play; GE = defense/aerospace pure-play."
+    }
+  ]
+}

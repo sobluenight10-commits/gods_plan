@@ -87,6 +87,34 @@ Phase 1 guarded each position. Phase 2 produced calibrated forecasts. Phase 3 gu
 
 **Rule**: If `sentinel_watchdog.level = FREEZE`, no ADD/BUY survives regardless of source (directives, radar, override) — only EXITs and explicit TRIMs pass through. This is the one switch that overrides GOD — and only until the root cause (stale data, kernel breach, DD red) is cleared.
 
+## OLYMPUS-SENTINEL — DISCOVERY + REFLECTION + BEHAVIORAL + DEPLOY (PHASE 4)
+
+Phase 1–3 hardened risk. Phase 4 turns the system outward (hunt for alpha) and inward (learn from every closed trade, stop the human from self-destructing). Four modules, four dashboard panels, zero new dependencies.
+
+- **Auto lesson cards** (`tools/close_trade.py`) — every closed trade emits `data/lessons/<ticker>_<YYYY-MM-DD>.json` carrying entry/exit, realized 1y, thesis outcome, `signals_at_entry` (OPS, liquidity state, EV, ES5, p_win, conviction, ensemble quantiles), `what_fired_first / right / wrong / silent`, and a `felt` human reflection field. `tools/lesson_backfill.py` seeds KTOS / AVAV / GEVO / TMO canonical failures. `tools/lesson_roundup.py` produces `data/lesson_digest.json` (win-loss, signal scoreboard, actionable patterns, calibration status). Once ≥ 20 cards exist, `reflection/post_mortem.py` refits ensemble weights via pinball-loss / CRPS.
+- **Earth-Shifter discovery** —
+  - `tools/secular_trends.py`: 8 civilisational themes (AI_COMPUTE, NUCLEAR, SPACE_ECON, GENE_EDITING, DEFENSE_AUTON, BIOTECH_INFRA, CYBER, CRITICAL_MIN). Each theme tracks a proxy ETF's 90d/365d alpha vs a benchmark. States: `STRONG_BID | LEADING | INFLECTING | NEUTRAL | EXITING`.
+  - `tools/insider_flow.py`: SEC EDGAR Form 4 ATOM per CIK. Cluster score `log1p(n_filings_30d) × Σ decay`. Tight Form-4 title filter (rejects 424B* prospectuses). Seed CIK map covers portfolio + small-cap discovery (BKSY, IRDM, LEU, LTBR, NNE, ACHR, JOBY, RGTI, IONQ, QBTS, AVAV, ONDS, RZLV).
+  - `tools/ipo_spinoff_radar.py`: curated `gem_inputs/ipo_calendar.json` → scored (sector 0–4, scale 0–2, moat 0–2, governance 0–2) → tier A/B/C/D/PASS → `imminent_30d` / `imminent_90d` lists.
+  - `tools/patent_signal.py`: USPTO PatentsView velocity by CPC class and applicant name. Graceful `no_data` fallback when endpoint is key-gated.
+- **Behavioral circuit breakers** (`behavioral/circuit_breakers.py`) —
+  1. `check_cooldown(ticker, order_eur, day_move_pct)`: arms a **5-min cooldown** when order ≥ €500 **and** underlying moved ≥ 5% that day. Stored in `data/cooldowns.json`, auto-expired.
+  2. `require_thesis_restatement(ticker, action)`: blocks CORE trims/EXITs until a ≥ 20-char thesis sentence is recorded in `data/decisions_pending.json`.
+  3. `log_override(...)`: records every human contradiction of the system verb to `data/overrides.json`, classified `overconfidence_buy / conservative_miss / premature_harvest / hope_hold_trap / other`. Pattern learning reads this.
+- **Marginal-Sharpe deploy optimiser** (`tools/deploy_optimiser.py`) — consumes `forecasts.json` + `active_actions.json` + `core_satellite.json`. Marginal Sharpe = `EV / max(2, |ES5|)`. Adjusted score multiplies by `p_win × conviction_mult` (CORE 1.25 / SAT 1.00 / UNCL 0.85). Filters: OPS < 180, EV ≥ 5%, `p_win` ≥ 0.45, no killer blocks. Picks top-3 with 60/25/15 allocation of `(powder + monthly €1,500)`. Emits concrete `mandate` e.g. *"DEPLOY €3,700 → CWEN €2,220 · PLTR €925 · 000660.KS €555 (correlation-adjusted, OPS-screened)"*.
+
+**Daily wiring** (`olympus_daily.py`): after `_build_active_actions` → `_insider_flow → _secular_trends → _patent_signal → _ipo_radar → _lesson_roundup → _publish_lessons_index → _behavioral_publish → _deploy_optimiser`.
+
+**Dashboard panels** (all sit between Eval Stack and Catalyst Radar):
+- `🚀 DEPLOY PLAN` (open by default) — top-3 picks with € allocations, next-in-queue, rejected, concrete mandate echoed into CORE DIGEST.
+- `🛰 EARTH-SHIFTER DISCOVERY` (open by default) — 4-tile grid: secular themes / insider cluster / IPO radar / patent velocity.
+- `🪞 REFLECTION` (collapsed) — summary, 25 recent lesson cards, signal scoreboard (right / wrong / silent), CRPS calibration status.
+- `🧠 BEHAVIORAL GATES` (collapsed) — active cooldowns, pending thesis restatements, override pattern histogram, last 6 overrides.
+
+**CORE DIGEST extension**: when sentinel is not FREEZE and DEFCON > 2, `so_what_mandate` is replaced by the live deploy mandate (falls back to secular-theme mandate if no eligible picks). This makes the one "so what" line on the dashboard actually executable (€ amounts + tickers) rather than advisory prose.
+
+**Rule**: The deploy optimiser never bypasses Phase 1–3 gates — it only ranks amongst survivors. The behavioral gates never block EXITs of DEAD theses — only expansionary verbs and discretionary core trims.
+
 ## VECTOR LIQUIDITY ENGINE v2 + OPS (ENFORCED)
 
 - **Level zones (net $B):** DANGER &lt;1,900 · SELECTIVE 1,900–2,200 · DEPLOY ≥2,200. Institutions optimize range; OLYMPUS optimizes **vector** (7d Δ net liq).
