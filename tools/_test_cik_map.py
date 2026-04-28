@@ -1,4 +1,7 @@
 """Quick test for the CIK allow-list logic in price_alert.check_sec_filings."""
+import os
+import sys
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from price_alert import _build_cik_to_ticker_map
 
 m = _build_cik_to_ticker_map(["PL", "PLTR", "TSM", "OKLO", "VRT", "COHR"])
