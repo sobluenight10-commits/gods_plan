@@ -282,6 +282,50 @@ def _deploy_optimiser() -> None:
         print(f"[DEPLOY] optimiser failed: {exc}")
 
 
+def _scenario_engine() -> None:
+    """Publish probability-weighted macro scenario expected values."""
+    try:
+        from tools.scenario_engine import run as _run
+        _run()
+        print("[SCENARIO] published")
+    except Exception as exc:
+        print(f"[SCENARIO] failed: {exc}")
+
+
+def _strike_radar() -> None:
+    """Multi-horizon liquidity vector pivot detector. Source of truth for STRIKE state."""
+    try:
+        from tools.strike_radar import run as _run
+        out = _run()
+        print(f"[STRIKE_RADAR] state={out.get('state')} score={out.get('strike_score')} "
+              f"net=${out.get('net_liq_b')}B v_3d={(out.get('velocity_b_per_day') or {}).get('v_3d')} "
+              f"v_7d={(out.get('velocity_b_per_day') or {}).get('v_7d')}")
+    except Exception as exc:
+        print(f"[STRIKE_RADAR] failed: {exc}")
+
+
+def _strike_cards() -> None:
+    """Per-ticker decisive composite — single 0-100 strike_score per name."""
+    try:
+        from tools.strike_cards import run as _run
+        out = _run()
+        print(f"[STRIKE_CARDS] {out.get('n_eligible')}/{out.get('n_total')} eligible · "
+              f"top: " + ", ".join(c["ticker"] + f"({c['strike_score']})"
+                                    for c in (out.get("shortlist") or [])[:5]))
+    except Exception as exc:
+        print(f"[STRIKE_CARDS] failed: {exc}")
+
+
+def _strike_plan() -> None:
+    """Three-tranche pyramid plan, gated by strike_radar state."""
+    try:
+        from tools.strike_plan import run as _run
+        plan = _run()
+        print(f"[STRIKE_PLAN] {plan.get('mandate')}")
+    except Exception as exc:
+        print(f"[STRIKE_PLAN] failed: {exc}")
+
+
 def _publish_lessons_index() -> None:
     try:
         from tools import close_trade as _ct
@@ -332,6 +376,11 @@ def main():
     _publish_lessons_index()
     _behavioral_publish()
     _deploy_optimiser()
+    # Phase 5 — STRIKE ENGINE (single decisive layer on top of everything else)
+    _scenario_engine()
+    _strike_radar()
+    _strike_cards()
+    _strike_plan()
     print("=== DONE ===")
 
 

@@ -104,7 +104,38 @@ Phase 1–3 hardened risk. Phase 4 turns the system outward (hunt for alpha) and
 - **Marginal-Sharpe deploy optimiser** (`tools/deploy_optimiser.py`) — consumes `forecasts.json` + `active_actions.json` + `core_satellite.json` + live `state.dry_powder.TR_EUR`. Marginal Sharpe = `EV / max(2, |ES5|)`. Adjusted score multiplies by `p_win × conviction_mult` (CORE 1.25 / SAT 1.00 / UNCL 0.85). Eligibility: **blocks checked BEFORE verb** so that `liquidity_freeze`, `sentinel_freeze`, `tail_defcon1/2`, `kernel_freeze`, `correlation_veto`, `ops_extreme`, `pending_catalyst` surface as the real gate reason; only **BUY / ADD** verbs get sized (HOLD / WATCH / TRIM / EXIT are rejected). Additional filters: OPS < 180, EV ≥ 5%, `p_win` ≥ 0.45. Picks top-3 with 60/25/15 allocation of `(powder + monthly contribution)`. When nothing is eligible, the mandate is honest: *"HOLD €3,100 dry powder — LIQUIDITY GATE — zone DANGER / vector CONTRACTING. Hold powder, wait for vector reversal."* When eligible: *"DEPLOY €3,100 → CWEN €1,860 · 000660.KS €775 · COHR €465 (correlation-adjusted, OPS-screened)"*.
   - **Powder source of truth**: `state.json.dry_powder.TR_EUR` (+ `Kiwoom_USD`). Keep this fresh — `tools/update_state_powder.py --tr-eur N [--kw-usd N]` one-shots the update. Stale powder → wrong deployable. On 2026-04-24 this was already wrong (2200 committed in state.json while actual was 1600), producing a phantom €3,700 recommendation; after fix → €3,100 honest.
 
-**Daily wiring** (`olympus_daily.py`): after `_build_active_actions` → `_insider_flow → _secular_trends → _patent_signal → _ipo_radar → _lesson_roundup → _publish_lessons_index → _behavioral_publish → _deploy_optimiser`.
+**Daily wiring** (`olympus_daily.py`): after `_build_active_actions` → `_insider_flow → _secular_trends → _patent_signal → _ipo_radar → _lesson_roundup → _publish_lessons_index → _behavioral_publish → _deploy_optimiser → _scenario_engine → _strike_radar → _strike_cards → _strike_plan`.
+
+## OLYMPUS-SENTINEL — STRIKE ENGINE (PHASE 5)
+
+The user's standing instruction (Apr 28 2026): *"Vector is the most important thing. The moment money flow direction flips from CONTRACTING to EXPANDING is THE strike window. Catch it. Make all scattered data collapse into one decisive view. €10,000 powder is staged. Tell me what to buy and when."*
+
+Phase 5 is the single decisive layer above prediction, valuation, risk and discovery. It does not replace any earlier gate; it consumes their outputs and emits **one number per ticker, one tranche plan for the powder, and one mandate sentence**.
+
+### Layers
+
+- **Strike Radar** (`tools/strike_radar.py`) — multi-horizon FRED velocity stack. Pulls 90 daily observations of WRESBAL / WTREGEN / RRPONTSYD; forward-fills weekly to daily; computes `v_3d, v_7d, v_14d, v_28d` and `accel = v_3d − v_14d`. Component decomposition over the last 7 days yields `reserves_share`, `tga_share`, `rrp_share` and a `dominant_driver`. Pivot quality: **A** = reserves-led real injection, **B** = RRP-drain mechanical, **C** = TGA spending transient. State machine (priority order): `STRIKE_WINDOW_OPEN` (net<1900, v_3d≥0, v_7d≥0) > `STRIKE_PIVOT_EARLY` (net<1900, v_3d≥0, v_7d<0) > `FROZEN_CONTRACTING` (net<1900, v_3d<0) > selective/deploy variants. Output: `data/strike_radar.json` with `strike_score 0-100`, `mandate`, full velocity stack and decomposition.
+- **Strike Cards** (`tools/strike_cards.py`) — per-ticker decisive composite. Single 0-100 score weighted: macro 25 · forecast 20 · valuation 15 · quality 15 · catalyst 10 · discovery 10 − risk_penalty (0..15). Hard zero on any killer block (sentinel, kernel, correlation, ops_extreme, pending_catalyst, tail_defcon1/2, liquidity_freeze) and on `verb ∈ {EXIT,TRIM}` / `ev ≤ 0` / `p_win < 0.4` / `ops ≥ 180`. CORE × 1.05 / UNCLASSIFIED × 0.92. Output: `data/strike_cards.json` with shortlist (top-8) and full card list including `score_breakdown`, `buy_zone {low/mid/high}`, `nearest_catalyst`, `one_liner`.
+- **Strike Plan** (`tools/strike_plan.py`) — €N three-tranche pyramid (40/35/25), gated by Strike Radar state.
+  - **T1 STRIKE** — CORE-only, max 2 picks, 50% per-pick cap. Status `RELEASE` on `STRIKE_PIVOT_EARLY`+; `ARMED` on `FROZEN_CONTRACTING` (orders pre-staged; release on first day v_3d ≥ 0).
+  - **T2 CONFIRM** — top 3 picks, max 1 satellite. Releases on v_7d ≥ 0 + reserves-led pivot quality A or B.
+  - **T3 FOLLOW-UP** — opportunistic; reserved for the post-pop -8/-12% retracement OR a hard catalyst.
+  - Single-pick cap: **50% of the tranche** (no all-in on one name).
+  - When state ∈ {`SELECTIVE_FADING`, `DEPLOY_TOPPING`}: all tranches `HOLD`. Don't deploy into weakness.
+  - Output: `data/strike_plan.json` with `mandate`, three tranches, picks (incl. €, buy zone, stop), `powder_used_eur` / `powder_remaining_eur`.
+- **Scenario Engine** (`tools/scenario_engine.py`) — probability-weighted macro hypothesis encoder. Three seed scenarios in `config/scenarios.json` (GOD-editable): `fed_pivot_2026` (p=0.55), `geopolitical_deescalation` (p=0.40), `scenario_fail_recession` (p=0.20). Each carries `liquidity_uplift_b`, per-sector `sector_uplift_pct`, and `confirmation_signals` checklist. Output: `data/macro_scenario.json` with probability-weighted EV. The Strike Radar mandate stays UNCONDITIONAL on FRED velocity (we do not bias the gate by predicted politics) — scenarios are surfaced for context only.
+
+### Dashboard
+
+`⚡ STRIKE CONSOLE` is the new top panel (replaces the prior "open by default" Phase-4 deploy panel; deploy panel collapses to supporting evidence). Three rows: (1) Strike Radar pill with state colour, mandate, full velocity stack and 7d decomposition; (2) three-tranche grid with picks, € amounts, buy zones, stops, gate status (`RELEASE` green / `ARMED` amber / `COCKED` grey / `HOLD` muted); (3) top-8 strike cards with score breakdown line and forecast / OPS / GOD / next-catalyst columns.
+
+### Operating doctrine
+
+- **Vector beats range.** The radar fires on the day v_3d crosses zero, not on the day net liq crosses 1900. This is the user's central insight encoded.
+- **Quality of pivot matters.** Reserves-led pivots are tradable; TGA-spending pivots are noise. Quality is shown next to dominant driver on the dashboard.
+- **Tranches, not all-in.** Even at maximum-asymmetry STRIKE_WINDOW_OPEN we deploy at most T1 + T2 (75% of staged powder), keeping T3 for the post-pop dip. Never spend the powder twice.
+- **Single-pick cap 50%.** Even the best strike card cannot consume more than half a tranche.
+- **Honest stand-down.** When the gate is closed, the mandate says HOLD with a reason — not "no candidates". Powder is only deployed against the gate, never against narrative.
 
 **Dashboard panels** (all sit between Eval Stack and Catalyst Radar):
 - `🚀 DEPLOY PLAN` (open by default) — top-3 picks with € allocations, next-in-queue, rejected, concrete mandate echoed into CORE DIGEST.

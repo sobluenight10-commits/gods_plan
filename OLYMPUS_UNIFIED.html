@@ -1390,11 +1390,201 @@ td.mx-eval.oly-tip::after {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 5 — STRIKE CONSOLE
+     The single decisive view. Three panels stacked:
+       (1) Strike Radar — liquidity state, vector velocity, pivot quality
+       (2) €10k Strike Plan — three tranches, gated by radar state
+       (3) Top Strike Cards — per-ticker decisive composite (0-100)
+     Everything else (deploy plan, discovery, behavioral) is below as
+     supporting evidence; this is the panel GOD acts on.
+     ═══════════════════════════════════════════════════════════════════ -->
+<section id="strike-console" style="padding:14px 40px;background:linear-gradient(180deg,#0e1a2c 0%,#08111e 100%);border-top:2px solid #5a8ec5;border-bottom:2px solid #5a8ec5;color:#e6efff;">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#7ec0ff;margin-bottom:10px;">
+    ⚡ STRIKE CONSOLE — vector pivot · €strike plan · top decisive cards
+    <span id="strike-meta" style="font-weight:500;color:#7a8fa8;font-size:10px;margin-left:10px;"></span>
+  </div>
+
+  <!-- Row 1: Strike Radar -->
+  <div id="strike-radar-card" style="background:#0a1424;border:1px solid #244a78;border-radius:8px;padding:12px 14px;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:11px;line-height:1.55;">
+    Loading strike radar…
+  </div>
+
+  <!-- Row 2: Strike Plan (3 tranches side by side) -->
+  <div id="strike-plan-card" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:10px;margin-bottom:10px;">
+    <div style="background:#0a1424;border:1px solid #244a78;border-radius:8px;padding:12px;font-family:'DM Mono',monospace;font-size:11px;color:#9fb3cc;">Loading strike plan…</div>
+  </div>
+
+  <!-- Row 3: Top Strike Cards -->
+  <div style="background:#0a1424;border:1px solid #244a78;border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:11px;">
+    <div style="font-weight:700;color:#7ec0ff;letter-spacing:0.12em;text-transform:uppercase;font-size:10px;margin-bottom:6px;">
+      Top Strike Cards — single 0-100 composite per name
+      <span style="font-weight:400;color:#7a8fa8;text-transform:none;letter-spacing:0;margin-left:8px;">
+        25% macro · 20% forecast · 15% valuation · 15% quality · 10% catalyst · 10% discovery − risk penalty
+      </span>
+    </div>
+    <div id="strike-cards-body" style="color:#c4dccd;">Loading strike cards…</div>
+  </div>
+
+  <div style="margin-top:8px;color:#5e7ca0;font-size:10px;">
+    Sources <code style="background:#0a1424;padding:1px 4px;">strike_radar.json</code> ·
+    <code style="background:#0a1424;padding:1px 4px;">strike_plan.json</code> ·
+    <code style="background:#0a1424;padding:1px 4px;">strike_cards.json</code> ·
+    <code style="background:#0a1424;padding:1px 4px;">macro_scenario.json</code>.
+    Strike Radar uses 3d/7d/14d/28d FRED velocity stack with reserves/RRP/TGA decomposition. Tranche gates: T1 fires on v_3d ≥ 0; T2 fires on v_7d ≥ 0 + reserves-led; T3 reserves the post-pop dip.
+  </div>
+</section>
+
+<script>
+(function(){
+  function fmtEur(x){ if (x == null) return "—"; return "€"+Math.round(x).toLocaleString(); }
+  function fmtPct(x){ if (x == null || isNaN(x)) return "—"; return (Math.round(x*10)/10).toFixed(1)+"%"; }
+  function pillColor(state){
+    return ({
+      "STRIKE_WINDOW_OPEN":"#6aeab3",
+      "STRIKE_PIVOT_EARLY":"#7ec0ff",
+      "DEPLOY_RIDING":"#6aeab3",
+      "SELECTIVE_TAILWIND":"#9fe0a8",
+      "SELECTIVE_FADING":"#efc56a",
+      "DEPLOY_TOPPING":"#efc56a",
+      "FROZEN_CONTRACTING":"#ff7a6f",
+      "UNKNOWN":"#9fb3cc"
+    })[state] || "#9fb3cc";
+  }
+  function pillBG(state){
+    var c = pillColor(state);
+    return "background:"+c+";color:#0a1424;padding:2px 8px;border-radius:10px;font-weight:800;font-size:10px;letter-spacing:0.12em;";
+  }
+  function trancheStatusColor(s){
+    return ({"RELEASE":"#6aeab3","ARMED":"#efc56a","COCKED":"#9fb3cc","HOLD":"#7a8fa8"})[s] || "#9fb3cc";
+  }
+
+  function renderRadar(r){
+    var el = document.getElementById("strike-radar-card");
+    if (!el) return;
+    if (!r || !r.generated_utc){ el.innerHTML = '<div style="color:#ff9a7a;">Strike radar unavailable.</div>'; return; }
+    var v = r.velocity_b_per_day || {};
+    var c = r.components_b_7d_delta || {};
+    var pivotTxt = (r.pivot && r.pivot.detected) ? ("pivot detected " + r.pivot.days_since_pivot + "d ago") : "no pivot in 30d";
+    var driverTxt = c.dominant_driver ? (c.dominant_driver + (c.quality?(" · quality "+c.quality):"")) : "—";
+    el.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">' +
+        '<div style="font-size:18px;font-weight:800;color:#7ec0ff;">' +
+          'Net Liq <span style="color:#e6efff;">$'+ (r.net_liq_b||"?")+'B</span>' +
+          ' · <span style="'+pillBG(r.state)+'">' + (r.state||"UNKNOWN") + '</span>' +
+          ' · <span style="color:#efc56a;">strike '+ r.strike_score +'</span>' +
+        '</div>' +
+        '<div style="color:#9fb3cc;font-size:10px;">as of ' + (r.as_of_date||"?") + ' · zone ' + (r.zone||"—") + '</div>' +
+      '</div>' +
+      '<div style="margin-top:8px;color:#c4dccd;font-size:11px;">' +
+        '<strong style="color:#6aeab3;">▶ ' + (r.mandate||"") + '</strong>' +
+      '</div>' +
+      '<div style="margin-top:8px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:6px;">' +
+        '<div>v_3d <strong>'+(v.v_3d!=null?v.v_3d:"?")+'</strong> $B/d</div>' +
+        '<div>v_7d <strong>'+(v.v_7d!=null?v.v_7d:"?")+'</strong> $B/d</div>' +
+        '<div>v_14d <strong>'+(v.v_14d!=null?v.v_14d:"?")+'</strong> $B/d</div>' +
+        '<div>v_28d <strong>'+(v.v_28d!=null?v.v_28d:"?")+'</strong> $B/d</div>' +
+        '<div>accel <strong>'+(v.accel_b_per_day2!=null?v.accel_b_per_day2:"?")+'</strong></div>' +
+        '<div>'+pivotTxt+'</div>' +
+      '</div>' +
+      '<div style="margin-top:8px;color:#9fb3cc;">' +
+        '7d Δ — Reserves <strong style="color:#7ec0ff;">$'+(c.reserves_b!=null?c.reserves_b:"?")+'B</strong>' +
+        ' · TGA <strong>$'+(c.tga_b!=null?c.tga_b:"?")+'B</strong>' +
+        ' · RRP <strong>$'+(c.rrp_b!=null?c.rrp_b:"?")+'B</strong>' +
+        ' · driver <strong style="color:#efc56a;">'+driverTxt+'</strong>' +
+      '</div>';
+  }
+
+  function renderPlan(p){
+    var holder = document.getElementById("strike-plan-card");
+    if (!holder) return;
+    if (!p || !p.generated_utc){ holder.innerHTML = '<div style="color:#ff9a7a;">Strike plan unavailable.</div>'; return; }
+    var headTotal = '<div style="grid-column:1/-1;font-family:\'DM Mono\',monospace;font-size:12px;color:#6aeab3;font-weight:700;background:#0a1424;border:1px solid #2a4a38;border-radius:6px;padding:8px 10px;">' +
+      '📍 ' + (p.mandate||"") +
+      '<span style="color:#9fb3cc;font-weight:400;margin-left:8px;font-size:10px;">' +
+        'powder ' + fmtEur(p.powder_total_eur) + ' · used ' + fmtEur(p.powder_used_eur) + ' · remaining ' + fmtEur(p.powder_remaining_eur) +
+        ' · macro ' + p.macro_state + ' (score ' + p.macro_score + ')' +
+      '</span></div>';
+
+    var cards = (p.tranches||[]).map(function(t){
+      var picks = (t.picks||[]).map(function(pk){
+        var bz = pk.buy_zone || {};
+        return '<li style="margin-bottom:6px;border-left:2px solid '+trancheStatusColor(t.status)+';padding-left:6px;">' +
+          '<strong style="color:#e6efff;">'+pk.ticker+'</strong> ('+(pk.group||"?")+') ' +
+          '<strong style="color:#6aeab3;">'+fmtEur(pk.eur)+'</strong>' +
+          ' · score '+(pk.strike_score!=null?pk.strike_score:"?") +
+          (pk.ev_pct!=null ? (' · EV '+fmtPct(pk.ev_pct)+' / ES5 '+fmtPct(pk.es5_pct)) : "") +
+          (pk.ops!=null ? (' · OPS '+Math.round(pk.ops)) : "") +
+          (bz.mid != null ? ('<br><span style="color:#9fb3cc;font-size:10px;">buy zone $'+bz.low+' / $'+bz.mid+' / $'+bz.high+(pk.stop_price?(' · stop $'+pk.stop_price):"")+'</span>') : "") +
+        '</li>';
+      }).join("");
+      var holdReason = picks ? "" : '<div style="color:#7a8fa8;font-size:10px;">No picks — gate not released.</div>';
+      return '<div style="background:#0a1424;border:1px solid '+trancheStatusColor(t.status)+';border-radius:8px;padding:10px;font-family:\'DM Mono\',monospace;font-size:11px;color:#c4dccd;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">' +
+          '<strong style="color:'+trancheStatusColor(t.status)+';font-size:12px;letter-spacing:0.12em;">'+t.id+' · '+t.label+'</strong>' +
+          '<span style="background:'+trancheStatusColor(t.status)+';color:#0a1424;padding:1px 6px;border-radius:8px;font-size:9px;font-weight:800;letter-spacing:0.1em;">'+t.status+'</span>' +
+        '</div>' +
+        '<div style="color:#7ec0ff;font-weight:700;font-size:13px;">'+fmtEur(t.eur)+' <span style="color:#9fb3cc;font-weight:400;font-size:10px;">released '+fmtEur(t.eur_released)+'</span></div>' +
+        '<div style="color:#9fb3cc;font-size:10px;margin:4px 0 6px;">'+t.gate_condition+'</div>' +
+        '<div style="color:#efc56a;font-size:10px;margin-bottom:6px;font-style:italic;">'+t.trigger_text+'</div>' +
+        (picks ? '<ul style="margin:0;padding-left:14px;list-style:none;">'+picks+'</ul>' : holdReason) +
+      '</div>';
+    }).join("");
+    holder.innerHTML = headTotal + cards;
+  }
+
+  function renderCards(doc){
+    var body = document.getElementById("strike-cards-body");
+    if (!body) return;
+    if (!doc || !doc.shortlist){ body.innerHTML = '<div style="color:#ff9a7a;">Strike cards unavailable.</div>'; return; }
+    var rows = (doc.shortlist||[]).slice(0,8).map(function(c, i){
+      var grpColor = c.group === "CORE" ? "#6aeab3" : (c.group === "SATELLITE" ? "#efc56a" : "#9fb3cc");
+      var bd = c.score_breakdown || {};
+      return '<tr style="border-top:1px solid #244a78;">' +
+        '<td style="padding:5px 6px;color:#7ec0ff;font-weight:700;">'+(i+1)+'</td>' +
+        '<td style="padding:5px 6px;"><strong style="color:#e6efff;">'+c.ticker+'</strong> · <span style="color:'+grpColor+';font-weight:700;">'+(c.group||"?")+'</span> · <span style="color:#9fb3cc;font-size:10px;">'+(c.sector||"?")+'</span></td>' +
+        '<td style="padding:5px 6px;text-align:right;color:#efc56a;font-weight:800;font-size:13px;">'+(c.strike_score!=null?c.strike_score:"?")+'</td>' +
+        '<td style="padding:5px 6px;text-align:right;color:#9fb3cc;font-size:10px;">M '+(bd.macro||0)+' · F '+(bd.forecast||0)+' · V '+(bd.valuation||0)+' · Q '+(bd.quality||0)+' · C '+(bd.catalyst||0)+' · D '+(bd.discovery||0)+(bd.risk_penalty?(' · R '+bd.risk_penalty):"")+'</td>' +
+        '<td style="padding:5px 6px;text-align:right;color:#c4dccd;">EV '+fmtPct(c.ev_pct)+' / ES5 '+fmtPct(c.es5_pct)+'</td>' +
+        '<td style="padding:5px 6px;text-align:right;color:#9fb3cc;">OPS '+(c.ops!=null?Math.round(c.ops):"—")+' · GOD '+(c.god_score!=null?Math.round(c.god_score):"—")+'</td>' +
+        '<td style="padding:5px 6px;color:#9fb3cc;font-size:10px;">'+(c.nearest_catalyst?(c.nearest_catalyst.substring(0,10)):"—")+'</td>' +
+      '</tr>';
+    }).join("");
+    body.innerHTML =
+      '<div style="color:#9fb3cc;font-size:10px;margin-bottom:4px;">macro state <strong style="color:'+pillColor(doc.macro_state)+';">'+doc.macro_state+'</strong> (score '+doc.macro_score+') · ' +
+      doc.n_eligible+'/'+doc.n_total+' eligible</div>' +
+      '<table style="width:100%;border-collapse:collapse;">' +
+        '<thead><tr style="color:#7ec0ff;text-align:left;font-size:10px;letter-spacing:0.06em;">' +
+          '<th style="padding:4px 6px;">#</th>' +
+          '<th style="padding:4px 6px;">Ticker · group · sector</th>' +
+          '<th style="padding:4px 6px;text-align:right;">Score</th>' +
+          '<th style="padding:4px 6px;text-align:right;">Breakdown</th>' +
+          '<th style="padding:4px 6px;text-align:right;">Forecast</th>' +
+          '<th style="padding:4px 6px;text-align:right;">Val/Quality</th>' +
+          '<th style="padding:4px 6px;">Next catalyst</th>' +
+        '</tr></thead><tbody>'+rows+'</tbody></table>';
+  }
+
+  function load(){
+    var t = Date.now();
+    var meta = document.getElementById("strike-meta");
+    fetch("/strike_radar.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(renderRadar).catch(function(){ renderRadar(null); });
+    fetch("/strike_plan.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(renderPlan).catch(function(){ renderPlan(null); });
+    fetch("/strike_cards.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(function(d){
+      renderCards(d);
+      if (d && d.generated_utc && meta){ meta.textContent = "generated " + d.generated_utc; }
+    }).catch(function(){ renderCards(null); });
+  }
+  document.addEventListener("DOMContentLoaded", load);
+  setInterval(load, 180000);
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
      PHASE 4A — DEPLOY PLAN  (where does €1,500 go this month?)
      Top of Phase 4 stack because this is the only panel that
      produces an actionable number you can type into the broker.
      ═══════════════════════════════════════════════════════════════════ -->
-<details id="deploy-panel" open style="padding:12px 40px;background:linear-gradient(180deg,#10201a 0%,#0b1812 100%);border-top:1px solid #2a4a38;color:#d6e1f0;">
+<details id="deploy-panel" style="padding:12px 40px;background:linear-gradient(180deg,#10201a 0%,#0b1812 100%);border-top:1px solid #2a4a38;color:#d6e1f0;">
   <summary style="cursor:pointer;font-family:'Syne',sans-serif;font-weight:800;font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#6aeab3;">
     🚀 DEPLOY PLAN — €monthly contribution, marginal-Sharpe optimal
     <span id="deploy-meta" style="font-weight:500;color:#7a8fa8;font-size:10px;margin-left:10px;"></span>
