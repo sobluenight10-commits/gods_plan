@@ -84,13 +84,24 @@ STATE = os.path.join(BASE, "state.json")
 OUT = os.path.join(BASE, "data", "strike_cards.json")
 WEBROOT_OUT = "/var/www/html/strike_cards.json"
 
+# Killer blocks that veto a card unconditionally.
 KILLER_BLOCKS = {
     "sentinel_freeze", "sentinel_veto", "kernel_freeze",
     "correlation_veto", "ops_extreme", "pending_catalyst",
     "tail_defcon1", "tail_defcon2",
+}
+
+# Liquidity-related blocks: respected by default but DOWNGRADED to a soft
+# penalty (no hard zero) when Strike Radar reports a pivot state. Strike
+# Radar v2 is the modern vector+decomposition gate; liquidity_freeze is the
+# legacy zone-only v1 gate. When the radar detects a true pivot, the legacy
+# gate yields.
+LIQUIDITY_BLOCKS = {
     "liquidity_freeze", "liquidity_danger_freeze",
     "liquidity_contracting_freeze", "vector_freeze",
 }
+
+PIVOT_STATES = {"STRIKE_PIVOT_EARLY", "STRIKE_WINDOW_OPEN"}
 
 # Map from secular_trends sector keys to active_actions sector strings.
 SECTOR_TO_THEME = {
@@ -259,13 +270,22 @@ def _discovery_score(ticker: str, sector: Optional[str],
     return max(0, min(100, score))
 
 
-def _risk_penalty(action: Dict[str, Any]) -> int:
-    """Subtractive 0..15 — bigger penalty = worse."""
+def _risk_penalty(action: Dict[str, Any], pivot_active: bool = False) -> int:
+    """Subtractive 0..15 — bigger penalty = worse.
+
+    pivot_active = Strike Radar state ∈ PIVOT_STATES. When true, liquidity
+    blocks become a -3 penalty rather than triggering a hard veto upstream.
+    """
     penalty = 0
     blocks = action.get("blocks") or []
     vetoes = action.get("vetoes") or []
-    if any(b in KILLER_BLOCKS for b in list(blocks) + list(vetoes)):
+    seen = list(blocks) + list(vetoes)
+    if any(b in KILLER_BLOCKS for b in seen):
         return 100  # hard zero handled separately
+    if any(b in LIQUIDITY_BLOCKS for b in seen):
+        penalty += 0 if pivot_active else 100
+        if pivot_active:
+            penalty += 3
     pc1 = action.get("correlation_pc1_share")
     if pc1 is not None and float(pc1) >= 0.6:
         penalty += 5
@@ -273,7 +293,7 @@ def _risk_penalty(action: Dict[str, Any]) -> int:
         d = float(action["stop_distance_pct"])
         if d > 25:
             penalty += 5
-    return min(15, penalty)
+    return min(15, penalty) if penalty < 100 else 100
 
 
 def _buy_zone(action: Dict[str, Any], fc_row: Dict[str, Any]) -> Optional[Dict[str, float]]:
@@ -294,11 +314,14 @@ def _buy_zone(action: Dict[str, Any], fc_row: Dict[str, Any]) -> Optional[Dict[s
     }
 
 
-def _is_eligible(action: Dict[str, Any]) -> Tuple[bool, str]:
+def _is_eligible(action: Dict[str, Any], pivot_active: bool = False) -> Tuple[bool, str]:
     blocks = action.get("blocks") or []
     vetoes = action.get("vetoes") or []
-    if any(b in KILLER_BLOCKS for b in list(blocks) + list(vetoes)):
+    seen = list(blocks) + list(vetoes)
+    if any(b in KILLER_BLOCKS for b in seen):
         return False, "killer_block"
+    if any(b in LIQUIDITY_BLOCKS for b in seen) and not pivot_active:
+        return False, "liquidity_freeze"
     verb = (action.get("verb") or "").upper()
     if verb in ("EXIT", "TRIM"):
         return False, f"verb={verb}"
@@ -330,10 +353,11 @@ def run() -> Dict[str, Any]:
     sat_set = set(cs.get("satellite_tickers") or [])
 
     macro_score, macro_state = _macro_score(radar)
+    pivot_active = macro_state in PIVOT_STATES
 
     cards: List[Dict[str, Any]] = []
     for tk, action in actions.items():
-        eligible, reason = _is_eligible(action)
+        eligible, reason = _is_eligible(action, pivot_active=pivot_active)
         sector = action.get("sector") or (god_scores.get(tk) or {}).get("sector")
         group = (action.get("group")
                  or ("CORE" if tk in core_set else
@@ -363,7 +387,7 @@ def run() -> Dict[str, Any]:
         quality = _quality_score(action, god)
         cat_score, nearest_cat = _catalyst_score(catalysts, tk)
         discovery = _discovery_score(tk, sector, insider, patents, secular)
-        risk_pen = _risk_penalty(action)
+        risk_pen = _risk_penalty(action, pivot_active=pivot_active)
 
         # Weighted composite
         composite = (
@@ -433,6 +457,7 @@ def run() -> Dict[str, Any]:
         "generated_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "macro_state": macro_state,
         "macro_score": macro_score,
+        "pivot_active": pivot_active,
         "weights": {
             "macro": 25, "forecast": 20, "valuation": 15, "quality": 15,
             "catalyst": 10, "discovery": 10, "risk_penalty_max": 15,
