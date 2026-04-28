@@ -297,20 +297,61 @@ def _risk_penalty(action: Dict[str, Any], pivot_active: bool = False) -> int:
 
 
 def _buy_zone(action: Dict[str, Any], fc_row: Dict[str, Any]) -> Optional[Dict[str, float]]:
-    """Use forecasts.p05 / p50 / p95 (price space) when available."""
-    ens = (fc_row or {}).get("ensemble") or {}
-    p05 = ens.get("p05_1y_price") or ens.get("p05")
-    p50 = ens.get("p50_1y_price") or ens.get("p50")
-    px = action.get("limit_price") or action.get("current_price") or action.get("entry_price")
-    if px is None and p50 is not None:
-        px = p50
-    if px is None:
+    """Buy zone in PRICE space.
+
+    Priority:
+        1. action.limit_price (an explicit user-set limit) — most reliable.
+        2. forecasts.ensemble.p50_1y_price — if the forecaster emits absolute
+           prices (some pipelines do, others emit returns; we ignore returns).
+        3. Reverse-engineer from stop_price assuming the stop is set 15-25%
+           below the current price (typical ATR×2 calibration). We derive a
+           rough "current ≈ stop / 0.82".
+        4. None — refuse to fabricate a zone.
+
+    Output is always {low (-8%), mid (-3%), high (+2%)} around the anchor.
+    """
+    anchor: Optional[float] = None
+    lp = action.get("limit_price")
+    if lp is not None:
+        try:
+            v = float(lp)
+            if v > 0:
+                anchor = v
+        except (TypeError, ValueError):
+            pass
+
+    if anchor is None:
+        ens = (fc_row or {}).get("ensemble") or {}
+        for key in ("p50_1y_price", "p50_price", "p50_abs"):
+            v = ens.get(key)
+            if v is not None:
+                try:
+                    fv = float(v)
+                    if fv > 1.0:
+                        anchor = fv
+                        break
+                except (TypeError, ValueError):
+                    continue
+
+    if anchor is None:
+        sp = action.get("stop_price")
+        if sp is not None:
+            try:
+                fv = float(sp)
+                if fv > 0:
+                    anchor = fv / 0.82  # implied current = stop / 0.82
+            except (TypeError, ValueError):
+                pass
+
+    if anchor is None:
         return None
-    px = float(px)
     return {
-        "low": round(px * 0.92, 2),   # -8% (scale-in zone)
-        "mid": round(px * 0.97, 2),   # -3%
-        "high": round(px * 1.02, 2),  # market
+        "low": round(anchor * 0.92, 2),   # scale-in
+        "mid": round(anchor * 0.97, 2),   # base
+        "high": round(anchor * 1.02, 2),  # market
+        "anchor_source": ("limit_price" if action.get("limit_price")
+                           else ("forecast_p50_price" if anchor > 1.0 and not action.get("stop_price")
+                                  else "implied_from_stop")),
     }
 
 
