@@ -110,11 +110,15 @@ def _gate_text(state: str, status: str, tranche: str) -> str:
 def _select_picks(cards: List[Dict[str, Any]],
                    max_picks: int,
                    require_core: bool = False,
-                   max_satellite: Optional[int] = None) -> List[Dict[str, Any]]:
+                   max_satellite: Optional[int] = None,
+                   exclude: Optional[set] = None) -> List[Dict[str, Any]]:
     out: List[Dict[str, Any]] = []
     sat_count = 0
+    excl = exclude or set()
     for c in cards:
         if (c.get("strike_score") or 0) <= 0:
+            continue
+        if c.get("ticker") in excl:
             continue
         grp = c.get("group") or "UNCLASSIFIED"
         if require_core and grp != "CORE":
@@ -198,12 +202,17 @@ def run(powder_eur: Optional[float] = None) -> Dict[str, Any]:
         # Fallback: top 1 of any group, but flag as override.
         t1_picks_cards = _select_picks(shortlist, max_picks=1)
     t1_alloc = _allocate(t1_picks_cards, t1_eur) if gates["T1"] in ("RELEASE", "ARMED") else []
+    t1_set = {c["ticker"] for c in t1_picks_cards}
 
-    # Tranche 2 — top 3 names, max 1 satellite.
-    t2_picks_cards = _select_picks(shortlist, max_picks=3, max_satellite=1)
+    # Tranche 2 — diversifies into NEW names not taken by T1.
+    # Doubling-down on T1 picks is reserved for the post-pop dip in T3.
+    t2_picks_cards = _select_picks(shortlist, max_picks=3, max_satellite=2,
+                                    exclude=t1_set)
     t2_alloc = _allocate(t2_picks_cards, t2_eur) if gates["T2"] in ("RELEASE", "ARMED") else []
+    t2_set = {c["ticker"] for c in t2_picks_cards}
 
-    # Tranche 3 — top 2 names, opportunistic; only sized if state warrants.
+    # Tranche 3 — opportunistic. Allowed to add to T1/T2 names IF a real dip
+    # appears (-8/-12% retracement) — this is where we double-down.
     t3_picks_cards = _select_picks(shortlist, max_picks=2)
     t3_alloc = _allocate(t3_picks_cards, t3_eur) if gates["T3"] in ("RELEASE", "ARMED") else []
 
