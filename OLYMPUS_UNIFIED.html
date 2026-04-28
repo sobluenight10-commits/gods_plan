@@ -1423,6 +1423,22 @@ td.mx-eval.oly-tip::after {
       </span>
     </div>
     <div id="strike-cards-body" style="color:#c4dccd;">Loading strike cards…</div>
+    <details style="margin-top:8px;color:#9fb3cc;font-size:10px;">
+      <summary style="cursor:pointer;color:#7ec0ff;">Strike Score vs GEM Grade — why they tell different stories</summary>
+      <div style="padding:6px 0 0;line-height:1.55;">
+        <strong style="color:#e6efff;">GEM Grade</strong> (the bottom table on the page) measures <em>only</em> the shape of the projected return distribution — Heston Monte Carlo EV vs ES5 vs 9-dimension fundamental risk. It answers: <em>"if I held this for 1y/5y, how good is the math?"</em>
+        <br>
+        <strong style="color:#e6efff;">Strike Score</strong> (this panel) is a deployment-context composite: it takes that same GEM forecast (20% weight) and combines it with macro fit (25%), peer-relative valuation/OPS (15%), conviction/GOD score (15%), nearest catalyst (10%) and discovery edge (10%), then subtracts risk penalties. It answers: <em>"of the names I could buy with my powder TODAY, which is most asymmetric right now?"</em>
+        <br><br>
+        Common reasons they diverge:
+        <ul style="margin:4px 0 0 18px;padding:0;">
+          <li><strong style="color:#efc56a;">High GEM, low Strike</strong> — great math but expensive (OPS ≥ 150) or in a freeze regime. Example: PLTR (A grade but OPS ~300 → premium decoupled).</li>
+          <li><strong style="color:#7ec0ff;">Low GEM, high Strike</strong> — modest math but cheap, near catalyst, fits current macro pivot. Example: a CORE name with B grade but OPS &lt; 50 in a STRIKE_PIVOT_EARLY state.</li>
+          <li><strong style="color:#9fe0a8;">Both high</strong> — converged signal. These are the deploy candidates (000660.KS, TSM today).</li>
+        </ul>
+        <strong style="color:#e6efff;">Use both:</strong> GEM Grade for the long-hold decision, Strike Score for the deployment decision. They are complementary — not contradictory.
+      </div>
+    </details>
   </div>
 
   <div style="margin-top:8px;color:#5e7ca0;font-size:10px;">
@@ -1532,6 +1548,26 @@ td.mx-eval.oly-tip::after {
     holder.innerHTML = headTotal + cards;
   }
 
+  function opsBadge(ops){
+    if (ops == null || isNaN(ops)) return '<span style="color:#9a9a9a;">—</span>';
+    var v = Number(ops);
+    var c;
+    if (v >= 180)      c = "#ff7a6f";
+    else if (v >= 150) c = "#efc56a";
+    else if (v >= 100) c = "#efc56a";
+    else if (v >= 80)  c = "#7ec0ff";
+    else               c = "#6aeab3";
+    var suffix = v >= 180 ? " ⛔" : "";
+    return '<strong style="color:'+c+';">'+Math.round(v)+suffix+'</strong>';
+  }
+  function gemGradeBadge(tk){
+    var d = (typeof GEM_DATA !== "undefined" && GEM_DATA[tk]) ? GEM_DATA[tk] : null;
+    if (!d) return '<span style="color:#9a9a9a;">—</span>';
+    var g = d.pgrade || d.grade;
+    if (!g) return '<span style="color:#9a9a9a;">—</span>';
+    var color = ({S:"#FFD700","A+":"#6aeab3",A:"#6aeab3","B+":"#7ec0ff",B:"#7ec0ff","C+":"#efc56a",C:"#efc56a",D:"#ff7a6f",F:"#ff7a6f"})[g] || "#9fb3cc";
+    return '<strong style="color:'+color+';" title="GEM v5 letter grade · score '+(d.gem_score!=null?d.gem_score.toFixed(1):"?")+'">'+g+'</strong>';
+  }
   function renderCards(doc){
     var body = document.getElementById("strike-cards-body");
     if (!body) return;
@@ -1542,10 +1578,12 @@ td.mx-eval.oly-tip::after {
       return '<tr style="border-top:1px solid #244a78;">' +
         '<td style="padding:5px 6px;color:#7ec0ff;font-weight:700;">'+(i+1)+'</td>' +
         '<td style="padding:5px 6px;"><strong style="color:#e6efff;">'+c.ticker+'</strong> · <span style="color:'+grpColor+';font-weight:700;">'+(c.group||"?")+'</span> · <span style="color:#9fb3cc;font-size:10px;">'+(c.sector||"?")+'</span></td>' +
-        '<td style="padding:5px 6px;text-align:right;color:#efc56a;font-weight:800;font-size:13px;">'+(c.strike_score!=null?c.strike_score:"?")+'</td>' +
+        '<td style="padding:5px 6px;text-align:right;color:#efc56a;font-weight:800;font-size:13px;" title="Strike Score: deployment-context composite (macro+forecast+valuation+quality+catalyst+discovery − risk).">'+(c.strike_score!=null?c.strike_score:"?")+'</td>' +
+        '<td style="padding:5px 6px;text-align:center;font-size:13px;" title="GEM v5 letter grade — long-hold math (Heston EV vs ES5 vs 9-dim risk). Different lens from Strike Score.">'+gemGradeBadge(c.ticker)+'</td>' +
+        '<td style="padding:5px 6px;text-align:right;font-size:13px;" title="OPS — peer-relative valuation. ≥180 = premium decoupled, BUY auto-degrades to WATCH.">'+opsBadge(c.ops)+'</td>' +
         '<td style="padding:5px 6px;text-align:right;color:#9fb3cc;font-size:10px;">M '+(bd.macro||0)+' · F '+(bd.forecast||0)+' · V '+(bd.valuation||0)+' · Q '+(bd.quality||0)+' · C '+(bd.catalyst||0)+' · D '+(bd.discovery||0)+(bd.risk_penalty?(' · R '+bd.risk_penalty):"")+'</td>' +
         '<td style="padding:5px 6px;text-align:right;color:#c4dccd;">EV '+fmtPct(c.ev_pct)+' / ES5 '+fmtPct(c.es5_pct)+'</td>' +
-        '<td style="padding:5px 6px;text-align:right;color:#9fb3cc;">OPS '+(c.ops!=null?Math.round(c.ops):"—")+' · GOD '+(c.god_score!=null?Math.round(c.god_score):"—")+'</td>' +
+        '<td style="padding:5px 6px;text-align:right;color:#9fb3cc;">GOD '+(c.god_score!=null?Math.round(c.god_score):"—")+'</td>' +
         '<td style="padding:5px 6px;color:#9fb3cc;font-size:10px;">'+(c.nearest_catalyst?(c.nearest_catalyst.substring(0,10)):"—")+'</td>' +
       '</tr>';
     }).join("");
@@ -1556,10 +1594,12 @@ td.mx-eval.oly-tip::after {
         '<thead><tr style="color:#7ec0ff;text-align:left;font-size:10px;letter-spacing:0.06em;">' +
           '<th style="padding:4px 6px;">#</th>' +
           '<th style="padding:4px 6px;">Ticker · group · sector</th>' +
-          '<th style="padding:4px 6px;text-align:right;">Score</th>' +
+          '<th style="padding:4px 6px;text-align:right;">Strike</th>' +
+          '<th style="padding:4px 6px;text-align:center;">GEM</th>' +
+          '<th style="padding:4px 6px;text-align:right;">OPS</th>' +
           '<th style="padding:4px 6px;text-align:right;">Breakdown</th>' +
           '<th style="padding:4px 6px;text-align:right;">Forecast</th>' +
-          '<th style="padding:4px 6px;text-align:right;">Val/Quality</th>' +
+          '<th style="padding:4px 6px;text-align:right;">GOD</th>' +
           '<th style="padding:4px 6px;">Next catalyst</th>' +
         '</tr></thead><tbody>'+rows+'</tbody></table>';
   }
@@ -2089,11 +2129,12 @@ td.mx-eval.oly-tip::after {
         </span>
       </th>
       <th style="text-align:right;">GEM</th>
+      <th style="text-align:right;" title="OLYMPUS Premium Score — peer-relative valuation. (Stock P/S ÷ Sector median P/S) × 50 + (Stock fwd P/E ÷ Sector median fwd P/E) × 50. ≤80 cheap · 80–100 fair · 100–150 expensive · 150–180 stretched · ≥180 hard zero (BUY → WATCH).">OPS</th>
       <th style="text-align:right;">1Y EV%</th>
       <th style="text-align:right;">5Y EV%</th>
       <th style="text-align:left;max-width:240px;" title="Rule-based guidance from grade + risk + 1Y EV — not personalized advice.">SO WHAT</th>
     </tr></thead>
-    <tbody id="grade-summary-body"><tr><td colspan="7" style="padding:12px;color:#666;font-size:13px;">Loading…</td></tr></tbody>
+    <tbody id="grade-summary-body"><tr><td colspan="8" style="padding:12px;color:#666;font-size:13px;">Loading…</td></tr></tbody>
   </table>
 </div>
 
@@ -5021,7 +5062,7 @@ function populateGradeSummary() {
       if (typeof syncEvalWithGem === 'function') syncEvalWithGem();
     } catch (err) {
       console.error('populateGradeSummary', err);
-      body.innerHTML = '<tr><td colspan="7" style="padding:10px;color:#a32d2d;font-size:13px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="8" style="padding:10px;color:#a32d2d;font-size:13px">Grade summary error: ' + String(err && err.message ? err.message : err) + '</td></tr>';
     }
   });
 }
@@ -5095,11 +5136,32 @@ function _renderGradeSummaryTable(body, riskMap) {
       '">' +
       sowLine +
       "</a>";
+    var opsBadge = (function(){
+      var od = window.__OPS_DATA && window.__OPS_DATA[r.ticker];
+      var ops = od && (od.ops != null ? od.ops : (od.score != null ? od.score : null));
+      if (ops == null || isNaN(ops)) return '<td style="text-align:right;padding:8px 10px;font-size:12px;color:#9a9a9a">—</td>';
+      var v = Number(ops);
+      var bgC, fgC, suffix = '';
+      if (v >= 180)      { bgC = '#A32D2D'; fgC = '#fff'; suffix = ' ⛔'; }
+      else if (v >= 150) { bgC = '#FCEBEB'; fgC = '#A32D2D'; }
+      else if (v >= 120) { bgC = '#FAEEDA'; fgC = '#854F0B'; }
+      else if (v >= 100) { bgC = '#FFF8E1'; fgC = '#8B6914'; }
+      else if (v >= 80)  { bgC = '#E6F1FB'; fgC = '#185FA5'; }
+      else               { bgC = '#EAF3DE'; fgC = '#3B6D11'; }
+      var titleTxt = 'OPS ' + v.toFixed(0) +
+                     (v >= 180 ? ' — extreme premium · BUY auto-degrades to WATCH'
+                      : v >= 150 ? ' — stretched valuation, premium decoupled'
+                      : v >= 100 ? ' — expensive vs peers'
+                      : v >= 80  ? ' — fair vs peers'
+                                 : ' — cheap vs peers');
+      return '<td style="text-align:right;padding:8px 10px;font-size:12px;font-weight:700;background:' + bgC + ';color:' + fgC + ';border-radius:4px;line-height:1.4" title="' + titleTxt + '">' + v.toFixed(0) + suffix + '</td>';
+    })();
     html += '<tr style="background:' + bg + '">' +
       '<td style="padding:8px 10px;font-weight:700;font-size:13px;color:#14120e">' + r.ticker + nameHtml + '</td>' +
       '<td style="text-align:center;padding:8px 10px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px">' + serverPG + '</span></td>' +
       '<td style="text-align:center;padding:8px 6px">' + riskBadge + '</td>' +
       '<td style="text-align:right;padding:8px 10px;font-size:13px;font-weight:600;color:#1a1a1a">' + r.gem.toFixed(1) + '</td>' +
+      opsBadge +
       '<td style="text-align:right;padding:8px 10px;font-size:13px;font-weight:600;color:' + evColor(r.u1y) + '">' + evFmt(r.u1y) + '</td>' +
       '<td style="text-align:right;padding:8px 10px;font-size:13px;font-weight:600;color:' + evColor(r.u5y) + '">' + evFmt(r.u5y) + '</td>' +
       '<td class="gem-sowhat-cell" style="padding:8px 10px">' + sowAnchor + '</td>' +

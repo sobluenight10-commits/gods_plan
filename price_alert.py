@@ -943,12 +943,55 @@ def _save_sec_cache(cache: dict):
         json.dump(cache, f, indent=2)
 
 
+def _build_cik_to_ticker_map(tickers):
+    """Build a CIK→ticker reverse map for SEC 8-K matching.
+
+    The previous implementation matched by substring ('PL' in 'PEOPLES FINANCIAL'
+    triggered a false positive). The 8-K atom title carries the CIK in
+    parentheses, e.g. '8-K - PEOPLES FINANCIAL CORP /MS/ (0000770460) (Filer)'.
+    Matching by 10-digit CIK eliminates the substring problem completely.
+
+    Source of truth: tools.insider_flow.DEFAULT_CIK_MAP (+ user override at
+    gem_inputs/cik_map.json). Only tickers present in our cik map can fire
+    SEC 8-K alerts; this is an explicit allow-list and is exactly what we want.
+    """
+    cik_to_ticker = {}
+    try:
+        from tools.insider_flow import DEFAULT_CIK_MAP, _load_cik_map  # type: ignore
+        cik_map = _load_cik_map()
+    except Exception:
+        cik_map = {}
+        try:
+            from tools.insider_flow import DEFAULT_CIK_MAP  # type: ignore
+            cik_map = dict(DEFAULT_CIK_MAP)
+        except Exception:
+            return {}
+    monitored = set(t.upper() for t in tickers)
+    for tk, cik in (cik_map or {}).items():
+        if not cik:
+            continue
+        if monitored and tk.upper() not in monitored:
+            continue
+        try:
+            cik_pad = str(cik).zfill(10)
+        except Exception:
+            continue
+        cik_to_ticker[cik_pad] = tk.upper()
+    return cik_to_ticker
+
+
 def check_sec_filings():
-    """Fetch SEC EDGAR 8-K feed every 10 min; alert if a THESIS_ALERT_TICKER filed."""
+    """Fetch SEC EDGAR 8-K feed every 10 min; alert by CIK match (not substring)."""
     import config
+    import re as _re
 
     tickers = [t.upper() for t in (getattr(config, "THESIS_ALERT_TICKERS", None) or [])]
     if not tickers:
+        return
+
+    cik_to_ticker = _build_cik_to_ticker_map(tickers)
+    if not cik_to_ticker:
+        logger.warning("SEC 8-K: no CIK map available, skipping (avoids substring false positives)")
         return
 
     try:
@@ -974,6 +1017,8 @@ def check_sec_filings():
         logger.warning(f"SEC feed parse error: {exc}")
         return
 
+    cik_pattern = _re.compile(r"\((\d{6,10})\)")
+
     for entry in root.findall("atom:entry", ns):
         entry_id = (entry.findtext("atom:id", default="", namespaces=ns) or "").strip()
         title    = (entry.findtext("atom:title", default="", namespaces=ns) or "").strip()
@@ -984,27 +1029,38 @@ def check_sec_filings():
         if not entry_id or entry_id in seen:
             continue
 
-        title_upper = title.upper()
-        matched = [t for t in tickers if t in title_upper]
-        if not matched:
+        # Extract CIK from title; pad to 10; match against allow-list
+        ticker = None
+        for m in cik_pattern.finditer(title):
+            cik_pad = m.group(1).zfill(10)
+            if cik_pad in cik_to_ticker:
+                ticker = cik_to_ticker[cik_pad]
+                break
+        if ticker is None:
+            # Fallback: try the entry id (occasionally contains the CIK too)
+            for m in cik_pattern.finditer(entry_id):
+                cik_pad = m.group(1).zfill(10)
+                if cik_pad in cik_to_ticker:
+                    ticker = cik_to_ticker[cik_pad]
+                    break
+        if ticker is None:
             continue
 
         seen.append(entry_id)
-        for ticker in matched:
-            crit_reason = f"sec_8k:{entry_id}:{title[:200]}"
-            if _should_skip_critical_dedup(ticker, crit_reason):
-                continue
-            msg = (
-                f"📋 <b>SEC 8-K FILING — {ticker}</b>\n"
-                f"📄 {title}\n"
-                f"🕐 {updated}\n"
-                f"━━━━━━━━━━━━━━━━━━━\n"
-                f'<a href="{link}">View filing on EDGAR</a>\n\n'
-                f"<b>Review immediately — 8-Ks often move price.</b>"
-            )
-            _send_alert(msg)
-            _record_critical_dedup(ticker, crit_reason)
-            alerts_sent.append(f"SEC 8-K {ticker}")
+        crit_reason = f"sec_8k:{entry_id}:{title[:200]}"
+        if _should_skip_critical_dedup(ticker, crit_reason):
+            continue
+        msg = (
+            f"📋 <b>SEC 8-K FILING — {ticker}</b>\n"
+            f"📄 {title}\n"
+            f"🕐 {updated}\n"
+            f"━━━━━━━━━━━━━━━━━━━\n"
+            f'<a href="{link}">View filing on EDGAR</a>\n\n'
+            f"<b>Review immediately — 8-Ks often move price.</b>"
+        )
+        _send_alert(msg)
+        _record_critical_dedup(ticker, crit_reason)
+        alerts_sent.append(f"SEC 8-K {ticker}")
 
     cache["seen"] = seen[-500:]
     _save_sec_cache(cache)
