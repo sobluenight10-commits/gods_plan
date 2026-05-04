@@ -5,6 +5,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>OLYMPUS — TITAN INVESTMENT SYSTEM</title>
+<script>
+/* Root-relative JSON (/strike_cards.json) only works on Minerva. On GitHub
+   Pages or file:// the fetch 404s — re-point live data to the production host. */
+(function(){
+  try {
+    var h = (location.hostname || "").toLowerCase();
+    var onMinerva = (h === "5.189.176.185");
+    if (!onMinerva && (h.indexOf("github.io") >= 0 || h === "")) {
+      window.OLYMPUS_LIVE_ORIGIN = "http://5.189.176.185";
+    } else {
+      window.OLYMPUS_LIVE_ORIGIN = "";
+    }
+  } catch (e) {
+    window.OLYMPUS_LIVE_ORIGIN = "http://5.189.176.185";
+  }
+  window.OLYMPUS_dataUrl = function(path){
+    if (!path) path = "/";
+    if (path.charAt(0) !== "/") path = "/" + path;
+    return (window.OLYMPUS_LIVE_ORIGIN || "") + path;
+  };
+})();
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600;700;800;900&display=swap');
 
@@ -1546,12 +1568,13 @@ td.mx-eval.oly-tip::after {
   function loadAll(){
     var t = Date.now();
     var meta = document.getElementById("hu-meta");
-    fetch("/heads_up.json?t="+t).then(function(r){ return r.ok?r.json():null; }).then(function(d){
+    var du = (typeof OLYMPUS_dataUrl === "function") ? OLYMPUS_dataUrl : function(p){ return p; };
+    fetch(du("/heads_up.json?t="+t)).then(function(r){ return r.ok?r.json():null; }).then(function(d){
       renderOneCmd(d); renderFirst30(d); renderProx(d);
       if (meta && d) { meta.textContent = "updated "+(d.generated_utc||"")+" · A:"+(d.counts && d.counts.a_fired)+" B-exec:"+(d.counts && d.counts.b_execute)+" B-warn:"+(d.counts && d.counts.b_warning); }
     }).catch(function(){ renderOneCmd(null); renderFirst30(null); renderProx(null); });
-    fetch("/point_a_scan.json?t="+t).then(function(r){ return r.ok?r.json():null; }).then(renderPointA).catch(function(){ renderPointA(null); });
-    fetch("/point_b_scan.json?t="+t).then(function(r){ return r.ok?r.json():null; }).then(renderPointB).catch(function(){ renderPointB(null); });
+    fetch(du("/point_a_scan.json?t="+t)).then(function(r){ return r.ok?r.json():null; }).then(renderPointA).catch(function(){ renderPointA(null); });
+    fetch(du("/point_b_scan.json?t="+t)).then(function(r){ return r.ok?r.json():null; }).then(renderPointB).catch(function(){ renderPointB(null); });
   }
   if (document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", loadAll); } else { loadAll(); }
 })();
@@ -1745,6 +1768,9 @@ td.mx-eval.oly-tip::after {
     if (!el){
       return '<span style="color:#5e7ca0;font-style:italic;">Entry ladder unavailable (Point B data missing).</span>';
     }
+    if (el.error){
+      return '<span style="color:#efc56a;font-style:italic;">Entry ladder: '+String(el.error).replace(/</g,"&lt;")+'</span>';
+    }
     var px = (el.current_price != null) ? ('current $'+el.current_price+' · ') : '';
     var ma = (el.ma_20w != null) ? ('MA20W $'+el.ma_20w+' · ') : '';
     var hi = (el.high_20d != null) ? ('20d high $'+el.high_20d+' · ') : '';
@@ -1777,8 +1803,21 @@ td.mx-eval.oly-tip::after {
   function renderCards(doc){
     var body = document.getElementById("strike-cards-body");
     if (!body) return;
-    if (!doc || !doc.shortlist){ body.innerHTML = '<div style="color:#ff9a7a;">Strike cards unavailable.</div>'; return; }
-    var rows = (doc.shortlist||[]).slice(0,8).map(function(c, i){
+    if (!doc){
+      var live = (typeof OLYMPUS_LIVE_ORIGIN !== "undefined" && OLYMPUS_LIVE_ORIGIN) ? OLYMPUS_LIVE_ORIGIN : "http://5.189.176.185";
+      body.innerHTML = '<div style="color:#ff9a7a;">Strike cards unavailable — JSON fetch failed. If you opened this file from GitHub or disk, data loads from <a href="'+live+'" style="color:#7ec0ff;">Minerva</a> automatically on refresh — or open the dashboard directly at that host.</div>';
+      return;
+    }
+    var src = Array.isArray(doc.shortlist) ? doc.shortlist : [];
+    if (!src.length && Array.isArray(doc.cards)){
+      src = doc.cards.filter(function(c){ return (c.strike_score||0) > 0; })
+        .sort(function(a,b){ return (b.strike_score||0) - (a.strike_score||0); }).slice(0,8);
+    }
+    if (!src.length){
+      body.innerHTML = '<div style="color:#ff9a7a;">No strike cards with score &gt; 0 — run <code>python3 olympus_daily.py</code> on Minerva or check active_actions / forecasts pipeline.</div>';
+      return;
+    }
+    var rows = src.slice(0,8).map(function(c, i){
       var grpColor = c.group === "CORE" ? "#6aeab3" : (c.group === "SATELLITE" ? "#efc56a" : "#9fb3cc");
       var bd = c.score_breakdown || {};
       var mainRow = '<tr style="border-top:1px solid #244a78;">' +
@@ -1818,9 +1857,10 @@ td.mx-eval.oly-tip::after {
   function load(){
     var t = Date.now();
     var meta = document.getElementById("strike-meta");
-    fetch("/strike_radar.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(renderRadar).catch(function(){ renderRadar(null); });
-    fetch("/strike_plan.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(renderPlan).catch(function(){ renderPlan(null); });
-    fetch("/strike_cards.json?t="+t).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    var du = (typeof OLYMPUS_dataUrl === "function") ? OLYMPUS_dataUrl : function(p){ return p; };
+    fetch(du("/strike_radar.json?t="+t)).then(function(r){return r.ok?r.json():null;}).then(renderRadar).catch(function(){ renderRadar(null); });
+    fetch(du("/strike_plan.json?t="+t)).then(function(r){return r.ok?r.json():null;}).then(renderPlan).catch(function(){ renderPlan(null); });
+    fetch(du("/strike_cards.json?t="+t)).then(function(r){return r.ok?r.json():null;}).then(function(d){
       renderCards(d);
       if (d && d.generated_utc && meta){ meta.textContent = "generated " + d.generated_utc; }
     }).catch(function(){ renderCards(null); });

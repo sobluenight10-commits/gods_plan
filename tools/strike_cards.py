@@ -588,7 +588,10 @@ def run() -> Dict[str, Any]:
         composite = max(0, min(100, round(composite, 1)))
 
         buy_zone = _buy_zone(action, fc_row)
-        entry_ladder = _entry_ladder(tk, action, point_b, point_a, fc_row)
+        try:
+            entry_ladder = _entry_ladder(tk, action, point_b, point_a, fc_row)
+        except Exception as exc:
+            entry_ladder = {"error": str(exc), "summary": "ladder unavailable"}
         one_liner_bits = []
         if action.get("ev_pct") is not None and action.get("es5_pct") is not None:
             one_liner_bits.append(f"EV {action['ev_pct']:+.0f}% / ES5 {action['es5_pct']:+.0f}%")
