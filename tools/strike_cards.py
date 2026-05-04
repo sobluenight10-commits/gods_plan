@@ -74,6 +74,8 @@ if BASE not in sys.path:
 ACTIVE = os.path.join(BASE, "data", "active_actions.json")
 FORECASTS = os.path.join(BASE, "data", "forecasts.json")
 RADAR = os.path.join(BASE, "data", "strike_radar.json")
+POINT_B = os.path.join(BASE, "data", "point_b_scan.json")
+POINT_A = os.path.join(BASE, "data", "point_a_scan.json")
 SECULAR = os.path.join(BASE, "data", "secular_trends.json")
 INSIDER = os.path.join(BASE, "data", "insider_flow.json")
 PATENT = os.path.join(BASE, "data", "patent_signal.json")
@@ -378,6 +380,82 @@ def _is_eligible(action: Dict[str, Any], pivot_active: bool = False) -> Tuple[bo
     return True, "ok"
 
 
+def _entry_ladder(
+    ticker: str,
+    action: Dict[str, Any],
+    point_b: Dict[str, Any],
+    point_a: Dict[str, Any],
+    fc_row: Dict[str, Any],
+) -> Optional[Dict[str, Any]]:
+    """Concrete 3-tranche entry ladder per the user's standing instruction:
+
+        Best single entry = -15% from 20d high (POINT_B_EXECUTE)
+        Best execution    = ladder
+            T1 light  -10%  →  30%   (warning level — toehold)
+            T2 main   -15%  →  50%   (execute level — the trade)
+            T3 deep   at base → 20%  (cancelled if base broken)
+
+        Abort: close ≤ stop_below_base = breakout_base × 0.97.
+
+    All three legs come from the Point B scanner output so the dashboard
+    shows the SAME numbers as the Heads-Up panel.
+    """
+    pb = (point_b.get("tickers") or {}).get(ticker) or {}
+    high_20d = pb.get("high_20d")
+    base = pb.get("breakout_base")
+    last = pb.get("last_close")
+    bz = pb.get("buy_zone_b") or {}
+
+    # If Point B has no data, fall back to existing buy_zone (ez_low/ez_high)
+    if high_20d is None or base is None:
+        return None
+
+    warning_at = bz.get("warning_at") or round(high_20d * 0.90, 4)
+    execute_at = bz.get("execute_at") or round(high_20d * 0.85, 4)
+    base_floor = round(base, 4)
+    stop_abort = pb.get("stop_below_base") or round(base * 0.97, 4)
+
+    pa_row = (point_a.get("tickers") or {}).get(ticker) or {}
+    ma_20w = pa_row.get("ma_20w")
+
+    # The "best single entry" = whichever is *higher* between -15% from 20d
+    # high and the 20W MA (you want the more conservative — i.e. the one
+    # likeliest to get filled on a normal pullback). If MA is above -15%, MA
+    # itself is already-filled territory; use -15% as the floor.
+    if ma_20w is not None and execute_at is not None:
+        best_single = max(execute_at, ma_20w)
+    else:
+        best_single = execute_at
+
+    # Confidence note — 3-of-3 (FIRED) on Point A → B execute is even higher
+    # asymmetry. 2-of-3 (WATCH) → wait for A3 (price ≤ MA20W) to flip.
+    a_state = pa_row.get("state") or "INACTIVE"
+
+    return {
+        "best_single": round(best_single, 2),
+        "tiers": [
+            {"label": "T1 light", "price": round(warning_at, 2), "size_pct": 30,
+             "trigger": "-10% from 20d high · POINT_B_WARNING"},
+            {"label": "T2 main",  "price": round(execute_at, 2), "size_pct": 50,
+             "trigger": "-15% from 20d high · POINT_B_EXECUTE"},
+            {"label": "T3 deep",  "price": round(base_floor, 2), "size_pct": 20,
+             "trigger": "at breakout base · cancel if abort fires"},
+        ],
+        "abort_below": round(stop_abort, 2),
+        "high_20d": round(high_20d, 2) if high_20d else None,
+        "ma_20w": round(ma_20w, 2) if ma_20w else None,
+        "current_price": round(last, 2) if last else None,
+        "soros_gap_pct": pb.get("soros_gap_pct"),
+        "point_b_state": pb.get("state"),
+        "point_a_state": a_state,
+        "summary": (
+            f"Best single entry: ${round(best_single,2)}. "
+            f"Best execution: ladder ${round(warning_at,2)} (30%) / "
+            f"${round(execute_at,2)} (50%) / ${round(base_floor,2)} (20%)."
+        ),
+    }
+
+
 def run() -> Dict[str, Any]:
     active = _load(ACTIVE, {})
     actions = active.get("actions") or {}
@@ -387,6 +465,8 @@ def run() -> Dict[str, Any]:
     patents = _load(PATENT, {})
     secular = _load(SECULAR, {})
     catalysts = _load(CATALYST, {})
+    point_b = _load(POINT_B, {})
+    point_a = _load(POINT_A, {})
     directives = _load(DIRECTIVES, {})
     god_scores = (directives or {}).get("god_scores") or {}
     cs = _load(CORE_SAT, {"core_tickers": [], "satellite_tickers": []})
@@ -448,6 +528,7 @@ def run() -> Dict[str, Any]:
         composite = max(0, min(100, round(composite, 1)))
 
         buy_zone = _buy_zone(action, fc_row)
+        entry_ladder = _entry_ladder(tk, action, point_b, point_a, fc_row)
         one_liner_bits = []
         if action.get("ev_pct") is not None and action.get("es5_pct") is not None:
             one_liner_bits.append(f"EV {action['ev_pct']:+.0f}% / ES5 {action['es5_pct']:+.0f}%")
@@ -485,6 +566,7 @@ def run() -> Dict[str, Any]:
             "blocks": action.get("blocks") or [],
             "vetoes": action.get("vetoes") or [],
             "buy_zone": buy_zone,
+            "entry_ladder": entry_ladder,
             "nearest_catalyst": nearest_cat,
             "forecast_source": action.get("forecast_source"),
             "one_liner": one_liner[:120],

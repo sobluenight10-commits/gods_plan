@@ -1736,6 +1736,35 @@ td.mx-eval.oly-tip::after {
     var color = ({S:"#FFD700","A+":"#6aeab3",A:"#6aeab3","B+":"#7ec0ff",B:"#7ec0ff","C+":"#efc56a",C:"#efc56a",D:"#ff7a6f",F:"#ff7a6f"})[g] || "#9fb3cc";
     return '<strong style="color:'+color+';" title="GEM v5 letter grade · score '+(d.gem_score!=null?d.gem_score.toFixed(1):"?")+'">'+g+'</strong>';
   }
+  function renderEntryLadder(c){
+    // Builds the "Best single entry / ladder" line directly below each
+    // strike card. Numbers come from strike_cards.entry_ladder, which
+    // is sourced from point_b_scan.json so the dashboard, heads-up panel
+    // and Telegram alerts all show the SAME prices.
+    var el = c.entry_ladder;
+    if (!el || !el.tiers || el.tiers.length === 0){
+      return '<span style="color:#5e7ca0;font-style:italic;">Entry ladder unavailable (Point B data missing).</span>';
+    }
+    var tiers = el.tiers.map(function(t){
+      var color = t.label.indexOf("T1") === 0 ? "#7ec0ff"
+                : t.label.indexOf("T2") === 0 ? "#9fe0a8"
+                : "#efc56a";
+      return '<span style="color:'+color+';font-weight:700;" title="'+(t.trigger||"")+'">$'+t.price+' ('+t.size_pct+'%)</span>';
+    }).join(' <span style="color:#5e7ca0;">/</span> ');
+    var px = (el.current_price != null) ? ('current $'+el.current_price+' · ') : '';
+    var ma = (el.ma_20w != null) ? ('MA20W $'+el.ma_20w+' · ') : '';
+    var hi = (el.high_20d != null) ? ('20d high $'+el.high_20d+' · ') : '';
+    var pas = el.point_a_state && el.point_a_state !== "INACTIVE"
+              ? ' · <span style="color:#ff7eb6;">A '+el.point_a_state+'</span>'
+              : '';
+    var pbs = el.point_b_state
+              ? ' · <span style="color:#9fe0a8;">B '+el.point_b_state.replace("POINT_B_","").replace("THESIS_REVIEW","REVIEW")+'</span>'
+              : '';
+    var abort = (el.abort_below != null) ? ' · <span style="color:#ff7a6f;">abort &lt;$'+el.abort_below+'</span>' : '';
+    return '<span style="color:#c4dccd;">🎯 <strong style="color:#ffd6ea;">Best entry $'+el.best_single+'</strong></span> · '
+         + '<span style="color:#9fb3cc;">Ladder</span> '+tiers
+         + abort + '<br><span style="color:#7a8fa8;font-size:9px;">'+px+ma+hi+'</span>'+pas+pbs;
+  }
   function renderCards(doc){
     var body = document.getElementById("strike-cards-body");
     if (!body) return;
@@ -1743,8 +1772,8 @@ td.mx-eval.oly-tip::after {
     var rows = (doc.shortlist||[]).slice(0,8).map(function(c, i){
       var grpColor = c.group === "CORE" ? "#6aeab3" : (c.group === "SATELLITE" ? "#efc56a" : "#9fb3cc");
       var bd = c.score_breakdown || {};
-      return '<tr style="border-top:1px solid #244a78;">' +
-        '<td style="padding:5px 6px;color:#7ec0ff;font-weight:700;">'+(i+1)+'</td>' +
+      var mainRow = '<tr style="border-top:1px solid #244a78;">' +
+        '<td style="padding:5px 6px;color:#7ec0ff;font-weight:700;" rowspan="2">'+(i+1)+'</td>' +
         '<td style="padding:5px 6px;"><strong style="color:#e6efff;">'+c.ticker+'</strong> · <span style="color:'+grpColor+';font-weight:700;">'+(c.group||"?")+'</span> · <span style="color:#9fb3cc;font-size:10px;">'+(c.sector||"?")+'</span></td>' +
         '<td style="padding:5px 6px;text-align:right;color:#efc56a;font-weight:800;font-size:13px;" title="Strike Score: deployment-context composite (macro+forecast+valuation+quality+catalyst+discovery − risk).">'+(c.strike_score!=null?c.strike_score:"?")+'</td>' +
         '<td style="padding:5px 6px;text-align:center;font-size:13px;" title="GEM v5 letter grade — long-hold math (Heston EV vs ES5 vs 9-dim risk). Different lens from Strike Score.">'+gemGradeBadge(c.ticker)+'</td>' +
@@ -1754,10 +1783,15 @@ td.mx-eval.oly-tip::after {
         '<td style="padding:5px 6px;text-align:right;color:#9fb3cc;">GOD '+(c.god_score!=null?Math.round(c.god_score):"—")+'</td>' +
         '<td style="padding:5px 6px;color:#9fb3cc;font-size:10px;">'+(c.nearest_catalyst?(c.nearest_catalyst.substring(0,10)):"—")+'</td>' +
       '</tr>';
+      var ladderRow = '<tr style="background:#08111e;">' +
+        '<td style="padding:4px 6px 8px 12px;font-size:10px;line-height:1.5;" colspan="8">' +
+          renderEntryLadder(c) +
+        '</td></tr>';
+      return mainRow + ladderRow;
     }).join("");
     body.innerHTML =
       '<div style="color:#9fb3cc;font-size:10px;margin-bottom:4px;">macro state <strong style="color:'+pillColor(doc.macro_state)+';">'+doc.macro_state+'</strong> (score '+doc.macro_score+') · ' +
-      doc.n_eligible+'/'+doc.n_total+' eligible</div>' +
+      doc.n_eligible+'/'+doc.n_total+' eligible · <em>each card shows: row 1 = composite/score, row 2 = best single entry + ladder</em></div>' +
       '<table style="width:100%;border-collapse:collapse;">' +
         '<thead><tr style="color:#7ec0ff;text-align:left;font-size:10px;letter-spacing:0.06em;">' +
           '<th style="padding:4px 6px;">#</th>' +

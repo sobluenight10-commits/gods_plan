@@ -412,12 +412,15 @@ def main():
     # Phase 5 — STRIKE ENGINE (single decisive layer on top of everything else)
     _scenario_engine()
     _strike_radar()
+    # Point A/B scanners run BEFORE strike_cards so each card can embed its
+    # entry_ladder (best single + 3-tier price) sourced from point_b_scan.json.
+    _point_a_scan()
+    _point_b_scan()
     _strike_cards()
     _strike_plan()
 
-    # Phase 6 — POINT A/B SCANNERS + HEADS-UP (proximity-gated, Telegram-clean)
-    _point_a_scan()
-    _point_b_scan()
+    # Phase 6 — HEADS-UP (proximity-gated, Telegram-clean) — runs last so
+    # it can read the latest strike_cards/strike_plan if needed.
     _heads_up()
     print("=== DONE ===")
 
