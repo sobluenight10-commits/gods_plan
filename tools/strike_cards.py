@@ -387,18 +387,24 @@ def _entry_ladder(
     point_a: Dict[str, Any],
     fc_row: Dict[str, Any],
 ) -> Optional[Dict[str, Any]]:
-    """Concrete 3-tranche entry ladder per the user's standing instruction:
+    """Concrete entry ladder per the user's standing instruction.
 
-        Best single entry = -15% from 20d high (POINT_B_EXECUTE)
-        Best execution    = ladder
-            T1 light  -10%  →  30%   (warning level — toehold)
-            T2 main   -15%  →  50%   (execute level — the trade)
-            T3 deep   at base → 20%  (cancelled if base broken)
+    Default ladder when Point B state is RIDING / ABOVE_HIGH (price > -10% from 20d high):
+        T1 light  -10%  →  30%   (warning level — toehold)
+        T2 main   -15%  →  50%   (execute level — the trade)
+        T3 deep   at base → 20%  (cancelled if base broken)
 
-        Abort: close ≤ stop_below_base = breakout_base × 0.97.
+    State-aware adjustments:
+        POINT_B_WARNING  current ≤ -10%  →  T1 = current, T2 = -15%, T3 = base (50/30/20)
+        POINT_B_EXECUTE  current ≤ -15%  →  T1 = current (60%), T2 = base (40%); fire now
+        THESIS_REVIEW    base broken     →  no ladder, return abort-only payload
+        T3 dropped if breakout_base ≥ -15% (no real "deeper" level exists);
+                                            T1/T2 rebalance to 40/60.
 
-    All three legs come from the Point B scanner output so the dashboard
-    shows the SAME numbers as the Heads-Up panel.
+    Best-single price logic:
+        - If price already ≤ MA20W: A3 is already true — best_single = current price.
+        - Else: best_single = max(-15%, MA20W) — the higher of the two pullback
+          targets is reached first.
     """
     pb = (point_b.get("tickers") or {}).get(ticker) or {}
     high_20d = pb.get("high_20d")
@@ -406,54 +412,108 @@ def _entry_ladder(
     last = pb.get("last_close")
     bz = pb.get("buy_zone_b") or {}
 
-    # If Point B has no data, fall back to existing buy_zone (ez_low/ez_high)
-    if high_20d is None or base is None:
+    if high_20d is None or base is None or last is None:
         return None
 
     warning_at = bz.get("warning_at") or round(high_20d * 0.90, 4)
     execute_at = bz.get("execute_at") or round(high_20d * 0.85, 4)
-    base_floor = round(base, 4)
+    base_floor = float(base)
     stop_abort = pb.get("stop_below_base") or round(base * 0.97, 4)
 
     pa_row = (point_a.get("tickers") or {}).get(ticker) or {}
     ma_20w = pa_row.get("ma_20w")
-
-    # The "best single entry" = whichever is *higher* between -15% from 20d
-    # high and the 20W MA (you want the more conservative — i.e. the one
-    # likeliest to get filled on a normal pullback). If MA is above -15%, MA
-    # itself is already-filled territory; use -15% as the floor.
-    if ma_20w is not None and execute_at is not None:
-        best_single = max(execute_at, ma_20w)
-    else:
-        best_single = execute_at
-
-    # Confidence note — 3-of-3 (FIRED) on Point A → B execute is even higher
-    # asymmetry. 2-of-3 (WATCH) → wait for A3 (price ≤ MA20W) to flip.
     a_state = pa_row.get("state") or "INACTIVE"
+    b_state = pb.get("state") or "UNKNOWN"
 
-    return {
-        "best_single": round(best_single, 2),
-        "tiers": [
-            {"label": "T1 light", "price": round(warning_at, 2), "size_pct": 30,
-             "trigger": "-10% from 20d high · POINT_B_WARNING"},
-            {"label": "T2 main",  "price": round(execute_at, 2), "size_pct": 50,
-             "trigger": "-15% from 20d high · POINT_B_EXECUTE"},
-            {"label": "T3 deep",  "price": round(base_floor, 2), "size_pct": 20,
-             "trigger": "at breakout base · cancel if abort fires"},
-        ],
+    payload_common = {
         "abort_below": round(stop_abort, 2),
-        "high_20d": round(high_20d, 2) if high_20d else None,
+        "high_20d": round(high_20d, 2),
         "ma_20w": round(ma_20w, 2) if ma_20w else None,
-        "current_price": round(last, 2) if last else None,
+        "current_price": round(last, 2),
         "soros_gap_pct": pb.get("soros_gap_pct"),
-        "point_b_state": pb.get("state"),
+        "point_b_state": b_state,
         "point_a_state": a_state,
-        "summary": (
-            f"Best single entry: ${round(best_single,2)}. "
-            f"Best execution: ladder ${round(warning_at,2)} (30%) / "
-            f"${round(execute_at,2)} (50%) / ${round(base_floor,2)} (20%)."
-        ),
     }
+
+    # THESIS_REVIEW — no ladder. Base broken; entry only after re-confirmation.
+    if b_state == "THESIS_REVIEW":
+        re_confirm = round(base_floor * 1.02, 2)
+        return {
+            **payload_common,
+            "best_single": None,
+            "tiers": [],
+            "no_entry": True,
+            "reason": "THESIS_REVIEW — breakout base broken. No entry until close ≥ "
+                      f"${re_confirm} (re-arms POINT_B_EXECUTE).",
+            "summary": f"NO ENTRY — base broken. Re-arms on close ≥ ${re_confirm}.",
+        }
+
+    # POINT_B_EXECUTE — current already at -15%, base intact. Fire now.
+    if b_state == "POINT_B_EXECUTE":
+        tiers = [{"label": "now", "price": round(last, 2), "size_pct": 60,
+                  "trigger": "current price · POINT_B_EXECUTE active · fire prepared orders"}]
+        if base_floor < last * 0.98:
+            tiers.append({"label": "T deep", "price": round(base_floor, 2),
+                          "size_pct": 40, "trigger": "at breakout base · last-chance bargain"})
+        else:
+            tiers[0]["size_pct"] = 100
+        best_single = round(last, 2)
+        summary = (f"Best single entry: ${best_single} (current — POINT_B_EXECUTE active). "
+                   + ("Add at breakout base $" + str(round(base_floor,2)) + " if reached."
+                      if len(tiers) > 1 else "Single shot."))
+        return {**payload_common, "best_single": best_single, "tiers": tiers,
+                "summary": summary}
+
+    # POINT_B_WARNING — current is in -10% to -15% band.
+    if b_state == "POINT_B_WARNING":
+        tiers = [
+            {"label": "T1 toehold", "price": round(last, 2), "size_pct": 50,
+             "trigger": "current price · POINT_B_WARNING active"},
+            {"label": "T2 execute", "price": round(execute_at, 2), "size_pct": 30,
+             "trigger": "-15% from 20d high · POINT_B_EXECUTE"},
+        ]
+        if base_floor < execute_at:
+            tiers.append({"label": "T3 deep", "price": round(base_floor, 2),
+                          "size_pct": 20, "trigger": "at breakout base · cancel if abort fires"})
+        else:
+            tiers[0]["size_pct"] = 60
+            tiers[1]["size_pct"] = 40
+        best_single = round(execute_at, 2)
+        summary = (f"Best single entry: ${best_single}. "
+                   f"Best execution: ladder " + " / ".join(
+                       [f"${t['price']} ({t['size_pct']}%)" for t in tiers]) + ".")
+        return {**payload_common, "best_single": best_single, "tiers": tiers,
+                "summary": summary}
+
+    # Default (RIDING / ABOVE_HIGH) — full 3-tier ladder.
+    tiers = [
+        {"label": "T1 light", "price": round(warning_at, 2), "size_pct": 30,
+         "trigger": "-10% from 20d high · POINT_B_WARNING"},
+        {"label": "T2 main",  "price": round(execute_at, 2), "size_pct": 50,
+         "trigger": "-15% from 20d high · POINT_B_EXECUTE"},
+    ]
+    if base_floor < execute_at:
+        tiers.append({"label": "T3 deep", "price": round(base_floor, 2), "size_pct": 20,
+                      "trigger": "at breakout base · cancel if abort fires"})
+    else:
+        # No deeper level; rebalance to 40/60.
+        tiers[0]["size_pct"] = 40
+        tiers[1]["size_pct"] = 60
+
+    # Best single entry
+    if ma_20w is not None and last <= ma_20w:
+        best_single = round(last, 2)  # A3 already true — no waiting
+    elif ma_20w is not None:
+        # Wait for pullback. Higher of {-15%, MA20W} is hit first as price falls.
+        best_single = round(max(execute_at, ma_20w), 2)
+    else:
+        best_single = round(execute_at, 2)
+
+    summary = (f"Best single entry: ${best_single}. "
+               f"Best execution: ladder " + " / ".join(
+                   [f"${t['price']} ({t['size_pct']}%)" for t in tiers]) + ".")
+
+    return {**payload_common, "best_single": best_single, "tiers": tiers, "summary": summary}
 
 
 def run() -> Dict[str, Any]:
