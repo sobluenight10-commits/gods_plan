@@ -359,6 +359,15 @@ def _heads_up() -> None:
         print(f"[HEADS_UP] failed: {exc}")
 
 
+def _embed_dashboard_preload() -> None:
+    """Inline JSON snapshot into OLYMPUS_UNIFIED.html (GitHub/file mirror safe)."""
+    try:
+        from tools.embed_dashboard_preload import run as _run
+        _run()
+    except Exception as exc:
+        print(f"[EMBED] failed: {exc}")
+
+
 def _publish_lessons_index() -> None:
     try:
         from tools import close_trade as _ct
@@ -422,6 +431,7 @@ def main():
     # Phase 6 — HEADS-UP (proximity-gated, Telegram-clean) — runs last so
     # it can read the latest strike_cards/strike_plan if needed.
     _heads_up()
+    _embed_dashboard_preload()
     print("=== DONE ===")
 
 

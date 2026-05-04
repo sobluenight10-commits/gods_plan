@@ -27,6 +27,34 @@
   };
 })();
 </script>
+<script type="application/json" id="olympus-dashboard-preload">
+{}
+</script>
+<script>
+try {
+  var _pe = document.getElementById("olympus-dashboard-preload");
+  window.__OLYMPUS_DASHBOARD_PRELOAD = (_pe && _pe.textContent)
+    ? JSON.parse(_pe.textContent.trim()) : {};
+} catch (e) {
+  window.__OLYMPUS_DASHBOARD_PRELOAD = {};
+}
+window.OLYMPUS_fetchDash = function(rel, key, t){
+  var du = (typeof OLYMPUS_dataUrl === "function") ? OLYMPUS_dataUrl : function(p){ return p; };
+  var emb = (window.__OLYMPUS_DASHBOARD_PRELOAD || {})[key];
+  return fetch(du(rel + "?t=" + t), {cache:"no-store"})
+    .then(function(r){
+      if (!r.ok) throw new Error("http "+r.status);
+      return r.json();
+    })
+    .catch(function(err){
+      if (emb) {
+        if (typeof console !== "undefined" && console.warn) console.warn("OLYMPUS embed:"+key, err && err.message);
+        return emb;
+      }
+      throw err;
+    });
+};
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&family=Barlow:wght@400;500;600;700;800;900&display=swap');
 
@@ -1568,13 +1596,13 @@ td.mx-eval.oly-tip::after {
   function loadAll(){
     var t = Date.now();
     var meta = document.getElementById("hu-meta");
-    var du = (typeof OLYMPUS_dataUrl === "function") ? OLYMPUS_dataUrl : function(p){ return p; };
-    fetch(du("/heads_up.json?t="+t)).then(function(r){ return r.ok?r.json():null; }).then(function(d){
+    var fd = (typeof OLYMPUS_fetchDash === "function") ? OLYMPUS_fetchDash : function(r,k,x){ return fetch(r+"?t="+x).then(function(x){return x.json()}); };
+    fd("/heads_up.json", "heads_up", t).then(function(d){
       renderOneCmd(d); renderFirst30(d); renderProx(d);
       if (meta && d) { meta.textContent = "updated "+(d.generated_utc||"")+" · A:"+(d.counts && d.counts.a_fired)+" B-exec:"+(d.counts && d.counts.b_execute)+" B-warn:"+(d.counts && d.counts.b_warning); }
     }).catch(function(){ renderOneCmd(null); renderFirst30(null); renderProx(null); });
-    fetch(du("/point_a_scan.json?t="+t)).then(function(r){ return r.ok?r.json():null; }).then(renderPointA).catch(function(){ renderPointA(null); });
-    fetch(du("/point_b_scan.json?t="+t)).then(function(r){ return r.ok?r.json():null; }).then(renderPointB).catch(function(){ renderPointB(null); });
+    fd("/point_a_scan.json", "point_a_scan", t).then(renderPointA).catch(function(){ renderPointA(null); });
+    fd("/point_b_scan.json", "point_b_scan", t).then(renderPointB).catch(function(){ renderPointB(null); });
   }
   if (document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", loadAll); } else { loadAll(); }
 })();
@@ -1857,10 +1885,10 @@ td.mx-eval.oly-tip::after {
   function load(){
     var t = Date.now();
     var meta = document.getElementById("strike-meta");
-    var du = (typeof OLYMPUS_dataUrl === "function") ? OLYMPUS_dataUrl : function(p){ return p; };
-    fetch(du("/strike_radar.json?t="+t)).then(function(r){return r.ok?r.json():null;}).then(renderRadar).catch(function(){ renderRadar(null); });
-    fetch(du("/strike_plan.json?t="+t)).then(function(r){return r.ok?r.json():null;}).then(renderPlan).catch(function(){ renderPlan(null); });
-    fetch(du("/strike_cards.json?t="+t)).then(function(r){return r.ok?r.json():null;}).then(function(d){
+    var fd = (typeof OLYMPUS_fetchDash === "function") ? OLYMPUS_fetchDash : function(r,k,x){ return fetch(r+"?t="+x).then(function(z){return z.json()}); };
+    fd("/strike_radar.json", "strike_radar", t).then(renderRadar).catch(function(){ renderRadar(null); });
+    fd("/strike_plan.json", "strike_plan", t).then(renderPlan).catch(function(){ renderPlan(null); });
+    fd("/strike_cards.json", "strike_cards", t).then(function(d){
       renderCards(d);
       if (d && d.generated_utc && meta){ meta.textContent = "generated " + d.generated_utc; }
     }).catch(function(){ renderCards(null); });
