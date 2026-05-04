@@ -57,8 +57,11 @@ def run(html_path: str | None = None) -> dict:
         r"(</script>)",
         re.IGNORECASE,
     )
-    repl = r"\1\n" + inner + r"\n\2"
-    html_new, n = pat.subn(repl, html, count=1)
+
+    def _repl(m):
+        return m.group(1) + "\n" + inner + "\n" + m.group(2)
+
+    html_new, n = pat.subn(_repl, html, count=1)
     if not n:
         print("[embed_dashboard_preload] marker script#olympus-dashboard-preload not found", file=sys.stderr)
         return {"ok": False, "bytes": 0}
