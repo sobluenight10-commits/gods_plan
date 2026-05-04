@@ -8,6 +8,7 @@ fetch still refreshes when same-origin or CORS succeeds.
 from __future__ import annotations
 
 import json
+import math
 import os
 import re
 import sys
@@ -23,6 +24,19 @@ Keys = [
     "point_a_scan",
     "point_b_scan",
 ]
+
+
+def _sanitize(x):
+    """JSON has no NaN/Infinity — invalid JSON breaks JSON.parse in the browser."""
+    if isinstance(x, float):
+        if math.isnan(x) or math.isinf(x):
+            return None
+        return x
+    if isinstance(x, dict):
+        return {k: _sanitize(v) for k, v in x.items()}
+    if isinstance(x, list):
+        return [_sanitize(v) for v in x]
+    return x
 
 
 def _load_data(path: str):
@@ -45,7 +59,8 @@ def run(html_path: str | None = None) -> dict:
         inner = "{}"
         print("[embed_dashboard_preload] no JSON files found — leaving preload empty", file=sys.stderr)
     else:
-        inner = json.dumps(payload, ensure_ascii=False, separators=(",", ":"))
+        payload = _sanitize(payload)
+        inner = json.dumps(payload, ensure_ascii=False, separators=(",", ":"), allow_nan=False)
         inner = inner.replace("<", "\\u003c")
 
     with open(path, encoding="utf-8") as f:
