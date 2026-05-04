@@ -678,12 +678,34 @@ def _format_state_context(state: dict) -> str:
         for l in limits:
             lines.append(f"  {l['ticker']} @ {l.get('limit_EUR','?')} EUR — {l.get('status','?')} — {l.get('reason','')}")
 
-    # Active stops
+    # Active stops — annotated with current proximity so GPT does NOT
+    # treat far-away stops as "30-min watch" candidates.
     stops = state.get("active_stops", [])
     if stops:
-        lines.append("Active stops:")
+        prices_now = {}
+        try:
+            from fetch_data import get_live_prices
+            prices_now = get_live_prices() or {}
+        except Exception:
+            pass
+        lines.append("Active stops (PROXIMITY annotated — only proximate stops are 30-min watch candidates):")
         for s in stops:
-            lines.append(f"  {s['ticker']} stop ${s.get('stop_USD','?')} — {s.get('note','')}")
+            tk = s.get("ticker")
+            stop = s.get("stop_USD") or s.get("stop_EUR")
+            px = prices_now.get(tk)
+            if px and stop and stop > 0:
+                dist_pct = (px - stop) / stop * 100
+                if dist_pct < 0:
+                    tag = f"TRIGGERED ({dist_pct:+.1f}%)"
+                elif dist_pct <= 2:
+                    tag = f"URGENT ({dist_pct:+.1f}% above stop)"
+                elif dist_pct <= 5:
+                    tag = f"APPROACHING ({dist_pct:+.1f}% above stop)"
+                else:
+                    tag = f"FAR ({dist_pct:+.1f}% above stop — DO NOT include in 30-min watch)"
+                lines.append(f"  {tk} ${px} stop ${stop} [{tag}] — {s.get('note','')}")
+            else:
+                lines.append(f"  {tk} stop ${stop} [no live price] — {s.get('note','')}")
 
     # Exit flags
     exits = state.get("exit_flags", [])
@@ -1308,6 +1330,23 @@ WEEKDAY: {weekday}
 # US OPEN — 15:30
 # ══════════════════════════════════════════════════════════════════════════════
 
+def _build_proximate_watch_block() -> str:
+    """Replace GPT-generated 'FIRST 30 MIN WATCH' with deterministic, proximity-gated content.
+
+    The previous GPT prompt happily emitted things like 'Watch for potential dip
+    below €95 to trigger PLTR stop' even when current price was €126 (24% away).
+    That's noise. We now compute Point A / Point B / stop+limit proximity
+    upstream (tools.heads_up) and just inject the result here.
+    """
+    try:
+        from tools.heads_up import run as _hu_run
+        hu = _hu_run(send_telegram=False)
+        return hu.get("first_30min_block", "")
+    except Exception as exc:
+        logger.warning(f"heads_up.run failed: {exc}")
+        return "⚪ Heads-up unavailable — manual review required."
+
+
 def generate_us_open() -> str:
     ctx = _fetch_live_context()
     now = _berlin_now()
@@ -1330,19 +1369,26 @@ def generate_us_open() -> str:
     except Exception as e:
         logger.error(f"Open news scan failed: {e}")
 
-    analysis = _gpt(
+    proximate_block = _build_proximate_watch_block()
+
+    open_strategy = _gpt(
         SYSTEM_PERSONA + """
+You are writing the OPEN STRATEGY block. The proximate-watch list (stops/limits/Point B
+within striking distance) is already provided as 'PROXIMATE TRIGGERS' input. DO NOT
+restate stops/limits that are far from current price (>5% away for stops, >3% for limits).
+
 Structure:
-🎯 LIMITS CHECK
-• [every active limit order — armed/triggered/cancel?]
-
-⚡ FIRST 30 MIN WATCH
-• [2-3 stocks to watch at open + price levels + what triggers action]
-
 📋 OPEN STRATEGY
 • [what to do at open — specific tickers, prices, sizes]
-• [do NOT buy in first 15min unless stop triggered]""",
-        f"Portfolio:\n{ctx['portfolio_text']}\nMacro:\n{ctx['key_moves']}\nEUR/USD: {ctx['fx_rate']}"
+• [do NOT buy in first 15min unless stop triggered]
+• [reference only the PROXIMATE TRIGGERS — do NOT invent new watch levels]""",
+        (f"Proximate triggers (deterministic, already filtered):\n{proximate_block}\n\n"
+         f"Portfolio:\n{ctx['portfolio_text']}\nMacro:\n{ctx['key_moves']}\nEUR/USD: {ctx['fx_rate']}")
+    )
+
+    analysis = (
+        "🎯 PROXIMATE TRIGGERS — proximity-gated (stops ≤5% away · limits ≤3% away · Point B at -10/-15%)\n"
+        f"{proximate_block}\n\n{open_strategy}"
     )
 
     sep = "━" * 26

@@ -326,6 +326,39 @@ def _strike_plan() -> None:
         print(f"[STRIKE_PLAN] failed: {exc}")
 
 
+def _point_a_scan() -> None:
+    """Point A scanner — earliest reliable buy signal (macro-driven entry)."""
+    try:
+        from tools.point_a_scanner import run as _run
+        out = _run()
+        print(f"[POINT_A] fired={out.get('n_fired')} watch={out.get('n_watch')} · "
+              f"A1={out.get('a1_liquidity_expanding',{}).get('value')} "
+              f"A2={out.get('a2_funding_easing',{}).get('value')}")
+    except Exception as exc:
+        print(f"[POINT_A] failed: {exc}")
+
+
+def _point_b_scan() -> None:
+    """Point B scanner — Soros gap formalised (-15% from 20d high, base intact)."""
+    try:
+        from tools.point_b_scanner import run as _run
+        out = _run()
+        print(f"[POINT_B] execute={out.get('n_execute')} warning={out.get('n_warning')} "
+              f"review={out.get('n_review')}")
+    except Exception as exc:
+        print(f"[POINT_B] failed: {exc}")
+
+
+def _heads_up() -> None:
+    """Consolidate Point A / Point B / proximity into the single Telegram-ready feed."""
+    try:
+        from tools.heads_up import run as _run
+        out = _run(send_telegram=True)
+        print(f"[HEADS_UP] {out.get('one_command')}")
+    except Exception as exc:
+        print(f"[HEADS_UP] failed: {exc}")
+
+
 def _publish_lessons_index() -> None:
     try:
         from tools import close_trade as _ct
@@ -381,6 +414,11 @@ def main():
     _strike_radar()
     _strike_cards()
     _strike_plan()
+
+    # Phase 6 — POINT A/B SCANNERS + HEADS-UP (proximity-gated, Telegram-clean)
+    _point_a_scan()
+    _point_b_scan()
+    _heads_up()
     print("=== DONE ===")
 
 

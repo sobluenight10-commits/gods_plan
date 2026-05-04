@@ -147,6 +147,52 @@ Phase 5 is the single decisive layer above prediction, valuation, risk and disco
 
 **Rule**: The deploy optimiser never bypasses Phase 1–3 gates — it only ranks amongst survivors. The behavioral gates never block EXITs of DEAD theses — only expansionary verbs and discretionary core trims.
 
+## OLYMPUS-SENTINEL — POINT A / POINT B + HEADS-UP (PHASE 6)
+
+The user's standing instruction (May 4 2026): *"The major premise is price keeps going up. The ideal entry is A — the moment before price moves. If A is unclear, B is the practical fallback: -15% from previous peak. My experience says stocks meeting the major premise rebound -15 to -20%. Build the heads-up. And fix Telegram — saying 'watch for dip below €95' when price is €126 is noise."*
+
+### Definitions (locked)
+
+- **Point A** (macro entry, earliest reliable signal): three conditions must be true SIMULTANEOUSLY.
+  - **A1 Liquidity expanding** — Strike Radar state ∈ {`STRIKE_PIVOT_EARLY`, `STRIKE_WINDOW_OPEN`, `SELECTIVE_TAILWIND`, `DEPLOY_RIDING`} OR (`v_3d ≥ 0` AND `v_7d ≥ 0`).
+  - **A2 Funding stress easing** — VIX < 20 AND VIX < VIX 5d ago, OR HYG drawdown vs 60d high improving. Proxy for OFR FSI dropping below 0.5.
+  - **A3 Stock below 20W MA** — close < 100-day SMA. The "price hasn't moved yet" guard. When price crosses above the 20W MA the A window CLOSES and we're in B-territory.
+  - 3-of-3 = `FIRED`. 2-of-3 = `WATCH`. 1-of-3 or 0-of-3 = `INACTIVE`.
+
+- **Point B** (price-driven entry, Soros gap formalised):
+  - `high_20d` = highest CLOSE in trailing 20 trading days.
+  - `breakout_base` = lowest CLOSE in trailing 60 trading days (consolidation low proxy).
+  - `dist_pct = (close − high_20d) / high_20d × 100`.
+  - States (priority — first match wins):
+    - `THESIS_REVIEW` — dist ≤ −15% AND close ≤ base × 1.02. Base broken; written justification required. NOT a B entry.
+    - `POINT_B_EXECUTE` — dist ≤ −15% AND base intact. Fire prepared orders.
+    - `POINT_B_WARNING` — −15% < dist ≤ −10%. Pre-stage limits.
+    - `RIDING` — −10% < dist ≤ 0. No action.
+    - `ABOVE_HIGH` — dist > 0. A-window already closed; wait for next pullback.
+
+### Heads-Up doctrine (Telegram noise fix)
+
+- **Stop alerts** fire only when `current_price ≤ stop × 1.05` (within 5%). The PLTR €95 stop noise (price €126, 25% away) is now suppressed.
+- **Limit alerts** fire only when `current_price ≤ limit × 1.03` (within 3%).
+- Tier 2 (Point A `FIRED`) and Tier 3b (Point B `EXECUTE`) and Tier 3c (`THESIS_REVIEW`) always alert with daily dedup.
+- Tier 3a (Point B `WARNING`) alerts once per ticker per day.
+- Tier 1 (Point A `WATCH` 2-of-3) is digest-only — never an immediate alert.
+- The `FIRST 30 MIN WATCH` block in `battle_rhythm.generate_us_open()` is now built deterministically by `tools.heads_up.run()` instead of GPT — GPT only writes the `OPEN STRATEGY` paragraph and is fed the proximity-gated trigger list as input. Stops in `_format_state_context()` are also annotated with proximity tags (`URGENT` / `APPROACHING` / `FAR — DO NOT include`) so other GPT prompts can't reintroduce noise.
+
+### Modules
+
+- `tools/point_a_scanner.py` — outputs `data/point_a_scan.json` with per-ticker A1/A2/A3 booleans, conditions met (0–3), state, reasons, and `shortlist_fired` / `shortlist_watch`.
+- `tools/point_b_scanner.py` — outputs `data/point_b_scan.json` with per-ticker `last_close, high_20d, breakout_base, base_intact, dist_pct, soros_gap_pct, state, buy_zone_b {warning_at, execute_at}, stop_below_base`.
+- `tools/heads_up.py` — consolidates both scanners + active stops/limits with proximity gating; outputs `data/heads_up.json` with `tiers {tier_2_point_a_fired, tier_3a_point_b_warning, tier_3b_point_b_execute, tier_3c_thesis_review, tier_4_stop_proximity, tier_5_limit_proximity, digest_point_a_watch}`, `one_command`, `first_30min_block`. Daily dedup state in `data/heads_up_dedup.json`.
+
+### Dashboard
+
+`🎯 HEADS-UP CONSOLE` is the new top-most panel (above Strike Console). Four blocks: (1) ONE-COMMAND single-line directive; (2) FIRST 30 MIN deterministic proximity block (replaces old GPT noise); (3) three-card grid: Point A (macro) · Point B (Soros gap) · Proximity (stops & limits). Loads `point_a_scan.json`, `point_b_scan.json`, `heads_up.json`.
+
+### Operating rule
+
+A and B are different signals on different data. A watches FRED + VIX/HYG + 20W MA. B watches price feeds. They are run independently every cycle. The user buys CORE candidates on A; SATELLITE candidates on B. Anything that doesn't fit either pattern but is being tempted by price action is a discretionary trade requiring written thesis restatement under behavioral gates.
+
 ## VECTOR LIQUIDITY ENGINE v2 + OPS (ENFORCED)
 
 - **Level zones (net $B):** DANGER &lt;1,900 · SELECTIVE 1,900–2,200 · DEPLOY ≥2,200. Institutions optimize range; OLYMPUS optimizes **vector** (7d Δ net liq).

@@ -1390,6 +1390,174 @@ td.mx-eval.oly-tip::after {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════════
+     PHASE 6 — HEADS-UP CONSOLE
+     The first thing GOD looks at every day. Proximity-gated. Telegram-clean.
+       (1) ONE COMMAND — single most-actionable line
+       (2) FIRST 30 MIN — only proximate triggers (no 25%-away noise)
+       (3) Point A FIRED  — 3-of-3 macro+funding+below-20WMA stocks
+       (4) Point B EXECUTE / WARNING / REVIEW — 20d-high pullback grid
+     ═══════════════════════════════════════════════════════════════════ -->
+<section id="heads-up-console" style="padding:14px 40px;background:linear-gradient(180deg,#1c0e1a 0%,#0e0610 100%);border-top:2px solid #c5648e;border-bottom:2px solid #c5648e;color:#ffe6f4;">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;letter-spacing:0.22em;text-transform:uppercase;color:#ff7eb6;margin-bottom:10px;">
+    🎯 HEADS-UP — point a · point b · proximate stops &amp; limits
+    <span id="hu-meta" style="font-weight:500;color:#a87a8f;font-size:10px;margin-left:10px;"></span>
+  </div>
+
+  <div id="hu-onecommand" style="background:#240a1a;border:1px solid #783d63;border-radius:8px;padding:14px 16px;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:13px;color:#ffd6ea;line-height:1.45;">
+    Loading one-command…
+  </div>
+
+  <div id="hu-first30" style="background:#1a070f;border:1px solid #783d63;border-radius:8px;padding:12px 14px;margin-bottom:10px;font-family:'DM Mono',monospace;font-size:11px;color:#ffd6ea;line-height:1.6;white-space:pre-wrap;">
+    Loading first-30-min block…
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:10px;">
+    <div id="hu-point-a" style="background:#1a070f;border:1px solid #783d63;border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:11px;">
+      <div style="font-weight:700;color:#ff7eb6;letter-spacing:0.12em;text-transform:uppercase;font-size:10px;margin-bottom:6px;">
+        Point A · macro entry
+        <span style="font-weight:400;color:#a87a8f;text-transform:none;letter-spacing:0;font-size:9px;margin-left:6px;">liq+ &amp; funding↘ &amp; price ≤ 20W MA</span>
+      </div>
+      <div id="hu-point-a-body">Loading…</div>
+    </div>
+    <div id="hu-point-b" style="background:#1a070f;border:1px solid #783d63;border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:11px;">
+      <div style="font-weight:700;color:#ff7eb6;letter-spacing:0.12em;text-transform:uppercase;font-size:10px;margin-bottom:6px;">
+        Point B · soros gap
+        <span style="font-weight:400;color:#a87a8f;text-transform:none;letter-spacing:0;font-size:9px;margin-left:6px;">-10% warning · -15% execute · base broken = review</span>
+      </div>
+      <div id="hu-point-b-body">Loading…</div>
+    </div>
+    <div id="hu-proximity" style="background:#1a070f;border:1px solid #783d63;border-radius:8px;padding:10px 12px;font-family:'DM Mono',monospace;font-size:11px;">
+      <div style="font-weight:700;color:#ff7eb6;letter-spacing:0.12em;text-transform:uppercase;font-size:10px;margin-bottom:6px;">
+        Proximity · stops ≤5% &amp; limits ≤3%
+      </div>
+      <div id="hu-proximity-body">Loading…</div>
+    </div>
+  </div>
+
+  <div style="margin-top:8px;color:#9c647a;font-size:10px;">
+    Sources <code style="background:#1a070f;padding:1px 4px;">point_a_scan.json</code> ·
+    <code style="background:#1a070f;padding:1px 4px;">point_b_scan.json</code> ·
+    <code style="background:#1a070f;padding:1px 4px;">heads_up.json</code>.
+    Doctrine: A = liquidity expanding + funding easing + price ≤ 20W MA. B = -15% from 20d high above breakout base. Telegram alerts only on proximate triggers (no 25%-away stop noise).
+  </div>
+</section>
+
+<script>
+(function(){
+  function fmtTk(t){ return '<span style="color:#ffe6f4;font-weight:700;">'+t+'</span>'; }
+  function pricesNice(v){ if (v == null || isNaN(v)) return "—"; return Number(v).toFixed(2); }
+  function renderOneCmd(d){
+    var el = document.getElementById("hu-onecommand");
+    if (!el) return;
+    if (!d) { el.textContent = "heads_up.json unavailable"; return; }
+    el.textContent = d.one_command || "—";
+  }
+  function renderFirst30(d){
+    var el = document.getElementById("hu-first30");
+    if (!el) return;
+    el.textContent = (d && d.first_30min_block) ? d.first_30min_block : "no proximate triggers";
+  }
+  function renderPointA(a){
+    var el = document.getElementById("hu-point-a-body");
+    if (!el) return;
+    if (!a){ el.textContent = "point_a_scan.json unavailable"; return; }
+    var html = "";
+    var a1 = a.a1_liquidity_expanding || {};
+    var a2 = a.a2_funding_easing || {};
+    html += '<div style="margin-bottom:6px;color:'+(a1.value?'#9fe0a8':'#a87a8f')+';">A1 LIQ EXPAND · '+(a1.value?'YES':'NO')+'</div>';
+    html += '<div style="margin-bottom:6px;color:'+(a2.value?'#9fe0a8':'#a87a8f')+';">A2 FUND EASE · '+(a2.value?'YES':'NO')+'</div>';
+    var fired = a.shortlist_fired || [];
+    if (fired.length){
+      html += '<div style="color:#ffd6ea;font-weight:700;margin-top:6px;">🎯 FIRED ('+fired.length+'):</div>';
+      fired.slice(0,8).forEach(function(r){
+        html += '<div>'+fmtTk(r.ticker)+' $'+pricesNice(r.last_close)+' · MA '+pricesNice(r.ma_20w)+' ('+(r.dist_to_ma_pct||0).toFixed(1)+'%)</div>';
+      });
+    }
+    var watch = a.shortlist_watch || [];
+    if (watch.length){
+      html += '<div style="color:#efc56a;margin-top:6px;">⚠ WATCH 2-of-3 ('+watch.length+'):</div>';
+      watch.slice(0,8).forEach(function(r){
+        html += '<div>'+fmtTk(r.ticker)+' '+(r.conditions_met||0)+'/3</div>';
+      });
+    }
+    if (!fired.length && !watch.length){
+      html += '<div style="color:#a87a8f;margin-top:6px;">No A signals. Monitor liquidity/FSI for pivot.</div>';
+    }
+    el.innerHTML = html;
+  }
+  function renderPointB(b){
+    var el = document.getElementById("hu-point-b-body");
+    if (!el) return;
+    if (!b){ el.textContent = "point_b_scan.json unavailable"; return; }
+    var html = "";
+    var ex = b.shortlist_execute || [];
+    var wn = b.shortlist_warning || [];
+    var rv = b.shortlist_review || [];
+    if (rv.length){
+      html += '<div style="color:#ff7a6f;font-weight:700;">🔻 THESIS REVIEW ('+rv.length+'):</div>';
+      rv.slice(0,5).forEach(function(r){
+        html += '<div>'+fmtTk(r.ticker)+' $'+pricesNice(r.last_close)+' · base $'+pricesNice(r.breakout_base)+' BROKEN ('+r.dist_pct.toFixed(1)+'%)</div>';
+      });
+    }
+    if (ex.length){
+      html += '<div style="color:#9fe0a8;font-weight:700;margin-top:6px;">🎯 EXECUTE ('+ex.length+'):</div>';
+      ex.slice(0,8).forEach(function(r){
+        html += '<div>'+fmtTk(r.ticker)+' $'+pricesNice(r.last_close)+' · -'+r.soros_gap_pct.toFixed(1)+'% from 20d $'+pricesNice(r.high_20d)+' · base $'+pricesNice(r.breakout_base)+' OK</div>';
+      });
+    }
+    if (wn.length){
+      html += '<div style="color:#efc56a;font-weight:700;margin-top:6px;">🟡 WARNING ('+wn.length+'):</div>';
+      wn.slice(0,8).forEach(function(r){
+        html += '<div>'+fmtTk(r.ticker)+' $'+pricesNice(r.last_close)+' · -'+r.soros_gap_pct.toFixed(1)+'% · exec @ $'+pricesNice(r.buy_zone_b && r.buy_zone_b.execute_at)+'</div>';
+      });
+    }
+    if (!ex.length && !wn.length && !rv.length){
+      html += '<div style="color:#a87a8f;">No B signals. Riding/above-high — wait for 10% pullback.</div>';
+    }
+    el.innerHTML = html;
+  }
+  function renderProx(d){
+    var el = document.getElementById("hu-proximity-body");
+    if (!el) return;
+    if (!d){ el.textContent = "heads_up.json unavailable"; return; }
+    var t = (d.tiers || {});
+    var stops = t.tier_4_stop_proximity || [];
+    var limits = t.tier_5_limit_proximity || [];
+    var html = "";
+    if (stops.length){
+      html += '<div style="color:#ff7a6f;font-weight:700;">🚨 STOPS:</div>';
+      stops.forEach(function(s){
+        var c = (s.severity === "URGENT" || s.severity === "TRIGGERED") ? "#ff7a6f" : "#efc56a";
+        html += '<div style="color:'+c+';">'+fmtTk(s.ticker)+' $'+pricesNice(s.current_price)+' → stop $'+pricesNice(s.stop)+' ('+s.dist_pct.toFixed(1)+'% · '+s.severity+')</div>';
+      });
+    }
+    if (limits.length){
+      html += '<div style="color:#9fe0a8;font-weight:700;margin-top:6px;">🎯 LIMITS:</div>';
+      limits.forEach(function(l){
+        var c = (l.severity === "READY" || l.severity === "FILLED") ? "#9fe0a8" : "#7ec0ff";
+        html += '<div style="color:'+c+';">'+fmtTk(l.ticker)+' '+pricesNice(l.current_price)+' → limit '+pricesNice(l.limit)+' ('+l.dist_pct.toFixed(1)+'% · '+l.severity+')</div>';
+      });
+    }
+    if (!stops.length && !limits.length){
+      html += '<div style="color:#a87a8f;">No proximate stops/limits. Powder safe, no urgent action.</div>';
+    }
+    el.innerHTML = html;
+  }
+  function loadAll(){
+    var t = Date.now();
+    var meta = document.getElementById("hu-meta");
+    fetch("/heads_up.json?t="+t).then(function(r){ return r.ok?r.json():null; }).then(function(d){
+      renderOneCmd(d); renderFirst30(d); renderProx(d);
+      if (meta && d) { meta.textContent = "updated "+(d.generated_utc||"")+" · A:"+(d.counts && d.counts.a_fired)+" B-exec:"+(d.counts && d.counts.b_execute)+" B-warn:"+(d.counts && d.counts.b_warning); }
+    }).catch(function(){ renderOneCmd(null); renderFirst30(null); renderProx(null); });
+    fetch("/point_a_scan.json?t="+t).then(function(r){ return r.ok?r.json():null; }).then(renderPointA).catch(function(){ renderPointA(null); });
+    fetch("/point_b_scan.json?t="+t).then(function(r){ return r.ok?r.json():null; }).then(renderPointB).catch(function(){ renderPointB(null); });
+  }
+  if (document.readyState === "loading"){ document.addEventListener("DOMContentLoaded", loadAll); } else { loadAll(); }
+})();
+</script>
+
+<!-- ═══════════════════════════════════════════════════════════════════
      PHASE 5 — STRIKE CONSOLE
      The single decisive view. Three panels stacked:
        (1) Strike Radar — liquidity state, vector velocity, pivot quality
