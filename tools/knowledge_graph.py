@@ -108,6 +108,110 @@ _SECTOR_GROUPS: Dict[str, List[str]] = {
 }
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# CANONICAL ENTITY ALIASING — collapse SYNONYMS of the SAME entity into ONE node.
+# (e.g. "Taiwan Semiconductor Manufacturing Company" / "TSMC" / "TSM" -> one node.)
+# This is distinct from the ontology above: ontology LINKS related entities with
+# edges; this MERGES different names of a single entity so the map isn't littered
+# with duplicate islands. Conservative on purpose — only true synonyms, never
+# merely-related concepts (CPI and inflation stay separate; they get LINKED).
+# ══════════════════════════════════════════════════════════════════════════════
+_CANON_ENTITIES: List[Tuple[str, str, str, List[str]]] = [
+    ("tsmc", "TSMC", "ticker", ["tsmc", "tsm", "taiwan semiconductor", "taiwan semiconductor manufacturing"]),
+    ("samsung", "Samsung Electronics", "company", ["samsung electronics", "samsung"]),
+    ("sk_hynix", "SK Hynix", "company", ["sk hynix", "hynix", "000660"]),
+    ("nvidia", "NVIDIA", "ticker", ["nvidia", "nvda"]),
+    ("broadcom", "Broadcom", "ticker", ["broadcom", "avgo"]),
+    ("alphabet", "Alphabet (Google)", "ticker", ["alphabet", "googl", "google"]),
+    ("microsoft", "Microsoft", "ticker", ["microsoft", "msft"]),
+    ("applied_materials", "Applied Materials", "ticker", ["applied materials", "amat"]),
+    ("asml", "ASML", "ticker", ["asml"]),
+    ("micron", "Micron", "ticker", ["micron technology", "micron"]),
+    ("intel", "Intel", "ticker", ["intel"]),
+    ("palantir", "Palantir", "ticker", ["palantir", "pltr"]),
+    ("tesla", "Tesla", "ticker", ["tesla", "tsla"]),
+    ("oklo", "Oklo", "ticker", ["oklo"]),
+    ("uranium_energy", "Uranium Energy", "ticker", ["uranium energy", "uec"]),
+    ("cameco", "Cameco", "ticker", ["cameco", "ccj"]),
+    ("rocket_lab", "Rocket Lab", "ticker", ["rocket lab", "rklb"]),
+    ("planet_labs", "Planet Labs", "ticker", ["planet labs"]),
+    ("spacex", "SpaceX", "company", ["spacex", "space x"]),
+    ("kratos", "Kratos Defense", "ticker", ["kratos", "ktos"]),
+    ("regeneron", "Regeneron", "ticker", ["regeneron", "regn"]),
+    ("nutrien", "Nutrien", "ticker", ["nutrien", "ntr"]),
+    ("coherent", "Coherent", "ticker", ["coherent", "cohr"]),
+    ("federal_reserve", "Federal Reserve", "policy", ["federal reserve", "the fed", "fed reserve"]),
+]
+
+
+def _canon_resolve(node_id: str, label: str, ntype: str) -> Optional[Tuple[str, str, str]]:
+    """Return (canonical_id, canonical_label, canonical_type) if this node is a
+    known synonym of a canonical entity, else None."""
+    text = f"{node_id} {label}".lower()
+    toks = set(re.findall(r"[a-z0-9]+", text))
+    for cid, clabel, ctype, aliases in _CANON_ENTITIES:
+        for a in aliases:
+            if (" " in a and a in text) or (" " not in a and a in toks):
+                return cid, clabel, ctype
+    return None
+
+
+def _merge_canonical(
+    node_by_id: Dict[str, Dict[str, Any]],
+    edge_by_key: Dict[Tuple[str, str], Dict[str, Any]],
+) -> int:
+    """Collapse duplicate synonym nodes into their canonical node, rewiring edges.
+    Idempotent and safe to run on every recompute. Returns number of nodes merged."""
+    remap: Dict[str, Tuple[str, str, str]] = {}
+    for nid in list(node_by_id.keys()):
+        node = node_by_id[nid]
+        canon = _canon_resolve(nid, str(node.get("label") or ""), str(node.get("type") or ""))
+        if canon and canon[0] != nid:
+            remap[nid] = canon
+    if not remap:
+        return 0
+
+    for old_id, (cid, clabel, ctype) in remap.items():
+        old = node_by_id.pop(old_id)
+        if cid not in node_by_id:
+            node_by_id[cid] = {
+                "id": cid, "label": clabel, "type": ctype, "weight": 0, "degree": 0,
+                "weighted_degree": 0, "centrality": 0.0, "mentions": 0,
+                "first_seen": old.get("first_seen") or _now_iso(),
+                "last_seen": old.get("last_seen") or _now_iso(),
+                "summary": old.get("summary", ""), "tickers": [], "posts": [],
+            }
+        tgt = node_by_id[cid]
+        tgt["label"] = clabel
+        tgt["type"] = ctype
+        tgt["weight"] = _safe_int(tgt.get("weight"), 0) + _safe_int(old.get("weight"), 0)
+        tgt["mentions"] = _safe_int(tgt.get("mentions"), 0) + _safe_int(old.get("mentions"), 0)
+        if not tgt.get("summary"):
+            tgt["summary"] = old.get("summary", "")
+        tgt["tickers"] = sorted({*(tgt.get("tickers") or []), *(old.get("tickers") or [])})
+        tgt["posts"] = list(dict.fromkeys([*(tgt.get("posts") or []), *(old.get("posts") or [])]))[-20:]
+
+    def _rid(x: str) -> str:
+        r = remap.get(x)
+        return r[0] if r else x
+
+    new_edges: Dict[Tuple[str, str], Dict[str, Any]] = {}
+    for (a, b), e in edge_by_key.items():
+        na, nb = _rid(a), _rid(b)
+        if not na or not nb or na == nb:
+            continue
+        k = _edge_key(na, nb)
+        if k in new_edges:
+            new_edges[k]["weight"] = _safe_int(new_edges[k].get("weight"), 0) + _safe_int(e.get("weight"), 1)
+        else:
+            e2 = dict(e)
+            e2["source"], e2["target"] = k[0], k[1]
+            new_edges[k] = e2
+    edge_by_key.clear()
+    edge_by_key.update(new_edges)
+    return len(remap)
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
 
@@ -335,6 +439,10 @@ def _upsert_node(
     increment_weight: int = 1,
     attach_ticker: Optional[str] = None,
 ) -> Dict[str, Any]:
+    # Redirect known synonyms onto their canonical node at write time.
+    _canon = _canon_resolve(node_id, label, ntype)
+    if _canon:
+        node_id, label, ntype = _canon[0], _canon[1], _canon[2]
     if node_id not in node_by_id:
         node_by_id[node_id] = {
             "id": node_id,
@@ -696,6 +804,10 @@ def recompute(g: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(watch_meta, dict):
         watch_meta = {}
         g[PRIVATE_WATCH_KEY] = watch_meta
+
+    # Collapse synonym duplicates into canonical entities FIRST (TSMC == Taiwan
+    # Semiconductor Manufacturing Company), rewiring edges onto the canonical id.
+    _merge_canonical(node_by_id, edge_by_key)
 
     # Regenerate semantic ontology edges fresh (drop stale ones first so their
     # fixed weight never compounds across repeated recompute() calls).

@@ -457,7 +457,8 @@
   ];
 
   var REMOTE_URL = "http://5.189.176.185/knowledge_graph.json";
-  var REFRESH_MS = 5 * 60 * 1000;
+  var REFRESH_MS = 10 * 60 * 1000;
+  var lastSig = "";
 
   var graphData = null;
   var network = null;
@@ -561,7 +562,12 @@
         highlight: { background: col, border: "#ffffff" },
         hover: { background: col, border: "#ffffff" }
       },
-      font: { color: "#e6edf3", size: 11, strokeWidth: 2, strokeColor: "#0d1117" },
+      font: (function () {
+        var cen = (node.centrality != null ? +node.centrality : 0) || 0;
+        var fsize = Math.round(11 + cen * 14);          // hubs read bigger
+        var fcol = cen >= 0.12 ? "#e6edf3" : "#6e7681";  // dim small-node labels
+        return { color: dimmed ? "#484f58" : fcol, size: fsize, strokeWidth: 2, strokeColor: "#0d1117" };
+      })(),
       borderWidth: dimmed ? 1 : 2,
       opacity: dimmed ? 0.25 : 1
     };
@@ -574,6 +580,12 @@
   }
 
   function renderGraph(data) {
+    // Skip the disruptive relayout when nothing actually changed (auto-refresh).
+    var sig = (data && data.updated_at ? data.updated_at : "") + "|" +
+              ((data && data.nodes) ? data.nodes.length : 0) + "|" +
+              ((data && data.edges) ? data.edges.length : 0);
+    if (network && sig === lastSig) { return; }
+    lastSig = sig;
     graphData = data;
     nodeMap = {};
     (data.nodes || []).forEach(function (n) { nodeMap[n.id] = n; });
@@ -640,10 +652,20 @@
     };
 
     if (network) {
-      // Refresh: load new data, run physics briefly, then re-freeze.
+      // Refresh WITHOUT shaking the map: pin existing nodes to their current
+      // positions, keep physics OFF, and only restabilize if NEW nodes appeared.
+      var prevPos = network.getPositions();
       network.setData({ nodes: nodesDS, edges: edgesDS });
-      network.setOptions({ physics: { enabled: true } });
-      network.stabilize();
+      network.setOptions({ physics: { enabled: false } });
+      var anyNew = false;
+      nodesDS.getIds().forEach(function (id) {
+        if (prevPos[id]) { network.moveNode(id, prevPos[id].x, prevPos[id].y); }
+        else { anyNew = true; }
+      });
+      if (anyNew) {
+        network.setOptions({ physics: { enabled: true } });
+        network.stabilize(150);
+      }
     } else {
       network = new vis.Network(el.graph, { nodes: nodesDS, edges: edgesDS }, options);
       network.on("click", function (params) {
@@ -652,12 +674,15 @@
         }
       });
       // Freeze the layout once stabilized so nodes stop drifting. Persistent
-      // handler (not .once) so each 5-min refresh re-freezes after restabilizing.
-      // Nodes remain draggable; dragging one won't shake the whole graph.
+      // handler re-freezes after any restabilization. Nodes stay draggable.
       network.on("stabilizationIterationsDone", function () {
         network.setOptions({ physics: { enabled: false } });
         network.fit({ animation: { duration: 400, easingFunction: "easeInOutQuad" } });
       });
+      // Safety net: hard-freeze after 6s even if the event never fires.
+      setTimeout(function () {
+        if (network) { network.setOptions({ physics: { enabled: false } }); }
+      }, 6000);
     }
 
     updateStats(data);
