@@ -1361,10 +1361,10 @@ def generate_us_open() -> str:
                 for t, hs in portfolio_news.items() if hs
             )
             catalyst_verdicts = _gpt(
-                SYSTEM_PERSONA + "\nPre-market. US opens in 30 min. ONE line per stock. "
+                SYSTEM_PERSONA + "\nFirst hour of US trading is underway. ONE line per stock. "
                 "Format: TICKER → BUY/HOLD/SELL @ $price · reason. Skip unchanged stocks. "
-                "End with: ⚡ OPEN ACTION: [single most important thing at open]",
-                f"Pre-market news:\n{news_block}\n\nPortfolio:\n{ctx['portfolio_text'][:800]}"
+                "End with: ⚡ OPEN ACTION: [single most important thing in the first hour]",
+                f"Opening-hour news:\n{news_block}\n\nPortfolio:\n{ctx['portfolio_text'][:800]}"
             )
     except Exception as e:
         logger.error(f"Open news scan failed: {e}")
@@ -1393,13 +1393,16 @@ Structure:
 
     sep = "━" * 26
     regime_emoji = {"CALM":"🟢","NORMAL":"🔵","FEAR":"🟡","CRISIS":"🔴"}.get(ctx["regime"],"⚪")
+    why_block = _session_movers_why(ctx)
     msg = (
-        f"🔱 <b>US OPEN · {now.strftime('%H:%M')}</b>\n"
+        f"🔱 <b>🟢 OPEN STATUS · {now.strftime('%H:%M')}</b>\n"
         f"{regime_emoji} {ctx['regime']} · VIX {ctx['vix']}\n"
         f"{sep}\n\n"
     )
+    if why_block:
+        msg += why_block
     if catalyst_verdicts:
-        msg += f"<b>⚡ PRE-MARKET VERDICTS</b>\n{catalyst_verdicts}\n\n"
+        msg += f"<b>⚡ OPENING-HOUR VERDICTS</b>\n{catalyst_verdicts}\n\n"
     msg += analysis
     msg += f"\n\n<b>📊 MOVES</b>\n{ctx['key_moves']}"
     dashboard_url = getattr(config, "TITAN_SYSTEM_URL",
@@ -1561,6 +1564,141 @@ def analyze_reflexivity(ticker: str, chg: float, price: float) -> None:
 
 
 # ══════════════════════════════════════════════════════════════════════════════
+# SESSION BRIEFS — US-market cadence (GOD directive Jun 27 2026)
+# Six volatility-aware briefings, each ACTIONABLE and CAUSE-CLASSIFIED:
+#   14:30 preopen · 16:30 open · 19:30 midday · 21:00 preclose · 22:00 close · 23:00 postclose
+# Each surfaces the biggest holding movers and runs them through the Why Engine
+# so the message says WHY and WHAT TO DO — not just what happened.
+# ══════════════════════════════════════════════════════════════════════════════
+
+_PHASE_META = {
+    "preopen": {
+        "emoji": "🔮", "title": "PRE-OPEN FORECAST", "min_to_open": "US opens in 1h",
+        "ask": ("Write the PRE-OPEN FORECAST. Futures + Asia/Europe handoff + today's "
+                "macro calendar. Then FORECAST the session: base case, risk case, and "
+                "the single setup that matters. End with what to arm before the bell."),
+    },
+    "midday": {
+        "emoji": "📊", "title": "MIDDAY STATUS", "min_to_open": "≈4h into US session",
+        "ask": ("Write the MIDDAY STATUS. What changed since the open, who is leading/"
+                "lagging in the book, and whether any thesis is being tested. Is the "
+                "morning forecast playing out? Adjust the plan if needed."),
+    },
+    "preclose": {
+        "emoji": "🟠", "title": "PRE-CLOSE STATUS", "min_to_open": "1h before US close",
+        "ask": ("Write the PRE-CLOSE STATUS. Power-hour positioning: what to do into the "
+                "close, any limits/stops in striking distance, and whether to act today "
+                "or wait. Be decisive about the last hour."),
+    },
+    "postclose": {
+        "emoji": "🌙", "title": "POST-CLOSE + TOMORROW", "min_to_open": "1h after US close",
+        "ask": ("Write the POST-CLOSE SUMMARY then FORECAST TOMORROW. Final tape, what it "
+                "means for the book, after-hours movers/earnings, and 1-2 concrete setups "
+                "to prepare tonight for tomorrow's open."),
+    },
+}
+
+
+def _session_movers_why(ctx: dict, threshold: float = 2.5, max_movers: int = 2) -> str:
+    """Top holding movers run through the Why Engine — cause + sign + action.
+
+    This is Lesson #09 inside the daily cadence: a move is a RESULT; we trace the
+    cause and classify the sign before the brief implies any decision.
+    """
+    prices = ctx.get("prices", {})
+    held = []
+    for _bk, positions in config.PORTFOLIO.items():
+        for pos in positions:
+            tk = pos["ticker"]
+            chg = prices.get(tk, {}).get("change_pct")
+            if isinstance(chg, (int, float)) and abs(chg) >= threshold:
+                held.append((tk, chg))
+    if not held:
+        return ""
+    held.sort(key=lambda x: abs(x[1]), reverse=True)
+
+    try:
+        from tools.why_engine import diagnose_and_record, tag
+    except Exception:
+        return ""
+
+    blocks = []
+    for tk, chg in held[:max_movers]:
+        try:
+            headlines = fetch_portfolio_news(ticker=tk, hours=48)
+            hl = [h.get("title", "") for h in headlines][:6] if headlines else []
+        except Exception:
+            hl = []
+        try:
+            card = diagnose_and_record(
+                result_text=f"{tk} moved {chg:+.1f}% in session.",
+                ticker=tk, move_pct=float(chg), headlines=hl,
+            )
+            line = (f"{tag(card)} <b>{tk}</b> {chg:+.1f}% — {card.get('root_cause','')[:130]}\n"
+                    f"   ⚔ {card.get('action','HOLD')}")
+            if card.get("misread_risk"):
+                line += "\n   ⚠️ tape likely has the sign backwards"
+            blocks.append(line)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning(f"why-engine mover {tk}: {exc}")
+    if not blocks:
+        return ""
+    return "<b>🧭 WHY ENGINE — MOVERS (cause &gt; result)</b>\n" + "\n".join(blocks) + "\n\n"
+
+
+def generate_session_brief(phase: str) -> str:
+    meta = _PHASE_META.get(phase, _PHASE_META["midday"])
+    ctx = _fetch_live_context()
+    now = _berlin_now()
+    sep = "━" * 26
+    regime_emoji = {"CALM": "🟢", "NORMAL": "🔵", "FEAR": "🟡", "CRISIS": "🔴"}.get(ctx["regime"], "⚪")
+
+    why_block = _session_movers_why(ctx)
+
+    forward = phase in ("preopen", "postclose")
+    analysis = _gpt(
+        SYSTEM_PERSONA + f"""
+You are writing the {meta['title']} ({meta['min_to_open']}). Market volatility is
+ELEVATED — be sharp and specific, never generic. {meta['ask']}
+
+The biggest holding movers and their CAUSE CLASSIFICATION are provided as
+'WHY-ENGINE MOVERS' — do NOT re-derive them; build your read on top. Obey Lesson
+#09: trade the cause, not the exposed result.
+
+Format:
+{meta['emoji']} {meta['title']}
+• [2-4 tight bullets — indices/VIX, the book, what matters NOW]
+{'• 🔭 FORECAST: [base case / risk case for ' + ('the session' if phase == 'preopen' else 'tomorrow') + ']' if forward else '• 📍 STATUS: [is the plan on track? adjust?]'}
+⚔ ONE COMMAND: [single most important action right now — ticker + price + size]""",
+        f"""Phase: {meta['title']} · {now.strftime('%H:%M')} Berlin
+Regime: {ctx['regime']} · VIX {ctx['vix']} · Deploy {ctx['deploy_pct']}%
+WHY-ENGINE MOVERS:
+{why_block or '(no holding moved >2.5% this read)'}
+PORTFOLIO:
+{ctx['portfolio_text'][:1100]}
+MACRO MOVES:
+{ctx['key_moves']}
+EUR/USD: {ctx['fx_rate']} · Composite: {ctx['composite']}/100
+EARNINGS TODAY: {', '.join(e['ticker'] for e in ctx['earnings_today']) or 'None'}""",
+        tokens=820,
+    )
+
+    msg = (
+        f"🔱 <b>{meta['emoji']} {meta['title']} · {now.strftime('%H:%M')}</b>\n"
+        f"{regime_emoji} {ctx['regime']} · VIX {ctx['vix']} · Deploy {ctx['deploy_pct']}%\n"
+        f"{sep}\n\n"
+    )
+    if why_block:
+        msg += why_block
+    msg += analysis
+    msg += f"\n\n<b>📊 MOVES</b>\n{ctx['key_moves']}"
+    dashboard_url = getattr(config, "TITAN_SYSTEM_URL",
+        "https://sobluenight10-commits.github.io/gods_plan/OLYMPUS_UNIFIED.html")
+    msg += f"\n\n{sep}\n🔱 <a href=\"{dashboard_url}\">Open OLYMPUS</a>"
+    return msg
+
+
+# ══════════════════════════════════════════════════════════════════════════════
 # DISPATCHER
 # ══════════════════════════════════════════════════════════════════════════════
 
@@ -1571,10 +1709,18 @@ def generate_briefing(briefing_id: str, force: bool = False) -> Optional[str]:
         return None
     if briefing_id in ("master_daily", "morning_macro"):
         return generate_master_daily()
+    elif briefing_id == "us_preopen":
+        return generate_session_brief("preopen")
     elif briefing_id in ("us_open", "us_premarket"):
         return generate_us_open()
+    elif briefing_id in ("us_midday", "us_interim"):
+        return generate_session_brief("midday")
+    elif briefing_id == "us_preclose":
+        return generate_session_brief("preclose")
     elif briefing_id in ("us_close",):
         return generate_us_close()
+    elif briefing_id == "us_postclose":
+        return generate_session_brief("postclose")
     elif briefing_id == "olympus_weekly":
         return None
     else:

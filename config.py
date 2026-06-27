@@ -119,11 +119,19 @@ ALERT_TIER_MOMENTUM_UP = 10
 ALERT_TIER_BREAKOUT_UP = 15
 
 # ── Berlin schedules (weekday checks are inside battle_rhythm.generate_briefing) ─
+# US-session cadence (GOD directive Jun 27 2026): six volatility-aware briefings
+# anchored to the US market (summer: open 15:30, close 22:00 Berlin), plus the
+# 07:00 morning strategic plan. Each is actionable + cause-classified (Why Engine).
+#   14:30 = 1h before open · 16:30 = 1h after open · 19:30 = 4h after open
+#   21:00 = 1h before close · 22:00 = at close · 23:00 = 1h after close (+ tomorrow)
 DAILY_SCHEDULE = [
-    ("07:00", "master_daily", "🌅 Morning Brief"),
-    ("16:30", "us_open", "🇺🇸 US Open"),
-    ("19:00", "us_midday", "📊 Interim Review"),
-    ("23:30", "us_close", "🏁 US Close"),
+    ("07:00", "master_daily", "🌅 Morning Plan"),
+    ("14:30", "us_preopen", "🔮 Pre-Open Forecast"),
+    ("16:30", "us_open", "🟢 Open Status"),
+    ("19:30", "us_midday", "📊 Midday Status"),
+    ("21:00", "us_preclose", "🟠 Pre-Close Status"),
+    ("22:00", "us_close", "🏁 Close Summary"),
+    ("23:00", "us_postclose", "🌙 Post-Close + Tomorrow"),
 ]
 
 WEEKLY_SCHEDULE = [

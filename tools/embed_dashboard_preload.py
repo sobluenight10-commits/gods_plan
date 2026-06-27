@@ -23,6 +23,8 @@ Keys = [
     "heads_up",
     "point_a_scan",
     "point_b_scan",
+    "why_tape",
+    "chokepoint_radar",
 ]
 
 

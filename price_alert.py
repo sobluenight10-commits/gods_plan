@@ -514,15 +514,33 @@ def _build_minerva_move_alert_text(
     vol_pct, vol_tag = _volume_vs_avg_pct(ticker)
     next_cat = _next_catalyst_for_ticker(ticker)
     move_word = "Rise" if direction == "spike" else "Drop"
+
+    # Lesson #09: trace the CAUSE, not the exposed result. The Why Engine
+    # classifies the root driver (DEMAND/SUPPLY/FINANCING/SENTIMENT/MACRO),
+    # decides the SIGN vs thesis (which may be the opposite of the tape's read),
+    # and maps second-order beneficiaries.
+    why_block = ""
+    try:
+        from tools.why_engine import diagnose_and_record, format_card_plain
+        hl_list = [a.get("title", "") for a in (articles or [])][:6]
+        card = diagnose_and_record(
+            result_text=f"{ticker} {move_word.lower()} {pct:+.1f}% in session.",
+            ticker=ticker, move_pct=float(pct), headlines=hl_list,
+        )
+        why_block = "\n\n" + format_card_plain(card)
+    except Exception as exc:  # noqa: BLE001
+        logger.debug(f"why-engine intraday {ticker}: {exc}")
+
     body = (
         f"{banner}\n"
         f"{move_word}: {pct:+.1f}% · Vol: {vol_pct:.0f}% of avg ({vol_tag})\n\n"
         f"{line1}\n"
         f"{line2}\n"
-        f"{line3}\n\n"
+        f"{line3}"
+        f"{why_block}\n\n"
         f"─────────────────\n"
         f"Next catalyst: {next_cat}\n"
-        f"Do NOT chase. Minerva brief at 16:30."
+        f"Do NOT chase. Cause &gt; result."
     )
     return body
 
@@ -984,6 +1002,12 @@ def check_sec_filings():
     """Fetch SEC EDGAR 8-K feed every 10 min; alert by CIK match (not substring)."""
     import config
     import re as _re
+
+    # GOD directive: no autonomous Telegram on weekends. SEC rarely files
+    # weekends anyway, but gate explicitly so nothing leaks through.
+    berlin = pytz.timezone(getattr(config, "TIMEZONE", "Europe/Berlin"))
+    if datetime.now(berlin).weekday() >= 5:
+        return
 
     tickers = [t.upper() for t in (getattr(config, "THESIS_ALERT_TICKERS", None) or [])]
     if not tickers:

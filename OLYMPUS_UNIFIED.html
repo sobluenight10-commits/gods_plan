@@ -1669,6 +1669,90 @@ td.mx-eval.oly-tip::after {
   </div>
 </section>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     LESSON #09 — CAUSAL LAYER: Why Engine + Chokepoint Tripwires
+     Trade the cause, not the exposed result.
+     ══════════════════════════════════════════════════════════════════ -->
+<section id="causal-console" style="padding:14px 40px;background:linear-gradient(180deg,#160e1f 0%,#0d0814 100%);border-top:2px solid #8e6ac5;border-bottom:2px solid #8e6ac5;color:#efe6ff;">
+  <div style="font-size:13px;font-weight:800;letter-spacing:1px;margin-bottom:4px;">
+    🧭 CAUSAL CONSOLE — trade the cause, not the exposed result
+    <span style="font-weight:500;color:#a890c8;font-size:10px;margin-left:10px;">Lesson #09 · Why Engine + supply-chain chokepoint tripwires</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-top:8px;">
+    <div style="background:#140d1f;border:1px solid #4a2f78;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#caa9ff;margin-bottom:6px;">🏭 CHOKEPOINT TRIPWIRES</div>
+      <div id="chokepoint-body" style="font-family:'DM Mono',monospace;font-size:11px;line-height:1.5;color:#d9c9f0;">Loading chokepoints…</div>
+    </div>
+    <div style="background:#140d1f;border:1px solid #4a2f78;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#caa9ff;margin-bottom:6px;">🧭 WHY ENGINE — CAUSAL TAPE</div>
+      <div id="whytape-body" style="font-family:'DM Mono',monospace;font-size:11px;line-height:1.5;color:#d9c9f0;">Loading causal tape…</div>
+    </div>
+  </div>
+  <div style="margin-top:8px;color:#7a5e9c;font-size:10px;">
+    Sources <code style="background:#0a0610;padding:1px 4px;">chokepoint_radar.json</code> ·
+    <code style="background:#0a0610;padding:1px 4px;">why_tape.json</code>.
+    Every alert is classified DEMAND / SUPPLY / FINANCING / SENTIMENT / MACRO with a SIGN vs thesis (which may be the opposite of the tape) and a second-order beneficiary map.
+  </div>
+</section>
+
+<script>
+(function(){
+  var t = Date.now();
+  var fd = (typeof OLYMPUS_fetchDash === "function") ? OLYMPUS_fetchDash : function(r,k,x){ return fetch(r+"?t="+x).then(function(z){return z.json()}); };
+  var CLS_ICON = {DEMAND:"📉",SUPPLY:"🏭",FINANCING:"💳",SENTIMENT:"🗣",MACRO:"🌐",UNKNOWN:"❓"};
+  var STATE_COL = {FIRED:"#ff7a6f",HOT:"#ef9a4a",WATCH:"#efc56a",QUIET:"#7a8fa8"};
+  function esc(s){ return String(s==null?"":s).replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];}); }
+
+  function renderChoke(d){
+    var el = document.getElementById("chokepoint-body");
+    if (!el) return;
+    var rows = (d && d.chokepoints) ? d.chokepoints : [];
+    if (!rows.length){ el.innerHTML = '<span style="color:#a890c8;">No chokepoint data.</span>'; return; }
+    var html = rows.slice(0,6).map(function(c){
+      var col = STATE_COL[c.state] || "#7a8fa8";
+      var hd = (c.days_to_hard_date != null) ? (" · T-"+c.days_to_hard_date+"d") : "";
+      var ben = (c.beneficiaries||[]).slice(0,3).join(", ");
+      return '<div style="margin-bottom:7px;border-left:3px solid '+col+';padding-left:7px;">'
+        + '<span style="color:'+col+';font-weight:700;">'+esc(c.state)+'</span> '
+        + '<b>'+esc(c.label)+'</b> <span style="color:#a890c8;">('+(c.score||0)+'/100'+hd+')</span>'
+        + (c.sign_note ? '<div style="color:#bfa9e0;">↕ '+esc(c.sign_note).slice(0,150)+'</div>' : '')
+        + (ben ? '<div style="color:#9fe0a8;">🟢 winners: '+esc(ben)+'</div>' : '')
+        + '</div>';
+    }).join("");
+    el.innerHTML = html;
+  }
+
+  function renderWhy(d){
+    var el = document.getElementById("whytape-body");
+    if (!el) return;
+    var cards = (d && d.cards) ? d.cards : [];
+    if (!cards.length){ el.innerHTML = '<span style="color:#a890c8;">No causal tape yet — fires on the next classified move.</span>'; return; }
+    var html = cards.slice(0,8).map(function(c){
+      var icon = CLS_ICON[c.cause_class] || "❓";
+      var sgn = c.sign === "HELPS" ? '🟢↑' : (c.sign === "HURTS" ? '🔴↓' : '⚪→');
+      var mis = c.misread_risk ? ' <span style="color:#ff9a7a;">MISREAD</span>' : '';
+      return '<div style="margin-bottom:7px;border-left:3px solid #6a4a9c;padding-left:7px;">'
+        + icon+' <b>'+esc(c.ticker||c.cause_class)+'</b> '+sgn+mis
+        + '<div style="color:#bfa9e0;">'+esc(c.root_cause||"").slice(0,150)+'</div>'
+        + '<div style="color:#9fe0a8;">⚔ '+esc(c.action||"HOLD").slice(0,120)+'</div>'
+        + '</div>';
+    }).join("");
+    el.innerHTML = html;
+  }
+
+  function loadCausal(){
+    fd("chokepoint_radar.json","chokepoint_radar",t).then(renderChoke).catch(function(){
+      var el=document.getElementById("chokepoint-body"); if(el) el.innerHTML='<span style="color:#ff9a7a;">Chokepoint feed unavailable.</span>';
+    });
+    fd("why_tape.json","why_tape",t).then(renderWhy).catch(function(){
+      var el=document.getElementById("whytape-body"); if(el) el.innerHTML='<span style="color:#a890c8;">Causal tape loads from Minerva.</span>';
+    });
+  }
+  loadCausal();
+  setInterval(loadCausal, 5*60*1000);
+})();
+</script>
+
 <script>
 (function(){
   function fmtEur(x){ if (x == null) return "—"; return "€"+Math.round(x).toLocaleString(); }
@@ -2936,6 +3020,11 @@ MINERVA ACTION CHANGE RULE (permanent):
   <strong style="color:#d4a017">Lesson #08</strong>
   <em style="color:#888;margin:0 6px">Stop Breach = One Shot</em>
   <span style="font-size:12px">A stop breach is an INFORMATION EVENT, not a loss event. Thesis check first. INTACT &#8594; ARMED ONE SHOT (dip widened narrative gap = maximum conviction). WOUNDED &#8594; EXIT REVIEW. DEAD &#8594; EXIT NOW. The deeper the dip with intact thesis = the wider the Soros gap = the higher the conviction = most aggressive sizing.</span>
+</div>
+<div class="lesson-item" style="border-left:3px solid #b3e86a;padding:8px 12px;margin:4px 0;background:rgba(179,232,106,0.10)">
+  <strong style="color:#6fae2e">Lesson #09</strong>
+  <em style="color:#888;margin:0 6px">Trade the Cause, Not the Exposed Result</em>
+  <span style="font-size:12px">Every price move and headline is a RESULT; the market staples the nearest narrative onto it and is frequently WRONG on causation — and when it is, the SIGN of the signal inverts. WF6 case: a China tungsten squeeze forcing a 25% supply cliff is an INPUT shock that RAISES memory prices (bullish for SK Hynix/Micron), yet the tape sold it as bearish AI-demand skepticism. RULE: before acting on any move, trace it up the causal chain to the root driver and classify it — DEMAND (real thesis risk) / SUPPLY (often the opposite of what the tape assumes) / FINANCING (de-rating) / SENTIMENT (noise) / MACRO. The exposed result is the question, never the answer. Then ask the question the market skips: who does this constrained input make richer? Encoded mechanically in the Why Engine + Chokepoint Tripwires.</span>
 </div>
     </div>
   </div>

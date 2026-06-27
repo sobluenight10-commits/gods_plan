@@ -359,6 +359,17 @@ def _heads_up() -> None:
         print(f"[HEADS_UP] failed: {exc}")
 
 
+def _chokepoint_radar() -> None:
+    """Supply-chain chokepoint tripwires (Lesson #09) — tungsten/WF6, gallium,
+    rare earths, neon, ABF substrate. Telegram is weekend/off-hours gated."""
+    try:
+        from tools.chokepoint_radar import run as _run
+        out = _run(send_telegram=True)
+        print(f"[CHOKEPOINT] active={len(out.get('active', []))}")
+    except Exception as exc:
+        print(f"[CHOKEPOINT] failed: {exc}")
+
+
 def _embed_dashboard_preload() -> None:
     """Inline JSON snapshot into OLYMPUS_UNIFIED.html (GitHub/file mirror safe)."""
     try:
@@ -431,6 +442,8 @@ def main():
     # Phase 6 — HEADS-UP (proximity-gated, Telegram-clean) — runs last so
     # it can read the latest strike_cards/strike_plan if needed.
     _heads_up()
+    # Phase 7 — CAUSAL LAYER (Lesson #09): supply-chain chokepoint tripwires.
+    _chokepoint_radar()
     _embed_dashboard_preload()
     print("=== DONE ===")
 

@@ -208,7 +208,14 @@ def run_tech_radar_scan(send_telegram_high: bool = True) -> Dict[str, Any]:
     d["system_intel"] = si
     _save_json(DIRECTIVES_PATH, d)
 
-    # Telegram: only fresh high-signal not yet alerted
+    # Telegram: only fresh high-signal not yet alerted.
+    # GOD directive: no autonomous Telegram on weekends / outside the US window.
+    try:
+        from tools.alert_gate import noise_allowed
+        if send_telegram_high and not noise_allowed():
+            send_telegram_high = False
+    except Exception:
+        pass
     if send_telegram_high and new_items:
         hot = [x for x in new_items if x.get("score", 0) >= TECH_RADAR_SCORE_ALERT]
         for x in sorted(hot, key=lambda z: -z.get("score", 0))[:3]:

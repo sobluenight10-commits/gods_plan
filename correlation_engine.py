@@ -319,9 +319,9 @@ def detect_correlated_signals(state, prices, skills):
         declining = [m for m in members if m["change"] < -2.0]
 
         # If sector average is strongly negative AND majority declining
-        if avg_chg <= -3.0 and len(declining) >= len(members) * 0.6:
+        if avg_chg <= -3.5 and len(declining) >= len(members) * 0.66:
             key = f"sector_{sector}"
-            if _alert_cooldown_ok(state, key, 120):
+            if _alert_cooldown_ok(state, key, 240):
                 tickers_str = ", ".join(
                     f"{m['ticker']}({m['change']:+.1f}%)" for m in
                     sorted(members, key=lambda x: x["change"])[:5]
@@ -424,6 +424,40 @@ def detect_correlated_signals(state, prices, skills):
     return alerts
 
 
+def _alerts_allowed_now() -> bool:
+    """Weekday + extended US window only — kills 24/7 weekend/overnight spam."""
+    try:
+        from tools.alert_gate import noise_allowed
+        return noise_allowed()
+    except Exception:
+        # Fallback: weekday 13:30–23:30 Berlin
+        now = datetime.now(BERLIN)
+        if now.weekday() >= 5:
+            return False
+        h = now.hour + now.minute / 60.0
+        return 13.5 <= h <= 23.5
+
+
+def _enrich_with_why(alert: dict) -> str:
+    """Append a causal diagnosis + action so the alert is linked to a decision,
+    not just an exposed result (Lesson #09). Best-effort; never blocks the send."""
+    try:
+        from tools.why_engine import diagnose_and_record, format_card
+        subject = alert.get("ticker") or alert.get("sector") or ""
+        # Strip HTML tags from the alert body to feed the engine clean text.
+        import re as _re
+        body = _re.sub(r"<[^>]+>", "", alert.get("msg", ""))
+        card = diagnose_and_record(
+            result_text=body[:400],
+            ticker=alert.get("ticker"),
+            context=f"Correlation-engine alert type: {alert.get('type')} · subject: {subject}",
+        )
+        return "\n\n" + format_card(card)
+    except Exception as exc:  # noqa: BLE001
+        print(f"  [CORR] why-engine enrich failed: {exc}", flush=True)
+        return ""
+
+
 def run_cycle(state, skills):
     """Single correlation cycle."""
     now = datetime.now(BERLIN)
@@ -439,11 +473,24 @@ def run_cycle(state, skills):
 
     track_price_momentum(state, prices)
 
+    # GOD directive (Jun 27 2026): no autonomous Telegram on weekends, and no
+    # correlation spam outside the US session. Keep tracking momentum (cheap),
+    # but do not detect/send alerts when the gate is closed.
+    if not _alerts_allowed_now():
+        if now.minute % 30 == 0:
+            print(f"[{now:%H:%M}] Gate closed (weekend/off-hours) — no alerts", flush=True)
+        save_state(state)
+        return state
+
     alerts = detect_correlated_signals(state, prices, skills)
 
     if alerts:
         for a in alerts:
-            _send_telegram(a["msg"])
+            msg = a["msg"]
+            # Lesson #09: every alert must carry its cause + the action it implies.
+            if a.get("type") in ("SECTOR_WEAKNESS", "EXIT_SIGNAL", "DANGER_CONVERGENCE"):
+                msg = msg + _enrich_with_why(a)
+            _send_telegram(msg)
             _mark_alerted(state, a["key"])
             print(f"  [ALERT] {a['type']}: {a.get('ticker', a.get('sector', '?'))}", flush=True)
 

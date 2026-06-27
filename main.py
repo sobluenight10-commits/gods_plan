@@ -348,15 +348,26 @@ def start_full_system():
         logger.info(f"     {t} {desc}")
     logger.info("=" * 50)
 
-    # Notify Telegram that Minerva is online (so user knows alarms will work)
+    # Notify Telegram that Minerva is online (so user knows alarms will work).
+    # Suppress on weekends per GOD directive (no autonomous weekend messages).
     try:
+        from tools.alert_gate import weekend_muted
+        _weekend_quiet = weekend_muted()
+    except Exception:
+        _weekend_quiet = False
+    if _weekend_quiet:
+        logger.info("Weekend — startup Telegram ping suppressed (GOD directive)")
+    try:
+        if _weekend_quiet:
+            raise StopIteration
         from telegram_bot import send_telegram
         lines = [
             "🔱 <b>Minerva ONLINE</b>",
             "Send /start for commands.",
             "",
-            "<b>Berlin (weekdays)</b>",
-            "· 07:00 Morning · 16:30 US Open · 19:00 Interim · 23:30 US Close",
+            "<b>Berlin (weekdays) — US-session cadence</b>",
+            "· 07:00 Morning Plan · 14:30 Pre-Open Forecast · 16:30 Open Status",
+            "· 19:30 Midday Status · 21:00 Pre-Close · 22:00 Close · 23:00 Tomorrow",
             f"· News pulse every {int(getattr(app_config, 'NEWS_PULSE_INTERVAL_MINUTES', 120))} min "
             f"({getattr(app_config, 'NEWS_PULSE_START_HOUR', 7)}–{getattr(app_config, 'NEWS_PULSE_END_HOUR', 23.5)}h, filtered headlines)",
             "· Thesis/spike tier scan every 5 min (weekdays 15:30–22:00 Berlin, THESIS_ALERT_TICKERS & ALERT_TIER_*)",
@@ -366,6 +377,8 @@ def start_full_system():
             f"· Tech radar (RSS) every {int(getattr(app_config, 'TECH_RADAR_INTERVAL_MINUTES', 30))} min — /tech",
         ]
         send_telegram("\n".join(lines))
+    except StopIteration:
+        pass
     except Exception as e:
         logger.warning(f"Startup Telegram ping failed: {e}")
 
