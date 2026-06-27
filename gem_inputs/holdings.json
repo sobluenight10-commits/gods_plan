@@ -1,0 +1,59 @@
+{
+  "as_of": "2026-06-27",
+  "source": "GOD broker screenshots (Kiwoom 국내/해외 + Trade Republic)",
+  "note": "Source of truth for ACTUAL positions. Quantities marked null were cropped in the app screenshot and need GOD confirmation. KRW values are evaluation amounts; TR values are EUR position market values.",
+  "kiwoom_domestic": {
+    "account": "5025-6895",
+    "total_buy_krw": 2227759,
+    "total_eval_krw": 22571200,
+    "total_pnl_krw": 20294600,
+    "total_return_pct": 910.99,
+    "positions": [
+      {"ticker": "000660.KS", "name": "SK Hynix", "shares": 6, "avg_cost_krw": 130500, "current_krw": 2700000, "return_pct": 1964.50, "pnl_krw": 15382060},
+      {"ticker": "272210.KS", "name": "Hanwha Systems", "shares": 88, "avg_cost_krw": 16418, "current_krw": 72400, "return_pct": 340.02, "pnl_krw": 4912540}
+    ]
+  },
+  "kiwoom_overseas": {
+    "account": "5620-5504",
+    "currency": "KRW_eval",
+    "positions": [
+      {"ticker": "MSFT", "name": "Microsoft", "shares": 5, "eval_krw": 2864783, "return_pct": -9.80},
+      {"ticker": "OKLO", "name": "Oklo", "shares": 21, "eval_krw": 1613010, "return_pct": -25.51},
+      {"ticker": "KTOS", "name": "Kratos Defense", "shares": 19, "eval_krw": 1377956, "return_pct": -34.19},
+      {"ticker": "AVGO", "name": "Broadcom", "shares": 2, "eval_krw": 1121487, "return_pct": -7.48},
+      {"ticker": "GOOGL", "name": "Alphabet A", "shares": 2, "eval_krw": 1036597, "return_pct": -2.62},
+      {"ticker": "NVDA", "name": "Nvidia", "shares": 2, "eval_krw": 887294, "return_pct": -2.24},
+      {"ticker": "PLTR", "name": "Palantir", "shares": null, "eval_krw": 867415, "return_pct": -17.77},
+      {"ticker": "UEC", "name": "Uranium Energy", "shares": 50, "eval_krw": 829548, "return_pct": -22.24},
+      {"ticker": "TMO", "name": "Thermo Fisher", "shares": 1, "eval_krw": 788117, "return_pct": -0.49},
+      {"ticker": "ARKQ", "name": "ARK Autonomous Tech & Robotics ETF", "shares": 4, "eval_krw": 754704, "return_pct": 27.70},
+      {"ticker": "TSLA", "name": "Tesla", "shares": 1, "eval_krw": 583311, "return_pct": -4.72},
+      {"ticker": "SPACEX", "name": "SpaceX", "shares": null, "eval_krw": 470784, "return_pct": -1.63},
+      {"ticker": "UUUU", "name": "Energy Fuels", "shares": 20, "eval_krw": 449185, "return_pct": -30.67},
+      {"ticker": "FCX", "name": "Freeport-McMoRan", "shares": 3, "eval_krw": 287807, "return_pct": -9.30},
+      {"ticker": "BOTZ", "name": "Global X Robotics & AI ETF", "shares": null, "eval_krw": 276593, "return_pct": 1.19},
+      {"ticker": "PL", "name": "Planet Labs", "shares": 7, "eval_krw": 83170, "return_pct": -15.22}
+    ]
+  },
+  "trade_republic": {
+    "currency": "EUR_eval",
+    "positions": [
+      {"ticker": "TSM", "name": "TSMC (ADR)", "eval_eur": 1890.00, "return_pct": 31.52},
+      {"ticker": "COHR", "name": "Coherent", "eval_eur": 1424.76, "return_pct": 54.87},
+      {"ticker": "REGN", "name": "Regeneron", "eval_eur": 1111.00, "return_pct": -7.59},
+      {"ticker": "PLTR", "name": "Palantir", "eval_eur": 888.48, "return_pct": -9.70},
+      {"ticker": "NTR", "name": "Nutrien", "eval_eur": 841.60, "return_pct": -20.23},
+      {"ticker": "PL", "name": "Planet Labs", "eval_eur": 761.60, "return_pct": -12.62},
+      {"ticker": "RKLB", "name": "Rocket Lab", "eval_eur": 621.03, "return_pct": 24.21},
+      {"ticker": "KTOS", "name": "Kratos Defense", "eval_eur": 579.88, "return_pct": -28.10},
+      {"ticker": "TMO", "name": "Thermo Fisher", "eval_eur": 537.26, "return_pct": 2.92},
+      {"ticker": "NTLA", "name": "Intellia Therapeutics", "eval_eur": 290.80, "return_pct": 4.68},
+      {"ticker": "UEC", "name": "Uranium Energy", "eval_eur": 280.20, "return_pct": -15.35},
+      {"ticker": "URNM", "name": "Sprott Uranium Miners ETF", "eval_eur": 236.13, "return_pct": -21.55},
+      {"ticker": "SPACEX", "name": "SpaceX", "eval_eur": 88.73, "return_pct": 12.90},
+      {"ticker": "MC.PA", "name": "LVMH", "eval_eur": 38.82, "return_pct": -23.49},
+      {"ticker": "CWEN", "name": "Clearway Energy", "eval_eur": 32.09, "return_pct": 9.45},
+      {"ticker": "UUUU", "name": "Energy Fuels", "eval_eur": 19.63, "return_pct": -29.57}
+    ]
+  }
+}
