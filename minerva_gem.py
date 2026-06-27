@@ -201,7 +201,7 @@ GRADE_THRESHOLDS = [
 ]
 
 
-def _gem_score(u1, u5, d1, b1_gain, risk_avg=None):
+def _gem_score(u1, u5, d1, b1_gain, risk_avg=None, dd_from_high=None):
     """
     Multi-factor GEM Score (0-100) → 9-tier letter grade.
 
@@ -211,6 +211,12 @@ def _gem_score(u1, u5, d1, b1_gain, risk_avg=None):
       Downside  (-15..20): 1Y worst-drop (PENALTY for extreme drawdowns)
       Asymmetry   (0-20):  bull-gain / worst-drop ratio (capped if downside extreme)
       Risk adj  (-15..+3): integrated risk screener penalty/bonus
+      Momentum  (-22..0):  REALIZED trailing drawdown from 52wk/recent high.
+                           Lesson #10 — the model projects upside off the CURRENT
+                           price, so a collapsed name looks "cheap" and scores high.
+                           A deep realized downtrend penalizes that: a falling price
+                           is a thesis question, not free upside (the 1810.HK -60%
+                           A-grade failure). Inert when dd_from_high is None.
     """
     s5 = _lerp(u5, [-50, 0, 25, 50, 100, 200], [0, 10, 18, 24, 30, 35])
     s1 = _lerp(u1, [-30, -15, 0, 10, 25], [0, 5, 12, 18, 25])
@@ -231,7 +237,12 @@ def _gem_score(u1, u5, d1, b1_gain, risk_avg=None):
         risk_adj = _lerp(risk_avg, [1.5, 3.0, 4.5, 6.0, 7.5],
                                     [3,   0,   -4,  -10, -15])
 
-    raw = s5 + s1 + sd + sa + risk_adj
+    # Realized trailing-drawdown penalty (Lesson #10).
+    mom_adj = 0.0
+    if dd_from_high is not None:
+        mom_adj = _lerp(dd_from_high, [-60, -40, -25, -15, -5], [-22, -14, -7, -2, 0])
+
+    raw = s5 + s1 + sd + sa + risk_adj + mom_adj
     return round(min(100, max(0, raw)), 1)
 
 
@@ -391,15 +402,27 @@ def evaluate(data):
     # Risk screener integration (injected by run_gem_daily or passed in data)
     risk_avg = data.get("_risk_avg")
 
-    raw_score = _gem_score(u1, u5, d1, b1, risk_avg=risk_avg)
+    # Realized trailing drawdown from 52wk/recent high (negative %). Populated by
+    # the build caller from price history; inert if absent.
+    dd_high = data.get("dd_from_high_pct")
+
+    raw_score = _gem_score(u1, u5, d1, b1, risk_avg=risk_avg, dd_from_high=dd_high)
     grade = _score_to_grade(raw_score)
 
+    downtrend_capped = False
     if thesis == "dead":
         grade, raw_score = "F", min(raw_score, 9)
     elif thesis == "wounded" and raw_score >= 30:
         grade, raw_score = "C+", min(raw_score, 39)
     elif macro == "broken" and raw_score >= 40:
         grade, raw_score = "B", min(raw_score, 49)
+    # Lesson #10: a deep realized structural downtrend HARD-CAPS the letter grade.
+    # No name down >40% from its high can be graded A/A+/S off model "upside" alone
+    # — that upside is an artifact of the collapsed price. This is the guard that
+    # would have stopped the 1810.HK A-grade.
+    if dd_high is not None and dd_high <= -40 and grade in ("S", "A+", "A"):
+        grade, raw_score = "B", min(raw_score, 49)
+        downtrend_capped = True
 
     gem_u = grade in ["S", "A+", "A", "B+", "B"]
     gem_p = grade in ["S", "A+", "A"]
@@ -408,6 +431,8 @@ def evaluate(data):
     reason = (f"Grade {grade} (GEM {raw_score:.0f}/100): "
               f"1y {u1:+.1f}%, 5y {u5:+.1f}%, worst {d1:.1f}%, "
               f"bull {b1:+.1f}%")
+    if downtrend_capped:
+        reason += f" · ⚠ DOWNTREND-CAPPED ({dd_high:+.0f}% from high)"
 
     # ── Versus matrix ────────────────────────────────────────────────────────
     vs = {
@@ -474,6 +499,8 @@ def evaluate(data):
             "gem_universe":      gem_u,
             "gem_portfolio":     gem_p,
             "god_score_warning": warn,
+            "dd_from_high_pct":  _r(dd_high) if dd_high is not None else None,
+            "downtrend_capped":  downtrend_capped,
             "reason":            reason,
             "risk_integrated":   risk_avg is not None,
             "risk_avg":          _r(risk_avg, 1) if risk_avg is not None else None,

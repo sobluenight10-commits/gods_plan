@@ -17,6 +17,15 @@ Before changing any stock action in `OLYMPUS_UNIFIED.html`:
 4. **KTOS example:** Another defense name exiting (e.g. AVAV) is not a KTOS thesis break — different companies, different contracts.
 5. **UEC example:** A live limit at €11 is **ARMED**, not HOLD and not ADD — the system waits for the fill; GOD does not second-guess the order.
 
+## LESSON #10 — A COLLAPSING PRICE IS A THESIS QUESTION, NOT FREE UPSIDE (MANDATORY)
+
+**The 1810.HK failure.** GEM graded Xiaomi **A** while it fell ~60% over months on a bad quarter, and GOD trusted the grade and sold at a big loss. Two root causes, both now fixed:
+
+1. **The grade table was a STATIC April-14 snapshot** inlined in `OLYMPUS_UNIFIED.html` (`const GEM_DATA`, never refreshed). It graded the *old* price. **Rule: the GEM grade summary must never be trusted past its `run_date` without a re-run.** The dashboard now self-corrects: `applyGemDowntrendOverlay` reads LIVE `point_a_scan.json` and strikes through + red-flags any grade sitting on a name now >25% below its 20-week MA.
+2. **The model read a collapsed price as cheap upside.** `minerva_gem._gem_score` projects EV off the *current* price, so a crash inflates "upside" → high grade. Fixed with the **momentum guard**: `dd_from_high_pct` (realized trailing-1y drawdown, fetched in `run_gem_daily.fetch_live_prices`) applies a penalty up to −22, and any name down **≥40% from its high is HARD-CAPPED at grade B** (`downtrend_capped`). No structurally collapsing name can be A/A+/S off model math alone.
+
+**Doctrine:** before trusting any high grade, check the realized chart. Cheap-because-collapsing is a thesis question (diagnose the cause — Lesson #09), never a free buy. Letter grade is invalid the moment price decouples below the 20-week trend until the cause is diagnosed and the grade re-run.
+
 ## OLYMPUS-SENTINEL — PRIME DIRECTIVE KERNEL (PHASE 1)
 
 The Sentinel stack is **above** prediction. A forecaster cannot buy. A risk agent can always refuse. Order of evaluation: `kernel → drawdown_guardian → liquidity_gate → ops_gate → position_sizer → PRIME_MINISTER` in `tools/build_active_actions.py`.

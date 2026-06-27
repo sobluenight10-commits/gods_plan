@@ -67,24 +67,34 @@ def assign_precision_tiers(results):
             r["grading"]["precision_composite"] = round(r.pop("_pc"), 3)
 
 def fetch_live_prices(tickers):
-    """Fetch FRESH prices from yfinance. Returns {ticker: price} dict."""
+    """Fetch FRESH prices + realized 52wk drawdown from yfinance.
+
+    Returns (prices, dd_from_high) where dd_from_high[t] is the % the last close
+    sits below its trailing 1-year high (negative). This feeds the Lesson #10
+    momentum guard so a collapsed name can't keep a stale A grade.
+    """
     prices = {}
+    dd_from_high = {}
     try:
         import yfinance as yf
-        print(f"[GEM] Fetching live prices for {len(tickers)} tickers...")
+        print(f"[GEM] Fetching live prices + 52wk drawdown for {len(tickers)} tickers...")
         for t in tickers:
             try:
-                h = yf.Ticker(t).history(period="5d")
+                h = yf.Ticker(t).history(period="1y")
                 if not h.empty:
-                    live = round(float(h["Close"].iloc[-1]), 4)
+                    closes = h["Close"]
+                    live = round(float(closes.iloc[-1]), 4)
                     if live > 0:
                         prices[t] = live
+                        hi = float(closes.max())
+                        if hi > 0:
+                            dd_from_high[t] = round((live / hi - 1.0) * 100.0, 1)
             except Exception as e:
                 print(f"  [WARN] {t}: yfinance failed: {e}")
         print(f"[GEM] Got live prices for {len(prices)}/{len(tickers)} tickers")
     except ImportError:
         print("[GEM] WARNING: yfinance not installed")
-    return prices
+    return prices, dd_from_high
 
 def _load_risk_scores():
     """Load latest risk screener results. Returns {ticker: {avg_risk, risk_level, critical_risks}}."""
@@ -118,6 +128,11 @@ def run():
     with open(INPUT_FILE, "r") as f:
         positions = json.load(f)
 
+    # Drop sold / not-held names from the GEM universe so they stop appearing in
+    # the grade summary (1810.HK sold at a loss; VRT/IAU never held).
+    _DROP = {"1810.HK", "VRT", "IAU"}
+    positions = [p for p in positions if p.get("ticker") not in _DROP]
+
     # RISK INTEGRATION — load latest risk screener scores
     risk_map = _load_risk_scores()
     for p in positions:
@@ -128,11 +143,13 @@ def run():
 
     # LIVE PRICE OVERRIDE — always use freshest yfinance prices
     all_tickers = [p["ticker"] for p in positions]
-    live_prices = fetch_live_prices(all_tickers)
+    live_prices, dd_from_high = fetch_live_prices(all_tickers)
 
     updated = 0
     for p in positions:
         t = p["ticker"]
+        if t in dd_from_high:
+            p["dd_from_high_pct"] = dd_from_high[t]
         if t in live_prices:
             old = p.get("current_price", 0)
             new = live_prices[t]

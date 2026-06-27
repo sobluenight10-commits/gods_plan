@@ -1424,7 +1424,7 @@ td.mx-eval.oly-tip::after {
   // ── PORTFOLIO RECONCILIATION ─────────────────────────────────────────────
   // Single, maintainable source of truth for matrix membership. Removes sold
   // names, promotes held watch rows to PORTFOLIO, renames xAI -> SpaceX (SPCX).
-  var REMOVE  = {"IAU":1, "VRT":1};               // sold / not held
+  var REMOVE  = {"IAU":1, "VRT":1, "1810.HK":1};  // sold / not held (1810.HK sold at a loss)
   var PROMOTE = {"NVDA":1, "OKLO":1, "NTLA":1};   // held -> PORTFOLIO
   var RENAME  = {"xAI": {ticker:"SPCX", name:"SpaceX"}};
   function reconcile(){
@@ -2749,7 +2749,6 @@ td.mx-eval.oly-tip::after {
         <tr><td style="padding:2px 8px;font-weight:700">OKLO</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">60%</td><td style="padding:2px 8px">Buy $57 — Meta 1.2GW</td></tr>
         <tr style="background:#f8f9fa"><td style="padding:2px 8px;font-weight:700">PLTR</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">59%</td><td style="padding:2px 8px">Entry zone €95–109</td></tr>
         <tr><td style="padding:2px 8px;font-weight:700">NVDA</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">45%</td><td style="padding:2px 8px">Buy on pullback</td></tr>
-        <tr style="background:#f8f9fa"><td style="padding:2px 8px;font-weight:700">1810.HK</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">41%</td><td style="padding:2px 8px">Hold — tariff fear</td></tr>
         <tr><td style="padding:2px 8px;font-weight:700">UEC</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">⚡ ARM</td><td style="text-align:center;padding:2px 8px;font-weight:800">€11</td><td style="padding:2px 8px">Limit armed — thesis intact</td></tr>
         <tr style="background:#f8f9fa"><td style="padding:2px 8px;font-weight:700">FCX</td><td style="text-align:center;padding:2px 8px;color:#d97706;font-weight:700">🔱 GAP</td><td style="text-align:center;padding:2px 8px;font-weight:800">32%</td><td style="padding:2px 8px">Hold $54.50 stop</td></tr>
         <tr><td style="padding:2px 8px;font-weight:700">KTOS</td><td style="text-align:center;padding:2px 8px;color:#888">−13.7%</td><td style="text-align:center;padding:2px 8px">—</td><td style="padding:2px 8px">Sector pullback — hold</td></tr>
@@ -4280,29 +4279,43 @@ function renderRadarSector8(blogRaw) {
   if (!items.length) {
     html += "<div style=\"color:var(--es-ink4);font-size:10px;\">None outside portfolio.</div>";
   } else {
-    // Rank by blog-score so the actionable names float to the top.
+    // Provisional CONVICTION when the blog feed gives no explicit score:
+    // recency (fresh = stronger) + mention-count (clustered = stronger). A name
+    // mentioned once long ago scores ~1; mentioned multiple times this week ~9.
+    function _recency(dateStr){
+      if(!dateStr) return 0;
+      var d = Date.parse(dateStr); if(isNaN(d)) return 0;
+      var days = (Date.now()-d)/86400000;
+      return days<=7 ? 6 : days<=21 ? 4 : days<=60 ? 2 : 1;
+    }
     var scored = items.map(function (b) {
       var sc = parseInt(b.score, 10); if (isNaN(sc)) sc = 0;
-      return { b: b, sc: sc };
-    }).sort(function (x, y) { return y.sc - x.sc; });
-    var researchN = scored.filter(function (s) { return s.sc >= 8; }).length;
+      var cnt = parseInt(b.count != null ? b.count : (b.mentions != null ? b.mentions : b.n), 10);
+      if (isNaN(cnt)) cnt = 0;
+      var conv = sc > 0 ? sc : Math.min(9, _recency(b.date) + Math.min(3, cnt));
+      return { b: b, sc: sc, conv: conv, cnt: cnt };
+    }).sort(function (x, y) { return y.conv - x.conv; });
+    var researchN = scored.filter(function (s) { return s.conv >= 7; }).length;
     html += "<div style=\"font-size:10px;color:#9fe0a8;margin:2px 0 6px;\">→ DIRECTION: " + scored.length + " names off-book · "
-      + (researchN ? ("<b>research now: " + scored.slice(0, researchN).map(function (s) { return olyEsc(s.b.ticker); }).join(", ") + "</b>") : "none ≥8 — all watch/log, no action required")
+      + (researchN ? ("<b>research first: " + scored.slice(0, researchN).map(function (s) { return olyEsc(s.b.ticker); }).join(", ") + "</b>") : "none high-conviction yet — watch for a name to recur before acting")
       + "</div>";
     html += scored.slice(0, 10).map(function (s) {
-      var b = s.b, sc = s.sc;
-      var action = sc >= 8 ? "RESEARCH" : sc >= 6 ? "WATCH" : "LOG";
-      var aCol = sc >= 8 ? "#8dc26f" : sc >= 6 ? "#efc56a" : "#7a8fa8";
+      var b = s.b, conv = s.conv;
+      var action = conv >= 7 ? "RESEARCH" : conv >= 4 ? "WATCH" : "LOG";
+      var aCol = conv >= 7 ? "#8dc26f" : conv >= 4 ? "#efc56a" : "#7a8fa8";
       var why = b.note || b.theme || b.source_post || "";
-      var scTxt = sc > 0 ? (sc + "/10") : "—";
+      var convTxt = "conv " + conv + "/10" + (s.sc > 0 ? "" : "*") + (s.cnt > 1 ? " ·" + s.cnt + "× mentions" : "");
       return "<div style=\"margin:4px 0;font-size:10px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;\">"
         + "<b style=\"min-width:70px;\">" + olyEsc(b.ticker) + "</b>"
         + "<span style=\"background:" + aCol + ";color:#0b1420;padding:0 5px;border-radius:3px;font-weight:700;\">" + action + "</span>"
-        + "<span style=\"color:#a9c7e8;\">blog " + scTxt + "</span>"
+        + "<span style=\"color:#a9c7e8;\">" + convTxt + "</span>"
         + "<span style=\"color:var(--es-ink4);\">" + olyEsc(b.date || "") + "</span>"
         + (why ? "<span style=\"color:#9fb3cc;\">— " + olyEsc(String(why).slice(0, 90)) + "</span>" : "")
         + "</div>";
     }).join("");
+    html += "<div style=\"margin-top:8px;padding-top:6px;border-top:1px solid #25354a;color:#7a8fa8;font-size:9px;line-height:1.5;\">"
+      + "<b>HOW TO PICK:</b> 1) take the top RESEARCH name → 2) confirm it clusters in the ATLAS graph (high node-degree = recurring thesis, not a one-off) → 3) map it to a sector you already hold → 4) only then run a GOD-score + GEM pass. <b>*</b> = provisional conviction (recency+mentions; blog gave no explicit score)."
+      + "</div>";
   }
   el.innerHTML = html;
 }
@@ -5319,7 +5332,7 @@ const GEM_DATA = {
   "UEC": {grade:"A",gem_score:65.9,u1y:7.92,u5y:266.15,worst1y:-71.70,unreal:15.34,cur_vs_1y:7.89,mos:21.82,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
   "NVDA": {grade:"A",gem_score:65.2,u1y:4.00,u5y:254.58,worst1y:-58.62,unreal:null,cur_vs_1y:3.99,mos:null,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
   "272210.KS": {grade:"A",gem_score:68.7,u1y:9.42,u5y:178.94,worst1y:-60.36,unreal:195.78,cur_vs_1y:9.42,mos:220.44,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
-  "1810.HK": {grade:"A",gem_score:69.9,u1y:9.80,u5y:172.39,worst1y:-56.81,unreal:695.88,cur_vs_1y:9.81,mos:760.05,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
+  "TSLA": {grade:"B+",gem_score:55.0,u1y:37.5,u5y:null,worst1y:null,unreal:null,cur_vs_1y:37.5,mos:null,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"forecast ensemble (GEM run pending) · p05 -78% p50 6% p95 276%"},
   "UUUU": {grade:"A",gem_score:62.1,u1y:5.05,u5y:168.39,worst1y:-74.46,unreal:7.91,cur_vs_1y:5.04,mos:8.73,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
   "URNM": {grade:"A",gem_score:61.0,u1y:3.78,u5y:122.87,worst1y:-58.51,unreal:351.88,cur_vs_1y:3.78,mos:377.82,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
   "CCJ": {grade:"A",gem_score:63.3,u1y:9.61,u5y:76.47,worst1y:-56.26,unreal:null,cur_vs_1y:9.61,mos:null,risk_avg:null,risk_level:"UNKNOWN",risk_int:false,pgrade:"",mode:"heston_1m6m + eps_pe_1y3y5y"},
@@ -5774,7 +5787,7 @@ function _renderGradeSummaryTable(body, riskMap) {
                                  : ' — cheap vs peers');
       return '<td style="text-align:right;padding:8px 10px;font-size:12px;font-weight:700;background:' + bgC + ';color:' + fgC + ';border-radius:4px;line-height:1.4" title="' + titleTxt + '">' + v.toFixed(0) + suffix + '</td>';
     })();
-    html += '<tr style="background:' + bg + '">' +
+    html += '<tr data-gem-ticker="' + olyEsc(r.ticker) + '" style="background:' + bg + '">' +
       '<td style="padding:8px 10px;font-weight:700;font-size:13px;color:#14120e">' + r.ticker + nameHtml + '</td>' +
       '<td style="text-align:center;padding:8px 10px">' + dot + '<span style="background:' + (bgMap[r.grade]||bgMap.D) + ';color:' + (fgMap[r.grade]||fgMap.D) + ';font-size:12px;font-weight:700;padding:3px 8px;border-radius:4px">' + serverPG + '</span></td>' +
       '<td style="text-align:center;padding:8px 6px">' + riskBadge + '</td>' +
@@ -5786,6 +5799,42 @@ function _renderGradeSummaryTable(body, riskMap) {
       '</tr>';
   });
   body.innerHTML = html;
+  applyGemDowntrendOverlay(body);
+}
+
+// LIVE self-correction for a stale GEM snapshot (Lesson #10): a high letter
+// grade on a name now in a deep structural downtrend is almost always a STALE
+// grade reading the OLD (pre-collapse) price — exactly the 1810.HK A-grade
+// failure. We re-check every graded row against LIVE price-vs-20W-MA and strike
+// through + flag any high grade sitting on a collapsing chart.
+function applyGemDowntrendOverlay(body) {
+  fetch("/point_a_scan.json?t=" + Date.now(), { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (doc) {
+      if (!doc) return;
+      var tks = doc.tickers || {};
+      body.querySelectorAll('tr[data-gem-ticker]').forEach(function (tr) {
+        var tk = tr.getAttribute('data-gem-ticker');
+        var row = tks[tk]; if (!row) return;
+        var dd = (typeof row.dist_to_ma_pct === "number") ? row.dist_to_ma_pct : null;
+        if (dd == null || dd > -25) return; // only deep structural downtrends
+        var gradeCell = tr.children[1];
+        var pill = gradeCell ? gradeCell.querySelector('span:last-child') : null;
+        if (pill) {
+          pill.style.opacity = "0.5";
+          pill.style.textDecoration = "line-through";
+          pill.title = "Grade likely STALE — price is " + dd.toFixed(0) + "% below its 20-week MA (structural downtrend).";
+        }
+        var sow = tr.querySelector('.gem-sowhat-cell');
+        if (sow && !sow.querySelector('.gem-dd-warn')) {
+          var warn = document.createElement('div');
+          warn.className = 'gem-dd-warn';
+          warn.style.cssText = "margin-top:4px;color:#A32D2D;font-size:10px;font-weight:700;line-height:1.4;";
+          warn.textContent = "⚠ DOWNTREND " + dd.toFixed(0) + "% vs 20W MA — re-grade before trusting (price has fallen since the last GEM run).";
+          sow.appendChild(warn);
+        }
+      });
+    }).catch(function () {});
 }
 
 function riskCellColor(score) {
