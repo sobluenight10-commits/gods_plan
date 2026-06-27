@@ -1753,6 +1753,72 @@ td.mx-eval.oly-tip::after {
 })();
 </script>
 
+<!-- ══════════════════════════════════════════════════════════════════
+     OLYMPUS ATLAS — blog knowledge graph (Obsidian-style)
+     ══════════════════════════════════════════════════════════════════ -->
+<section id="atlas-console" style="padding:14px 40px;background:linear-gradient(180deg,#0b1410 0%,#070d0a 100%);border-top:2px solid #4f9c6a;border-bottom:2px solid #4f9c6a;color:#e6ffef;">
+  <div style="font-size:13px;font-weight:800;letter-spacing:1px;margin-bottom:4px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span>🗺 OLYMPUS ATLAS — blog knowledge graph</span>
+    <a href="http://5.189.176.185/graph.html" target="_blank" style="background:#4f9c6a;color:#06140c;padding:3px 12px;border-radius:12px;font-size:11px;font-weight:800;text-decoration:none;letter-spacing:0.08em;">OPEN FULL GRAPH →</a>
+    <span id="atlas-meta" style="font-weight:500;color:#7fb89a;font-size:10px;"></span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;margin-top:8px;">
+    <div style="background:#0a1610;border:1px solid #2f6a47;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#9fe0b6;margin-bottom:6px;">🔗 MOST-CONNECTED CONCEPTS</div>
+      <div id="atlas-nodes" style="font-family:'DM Mono',monospace;font-size:11px;line-height:1.6;color:#c9f0d6;">Loading graph…</div>
+    </div>
+    <div style="background:#0a1610;border:1px solid #2f6a47;border-radius:8px;padding:12px 14px;">
+      <div style="font-size:11px;font-weight:700;letter-spacing:1px;color:#9fe0b6;margin-bottom:6px;">🎯 GRAPH-DERIVED WATCHLIST</div>
+      <div id="atlas-watch" style="font-family:'DM Mono',monospace;font-size:11px;line-height:1.6;color:#c9f0d6;">Loading watchlist…</div>
+    </div>
+  </div>
+  <div style="margin-top:8px;color:#5e8c70;font-size:10px;">
+    Source <code style="background:#06140c;padding:1px 4px;">knowledge_graph.json</code> — every ranto28 post is parsed into concepts (nodes) and relationships (edges); the more connections a concept accumulates across all posts, the more important it is. Click <b>OPEN FULL GRAPH</b> for the Obsidian-style map.
+  </div>
+</section>
+
+<script>
+(function(){
+  var t = Date.now();
+  var fd = (typeof OLYMPUS_fetchDash === "function") ? OLYMPUS_fetchDash : function(r,k,x){ return fetch(r+"?t="+x).then(function(z){return z.json()}); };
+  var TYPE_COL = {company:"#7ec0ff",ticker:"#6aeab3",metal:"#efc56a",commodity:"#e0a96a",bond:"#b39ddb",currency:"#80cbc4",country:"#f48fb1",sector:"#9fe0a8",theme:"#ce93d8",person:"#ffab91",policy:"#ff8a80",technology:"#82b1ff",event:"#ffd54f",other:"#90a4ae"};
+  function esc(s){ return String(s==null?"":s).replace(/[<>&]/g,function(c){return {"<":"&lt;",">":"&gt;","&":"&amp;"}[c];}); }
+  function render(g){
+    var meta = document.getElementById("atlas-meta");
+    var st = (g && g.stats) || {};
+    if (meta) meta.textContent = (st.n_nodes||0)+" nodes · "+(st.n_edges||0)+" links · "+(st.n_posts||0)+" posts";
+    var nEl = document.getElementById("atlas-nodes");
+    var tops = (g && g.top_nodes) || [];
+    if (nEl) {
+      if (!tops.length) { nEl.innerHTML = '<span style="color:#7fb89a;">No graph yet — analyses accumulate on each post.</span>'; }
+      else nEl.innerHTML = tops.slice(0,10).map(function(n){
+        var c = TYPE_COL[n.type]||"#90a4ae";
+        var bar = Math.max(4, Math.round((n.centrality||0)*60));
+        return '<div style="margin-bottom:3px;"><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+c+';margin-right:6px;"></span>'
+          + '<b>'+esc(n.label)+'</b> <span style="color:#6e9c80;">'+esc(n.type)+'</span> '
+          + '<span style="display:inline-block;height:6px;width:'+bar+'px;background:'+c+';border-radius:3px;vertical-align:middle;margin-left:4px;"></span></div>';
+      }).join("");
+    }
+    var wEl = document.getElementById("atlas-watch");
+    var wl = (g && g.watchlist) || [];
+    if (wEl) {
+      if (!wl.length) { wEl.innerHTML = '<span style="color:#7fb89a;">No watchlist derived yet.</span>'; }
+      else wEl.innerHTML = wl.slice(0,8).map(function(w){
+        return '<div style="margin-bottom:4px;border-left:3px solid #4f9c6a;padding-left:7px;">'
+          + '<b>'+esc(w.ticker)+'</b> <span style="color:#9fe0b6;">'+(Math.round((w.score||0)*10)/10)+'</span>'
+          + '<div style="color:#8fc4a2;">'+esc(w.reason||"").slice(0,110)+'</div></div>';
+      }).join("");
+    }
+  }
+  function load(){
+    fd("knowledge_graph.json","knowledge_graph",t).then(render).catch(function(){
+      var n=document.getElementById("atlas-nodes"); if(n) n.innerHTML='<span style="color:#7fb89a;">Graph loads from Minerva — open graph.html.</span>';
+    });
+  }
+  load(); setInterval(load, 5*60*1000);
+})();
+</script>
+
 <script>
 (function(){
   function fmtEur(x){ if (x == null) return "—"; return "€"+Math.round(x).toLocaleString(); }
@@ -3038,10 +3104,10 @@ MINERVA ACTION CHANGE RULE (permanent):
         <div style="font-size:10px;color:var(--es-ink4);margin:2px 0 4px;">Intelligence · IPO Oct 2026</div>
         <div style="font-size:10px;color:var(--es-ink2);">$30B ARR · 8/10 Fortune 10 customers · enterprise AI</div>
       </div>
-      <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:10px 12px;">
-        <div style="font-size:12px;font-weight:700;color:var(--c1);">SpaceX / xAI</div>
-        <div style="font-size:10px;color:var(--es-ink4);margin:2px 0 4px;">Intelligence + Space · IPO June 2026</div>
-        <div style="font-size:10px;color:var(--es-ink2);">$22B revenue · SEC filed</div>
+      <div style="background:var(--bull-lt);border:1px solid var(--bull);border-radius:6px;padding:10px 12px;">
+        <div style="font-size:12px;font-weight:700;color:var(--bull);">SpaceX ✅ LISTED</div>
+        <div style="font-size:10px;color:var(--es-ink4);margin:2px 0 4px;">Space + Intelligence · Public since Jun 2026</div>
+        <div style="font-size:10px;color:var(--es-ink2);">$22B revenue · now trading — <b>confirm ticker &amp; promote to matrix as Track-B core</b></div>
       </div>
       <div style="background:var(--white);border:1px solid var(--border);border-radius:6px;padding:10px 12px;">
         <div style="font-size:12px;font-weight:700;color:var(--c5);">Figure AI</div>
@@ -4102,8 +4168,9 @@ function daysUntilUtcMidnight(ymd) {
 function updateIPOPanels() {
   const sx = document.getElementById("ipo-days-spacex");
   const an = document.getElementById("ipo-days-anthropic");
-  if (sx) sx.textContent = String(daysUntilUtcMidnight("2026-06-01"));
-  if (an) an.textContent = String(daysUntilUtcMidnight("2026-10-01"));
+  function fmtIPO(dateStr){ var d = daysUntilUtcMidnight(dateStr); return d > 0 ? (String(d) + " days") : "LISTED ✅"; }
+  if (sx) sx.textContent = fmtIPO("2026-06-01");
+  if (an) an.textContent = fmtIPO("2026-10-01");
 }
 
 const RANTO_RSS_PROXY =

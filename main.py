@@ -192,6 +192,16 @@ def _run_blog():
         })
         _save_analyses(analyses)
         logger.info(f"Blog sent: {len(analyses)} posts")
+        # ATLAS: deep per-post analysis chapter + knowledge-graph accumulation.
+        # Event-driven (new post), deduped inside blog_intel — substantial, not noise.
+        try:
+            from tools.blog_intel import run as _bi_run
+            from tools.knowledge_graph import run as _kg_run
+            agg = _bi_run(limit=5, days_back=3, send_telegram=True)
+            _kg_run(agg.get("analyses"))
+            logger.info("ATLAS: blog intel + knowledge graph updated")
+        except Exception as e:
+            logger.warning(f"ATLAS update failed: {e}")
     except Exception as e:
         logger.error(f"Blog failed: {e}", exc_info=True)
         try:

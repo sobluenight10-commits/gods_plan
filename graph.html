@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OLYMPUS ATLAS — Knowledge Graph</title>
+  <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --bg-panel: #161b22;
+      --bg-hover: #21262d;
+      --border: #30363d;
+      --text: #e6edf3;
+      --text-muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-dim: #388bfd66;
+      --danger: #f85149;
+      --success: #3fb950;
+      --warn: #d29922;
+      --title-h: 44px;
+      --panel-w: 300px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+      font-size: 13px;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    #title-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--title-h);
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      padding: 0 14px;
+      background: var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    #title-bar h1 {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    #title-bar .stats {
+      font-size: 11px;
+      color: var(--text-muted);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    #title-bar .stats span { margin-right: 12px; }
+
+    .btn-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--accent);
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-decoration: none;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+    }
+
+    .btn-link:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent);
+    }
+
+    #search-wrap {
+      position: fixed;
+      top: calc(var(--title-h) + 10px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      width: min(360px, calc(100vw - 24px));
+    }
+
+    #search-input {
+      width: 100%;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    #search-input:focus { border-color: var(--accent); }
+
+    #search-input::placeholder { color: var(--text-muted); }
+
+    #graph-container {
+      position: fixed;
+      top: var(--title-h);
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--bg);
+    }
+
+    #empty-msg, #error-msg {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 50;
+      text-align: center;
+      padding: 24px 32px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      max-width: 420px;
+      display: none;
+    }
+
+    #empty-msg.visible, #error-msg.visible { display: block; }
+
+    #error-msg a { color: var(--accent); }
+
+    #legend {
+      position: fixed;
+      bottom: 12px;
+      left: 12px;
+      z-index: 80;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      font-size: 10px;
+    }
+
+    #legend h3 {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .side-panel {
+      position: fixed;
+      top: var(--title-h);
+      bottom: 0;
+      width: var(--panel-w);
+      z-index: 85;
+      background: var(--bg-panel);
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      transition: transform 0.2s ease;
+    }
+
+    #detail-panel {
+      right: 0;
+      border-right: none;
+      border-left: 1px solid var(--border);
+      transform: translateX(100%);
+    }
+
+    #detail-panel.open { transform: translateX(0); }
+
+    #right-stack {
+      right: 0;
+      width: var(--panel-w);
+      border-left: 1px solid var(--border);
+      transform: translateX(0);
+    }
+
+    #right-stack.detail-open {
+      right: var(--panel-w);
+    }
+
+    .panel-header {
+      padding: 10px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 12px;
+    }
+
+    #detail-panel .panel-body { padding: 12px; }
+
+    #detail-close {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 18px;
+      cursor: pointer;
+      line-height: 1;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+
+    #detail-close:hover { color: var(--text); background: var(--bg-hover); }
+
+    #detail-panel .panel-header { padding-right: 36px; position: relative; }
+
+    .detail-label {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      word-break: break-word;
+    }
+
+    .detail-type {
+      display: inline-block;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      margin-bottom: 10px;
+      font-weight: 500;
+    }
+
+    .detail-row {
+      font-size: 12px;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    .detail-row strong { color: var(--text); font-weight: 500; }
+
+    .detail-summary {
+      font-size: 12px;
+      line-height: 1.5;
+      margin: 10px 0;
+      color: var(--text);
+      opacity: 0.9;
+    }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 4px; margin: 8px 0; }
+
+    .chip {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      color: var(--accent);
+    }
+
+    .neighbors-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin: 12px 0 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .neighbor-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 6px 8px;
+      margin-bottom: 4px;
+      font-size: 12px;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.12s, border-color 0.12s;
+    }
+
+    .neighbor-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-dim);
+    }
+
+    .neighbor-item .n-type {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: 6px;
+    }
+
+    .list-section { margin-bottom: 14px; }
+
+    .list-section h4 {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .quick-item {
+      display: block;
+      width: 100%;
+      text-align: left;
+      padding: 7px 8px;
+      margin-bottom: 4px;
+      font-size: 11px;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+
+    .quick-item:hover { background: var(--bg-hover); }
+
+    .quick-item .qi-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .watch-score {
+      color: var(--warn);
+      font-weight: 600;
+    }
+
+    .list-empty {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    @media (max-width: 900px) {
+      :root { --panel-w: 260px; }
+      #legend { max-height: 120px; font-size: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <header id="title-bar">
+    <h1>OLYMPUS ATLAS — Knowledge Graph</h1>
+    <div class="stats" id="stats-bar">
+      <span>nodes: —</span>
+      <span>edges: —</span>
+      <span>posts: —</span>
+      <span>updated: —</span>
+    </div>
+    <a class="btn-link" href="http://5.189.176.185/index.html" title="Back to dashboard">← Dashboard</a>
+  </header>
+
+  <div id="search-wrap">
+    <input type="search" id="search-input" placeholder="Search nodes by label or id…" autocomplete="off">
+  </div>
+
+  <div id="graph-container"></div>
+
+  <div id="empty-msg">No graph data yet</div>
+  <div id="error-msg">
+  Graph loads from Minerva — open
+  <a href="http://5.189.176.185/graph.html">http://5.189.176.185/graph.html</a>
+  </div>
+
+  <aside id="legend">
+    <h3>Node types</h3>
+    <div id="legend-items"></div>
+  </aside>
+
+  <aside id="detail-panel" class="side-panel">
+    <div class="panel-header">
+      Node detail
+      <button id="detail-close" type="button" aria-label="Close">&times;</button>
+    </div>
+    <div class="panel-body" id="detail-body"></div>
+  </aside>
+
+  <aside id="right-stack" class="side-panel">
+    <div class="panel-header">Watchlist (graph-derived)</div>
+    <div class="panel-body" id="watchlist-body">
+      <p class="list-empty">Loading…</p>
+    </div>
+    <div class="panel-header" style="border-top:1px solid var(--border)">Top nodes</div>
+    <div class="panel-body" id="topnodes-body">
+      <p class="list-empty">Loading…</p>
+    </div>
+  </aside>
+
+  <script type="application/json" id="kg-preload"></script>
+
+  <script>
+(function () {
+  "use strict";
+
+  var TYPE_COLORS = {
+    company:    "#58a6ff",
+    ticker:     "#3fb950",
+    metal:      "#d29922",
+    commodity:  "#f0883e",
+    bond:       "#a371f7",
+    currency:   "#39d353",
+    country:    "#ff7b72",
+    sector:     "#79c0ff",
+    theme:      "#bc8cff",
+    person:     "#f778ba",
+    policy:     "#e3b341",
+    technology: "#56d4dd",
+    event:      "#ffa657",
+    other:      "#8b949e"
+  };
+
+  var NODE_TYPES = [
+    "company", "ticker", "metal", "commodity", "bond", "currency",
+    "country", "sector", "theme", "person", "policy", "technology", "event", "other"
+  ];
+
+  var REMOTE_URL = "http://5.189.176.185/knowledge_graph.json";
+  var REFRESH_MS = 5 * 60 * 1000;
+
+  var graphData = null;
+  var network = null;
+  var nodesDS = null;
+  var edgesDS = null;
+  var nodeMap = {};
+  var adjacency = {};
+  var highlightedNodeId = null;
+  var refreshTimer = null;
+
+  var el = {
+    stats: document.getElementById("stats-bar"),
+    graph: document.getElementById("graph-container"),
+    search: document.getElementById("search-input"),
+    empty: document.getElementById("empty-msg"),
+    error: document.getElementById("error-msg"),
+    legend: document.getElementById("legend-items"),
+    detailPanel: document.getElementById("detail-panel"),
+    detailBody: document.getElementById("detail-body"),
+    detailClose: document.getElementById("detail-close"),
+    rightStack: document.getElementById("right-stack"),
+    watchlist: document.getElementById("watchlist-body"),
+    topnodes: document.getElementById("topnodes-body"),
+    preload: document.getElementById("kg-preload")
+  };
+
+  function escapeHtml(s) {
+    if (s == null) return "";
+    return String(s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function colorForType(type) {
+    return TYPE_COLORS[type] || TYPE_COLORS.other;
+  }
+
+  function buildLegend() {
+    el.legend.innerHTML = NODE_TYPES.map(function (t) {
+      return '<div class="legend-item"><span class="legend-dot" style="background:' +
+        colorForType(t) + '"></span><span>' + escapeHtml(t) + "</span></div>";
+    }).join("");
+  }
+
+  function nodeSize(node) {
+    var c = typeof node.centrality === "number" ? node.centrality : 0;
+    var w = typeof node.weight === "number" ? node.weight : 0;
+    var score = Math.max(c, w > 0 ? Math.min(1, w / 100) : 0);
+    return 8 + score * 32;
+  }
+
+  function edgeWidth(weight) {
+    var w = typeof weight === "number" ? weight : 1;
+    return Math.max(1, Math.min(8, 1 + Math.log1p(w) * 1.2));
+  }
+
+  function formatDate(iso) {
+    if (!iso) return "—";
+    try {
+      var d = new Date(iso);
+      if (isNaN(d.getTime())) return iso;
+      return d.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+    } catch (e) {
+      return iso;
+    }
+  }
+
+  function updateStats(data) {
+    var s = data.stats || {};
+    el.stats.innerHTML =
+      "<span>nodes: " + (s.n_nodes != null ? s.n_nodes : (data.nodes || []).length) + "</span>" +
+      "<span>edges: " + (s.n_edges != null ? s.n_edges : (data.edges || []).length) + "</span>" +
+      "<span>posts: " + (s.n_posts != null ? s.n_posts : "—") + "</span>" +
+      "<span>updated: " + escapeHtml(formatDate(data.updated_at)) + "</span>";
+  }
+
+  function buildAdjacency(edges) {
+    adjacency = {};
+    (edges || []).forEach(function (e) {
+      var src = e.source;
+      var tgt = e.target;
+      if (!adjacency[src]) adjacency[src] = [];
+      if (!adjacency[tgt]) adjacency[tgt] = [];
+      if (adjacency[src].indexOf(tgt) === -1) adjacency[src].push(tgt);
+      if (adjacency[tgt].indexOf(src) === -1) adjacency[tgt].push(src);
+    });
+  }
+
+  function visNodeStyle(node, dimmed) {
+    var col = colorForType(node.type);
+    var base = {
+      id: node.id,
+      label: node.label || node.id,
+      title: (node.label || node.id) + " [" + (node.type || "other") + "]",
+      size: nodeSize(node),
+      color: {
+        background: col,
+        border: dimmed ? "#30363d" : "#e6edf3",
+        highlight: { background: col, border: "#ffffff" },
+        hover: { background: col, border: "#ffffff" }
+      },
+      font: { color: "#e6edf3", size: 11, strokeWidth: 2, strokeColor: "#0d1117" },
+      borderWidth: dimmed ? 1 : 2,
+      opacity: dimmed ? 0.25 : 1
+    };
+    if (node.id === highlightedNodeId) {
+      base.borderWidth = 4;
+      base.color.border = "#ffffff";
+      base.opacity = 1;
+    }
+    return base;
+  }
+
+  function renderGraph(data) {
+    graphData = data;
+    nodeMap = {};
+    (data.nodes || []).forEach(function (n) { nodeMap[n.id] = n; });
+    buildAdjacency(data.edges);
+
+    var visNodes = (data.nodes || []).map(function (n) {
+      return visNodeStyle(n, false);
+    });
+
+    var visEdges = (data.edges || []).map(function (e, i) {
+      return {
+        id: "e" + i,
+        from: e.source,
+        to: e.target,
+        width: edgeWidth(e.weight),
+        title: (e.relation || "linked") + (e.weight ? " (w=" + e.weight + ")" : ""),
+        color: { color: "#484f58", highlight: "#58a6ff", hover: "#8b949e", opacity: 0.7 },
+        smooth: { type: "continuous", roundness: 0.35 }
+      };
+    });
+
+    if (!visNodes.length) {
+      el.empty.classList.add("visible");
+      el.error.classList.remove("visible");
+      if (network) {
+        network.destroy();
+        network = null;
+      }
+      return;
+    }
+
+    el.empty.classList.remove("visible");
+    el.error.classList.remove("visible");
+
+    nodesDS = new vis.DataSet(visNodes);
+    edgesDS = new vis.DataSet(visEdges);
+
+    var options = {
+      physics: {
+        enabled: true,
+        barnesHut: {
+          gravitationalConstant: -8000,
+          centralGravity: 0.25,
+          springLength: 120,
+          springConstant: 0.04,
+          damping: 0.09,
+          avoidOverlap: 0.2
+        },
+        stabilization: { iterations: 150, fit: true }
+      },
+      interaction: {
+        dragNodes: true,
+        dragView: true,
+        zoomView: true,
+        hover: true,
+        tooltipDelay: 200,
+        multiselect: false
+      },
+      edges: {
+        smooth: { enabled: true, type: "continuous", roundness: 0.35 }
+      },
+      layout: { improvedLayout: true }
+    };
+
+    if (network) {
+      network.setData({ nodes: nodesDS, edges: edgesDS });
+      network.stabilize(80);
+    } else {
+      network = new vis.Network(el.graph, { nodes: nodesDS, edges: edgesDS }, options);
+      network.on("click", function (params) {
+        if (params.nodes.length) {
+          openDetail(params.nodes[0]);
+        }
+      });
+      network.once("stabilizationIterationsDone", function () {
+        network.fit({ animation: { duration: 400, easingFunction: "easeInOutQuad" } });
+      });
+    }
+
+    updateStats(data);
+    renderWatchlist(data.watchlist || []);
+    renderTopNodes(data.top_nodes || []);
+  }
+
+  function getNeighbors(nodeId) {
+    var ids = adjacency[nodeId] || [];
+    return ids.map(function (id) {
+      return nodeMap[id] || { id: id, label: id, type: "other" };
+    }).sort(function (a, b) {
+      return (b.centrality || 0) - (a.centrality || 0);
+    });
+  }
+
+  function openDetail(nodeId) {
+    var node = nodeMap[nodeId];
+    if (!node) return;
+
+    highlightedNodeId = nodeId;
+    refreshNodeHighlight();
+
+    var col = colorForType(node.type);
+    var neighbors = getNeighbors(nodeId);
+
+    var tickers = node.tickers || [];
+    var chipsHtml = tickers.length
+      ? '<div class="chips">' + tickers.map(function (t) {
+          return '<span class="chip">' + escapeHtml(t) + "</span>";
+        }).join("") + "</div>"
+      : "";
+
+    var neighHtml = neighbors.length
+      ? neighbors.map(function (n) {
+          return '<button type="button" class="neighbor-item" data-node-id="' +
+            escapeHtml(n.id) + '">' + escapeHtml(n.label || n.id) +
+            '<span class="n-type">' + escapeHtml(n.type || "") + "</span></button>";
+        }).join("")
+      : '<p class="list-empty">No connections</p>';
+
+    el.detailBody.innerHTML =
+      '<div class="detail-label">' + escapeHtml(node.label || node.id) + "</div>" +
+      '<span class="detail-type" style="background:' + col + "33;color:" + col + '">' +
+        escapeHtml(node.type || "other") + "</span>" +
+      '<div class="detail-row"><strong>Weight:</strong> ' + escapeHtml(node.weight != null ? node.weight : "—") + "</div>" +
+      '<div class="detail-row"><strong>Centrality:</strong> ' +
+        (node.centrality != null ? (node.centrality * 100).toFixed(1) + "%" : "—") + "</div>" +
+      '<div class="detail-row"><strong>Mentions:</strong> ' + escapeHtml(node.mentions != null ? node.mentions : "—") + "</div>" +
+      (node.summary ? '<div class="detail-summary">' + escapeHtml(node.summary) + "</div>" : "") +
+      (tickers.length ? "<div class=\"detail-row\"><strong>Tickers</strong></div>" + chipsHtml : "") +
+      '<div class="neighbors-title">Connected (' + neighbors.length + ")</div>" +
+      neighHtml;
+
+    el.detailBody.querySelectorAll(".neighbor-item").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        focusNode(btn.getAttribute("data-node-id"));
+        openDetail(btn.getAttribute("data-node-id"));
+      });
+    });
+
+    el.detailPanel.classList.add("open");
+    el.rightStack.classList.add("detail-open");
+  }
+
+  function closeDetail() {
+    el.detailPanel.classList.remove("open");
+    el.rightStack.classList.remove("detail-open");
+    highlightedNodeId = null;
+    refreshNodeHighlight();
+  }
+
+  function refreshNodeHighlight() {
+    if (!nodesDS || !graphData) return;
+    var updates = (graphData.nodes || []).map(function (n) {
+      var dimmed = highlightedNodeId && n.id !== highlightedNodeId &&
+        (adjacency[highlightedNodeId] || []).indexOf(n.id) === -1;
+      return visNodeStyle(n, dimmed && highlightedNodeId);
+    });
+    nodesDS.update(updates);
+  }
+
+  function focusNode(nodeId) {
+    if (!network || !nodesDS || !nodeMap[nodeId]) return;
+    highlightedNodeId = nodeId;
+    refreshNodeHighlight();
+    network.selectNodes([nodeId]);
+    network.focus(nodeId, {
+      scale: 1.4,
+      animation: { duration: 500, easingFunction: "easeInOutQuad" }
+    });
+  }
+
+  function searchNodes(query) {
+    if (!graphData || !query) {
+      highlightedNodeId = null;
+      refreshNodeHighlight();
+      return;
+    }
+    var q = query.toLowerCase().trim();
+    var match = (graphData.nodes || []).find(function (n) {
+      return (n.id && n.id.toLowerCase().indexOf(q) !== -1) ||
+        (n.label && n.label.toLowerCase().indexOf(q) !== -1);
+    });
+    if (match) {
+      focusNode(match.id);
+      openDetail(match.id);
+    }
+  }
+
+  function renderWatchlist(items) {
+    if (!items.length) {
+      el.watchlist.innerHTML = '<p class="list-empty">No watchlist entries</p>';
+      return;
+    }
+    el.watchlist.innerHTML = items.map(function (w, i) {
+      var linked = (w.linked_nodes && w.linked_nodes[0]) || "";
+      return '<button type="button" class="quick-item watch-item" data-linked="' +
+        escapeHtml(linked) + '" data-idx="' + i + '">' +
+        '<strong>' + escapeHtml(w.ticker || "?") + "</strong>" +
+        (w.name ? " · " + escapeHtml(w.name) : "") +
+        '<div class="qi-meta"><span class="watch-score">' +
+        (w.score != null ? w.score.toFixed(1) : "—") + "</span> — " +
+        escapeHtml(w.reason || "") + "</div></button>";
+    }).join("");
+
+    el.watchlist.querySelectorAll(".watch-item").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var lid = btn.getAttribute("data-linked");
+        if (lid && nodeMap[lid]) {
+          focusNode(lid);
+          openDetail(lid);
+        }
+      });
+    });
+  }
+
+  function renderTopNodes(items) {
+    if (!items.length) {
+      el.topnodes.innerHTML = '<p class="list-empty">No top nodes</p>';
+      return;
+    }
+    el.topnodes.innerHTML = items.map(function (n) {
+      return '<button type="button" class="quick-item top-item" data-node-id="' +
+        escapeHtml(n.id) + '">' + escapeHtml(n.label || n.id) +
+        '<div class="qi-meta">' + escapeHtml(n.type || "") +
+        (n.centrality != null ? " · " + (n.centrality * 100).toFixed(0) + "%" : "") +
+        "</div></button>";
+    }).join("");
+
+    el.topnodes.querySelectorAll(".top-item").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-node-id");
+        focusNode(id);
+        openDetail(id);
+      });
+    });
+  }
+
+  function readPreload() {
+    if (!el.preload) return null;
+    var text = (el.preload.textContent || "").trim();
+    if (!text) return null;
+    try {
+      return JSON.parse(text);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function fetchJson(url) {
+    return fetch(url, { cache: "no-store" }).then(function (res) {
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    });
+  }
+
+  function loadData() {
+    var localUrl = "knowledge_graph.json?t=" + Date.now();
+
+    return fetchJson(localUrl).catch(function () {
+      return fetchJson(REMOTE_URL + "?t=" + Date.now());
+    }).catch(function () {
+      var pre = readPreload();
+      if (pre) return pre;
+      throw new Error("all sources failed");
+    }).then(function (data) {
+      if (!data || !Array.isArray(data.nodes)) {
+        throw new Error("invalid data");
+      }
+      renderGraph(data);
+    }).catch(function () {
+      if (!graphData) {
+        el.error.classList.add("visible");
+        el.empty.classList.remove("visible");
+      }
+    });
+  }
+
+  function init() {
+    buildLegend();
+
+    el.detailClose.addEventListener("click", closeDetail);
+
+    var searchTimer = null;
+    el.search.addEventListener("input", function () {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(function () {
+        searchNodes(el.search.value);
+      }, 200);
+    });
+
+    el.search.addEventListener("keydown", function (ev) {
+      if (ev.key === "Enter") {
+        ev.preventDefault();
+        searchNodes(el.search.value);
+      }
+    });
+
+    loadData();
+    refreshTimer = setInterval(loadData, REFRESH_MS);
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+  </script>
+</body>
+</html>

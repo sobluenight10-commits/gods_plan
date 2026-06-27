@@ -25,6 +25,8 @@ Keys = [
     "point_b_scan",
     "why_tape",
     "chokepoint_radar",
+    "knowledge_graph",
+    "blog_intel_latest",
 ]
 
 

@@ -359,6 +359,28 @@ def _heads_up() -> None:
         print(f"[HEADS_UP] failed: {exc}")
 
 
+def _atlas() -> None:
+    """ATLAS — deep blog analysis (cause/result/next + cross-asset + >=5 watch)
+    accumulated into an Obsidian-style knowledge graph. Silent daily refresh;
+    the rich Telegram chapter fires from the event-driven blog path instead."""
+    try:
+        from tools.blog_intel import run as _bi_run
+        agg = _bi_run(limit=6, days_back=10, send_telegram=False)
+        from tools.knowledge_graph import run as _kg_run
+        g = _kg_run(agg.get("analyses"))
+        print(f"[ATLAS] posts={len(agg.get('analyses', []))} "
+              f"nodes={g.get('stats', {}).get('n_nodes')} "
+              f"edges={g.get('stats', {}).get('n_edges')} "
+              f"watchlist={len(g.get('watchlist', []))}")
+        # Keep the static graph viewer fresh in the webroot.
+        import shutil
+        gh = os.path.join(BASE, "graph.html")
+        if os.path.isfile(gh) and os.path.isdir("/var/www/html"):
+            shutil.copy2(gh, "/var/www/html/graph.html")
+    except Exception as exc:
+        print(f"[ATLAS] failed: {exc}")
+
+
 def _chokepoint_radar() -> None:
     """Supply-chain chokepoint tripwires (Lesson #09) — tungsten/WF6, gallium,
     rare earths, neon, ABF substrate. Telegram is weekend/off-hours gated."""
@@ -444,6 +466,8 @@ def main():
     _heads_up()
     # Phase 7 — CAUSAL LAYER (Lesson #09): supply-chain chokepoint tripwires.
     _chokepoint_radar()
+    # Phase 8 — ATLAS: blog intelligence -> accumulating knowledge graph.
+    _atlas()
     _embed_dashboard_preload()
     print("=== DONE ===")
 
