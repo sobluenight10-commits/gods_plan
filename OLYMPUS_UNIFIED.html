@@ -1421,6 +1421,37 @@ td.mx-eval.oly-tip::after {
 
 <script>
 (function(){
+  // ── PORTFOLIO RECONCILIATION ─────────────────────────────────────────────
+  // Single, maintainable source of truth for matrix membership. Removes sold
+  // names, promotes held watch rows to PORTFOLIO, renames xAI -> SpaceX (SPCX).
+  var REMOVE  = {"IAU":1, "VRT":1};               // sold / not held
+  var PROMOTE = {"NVDA":1, "OKLO":1, "NTLA":1};   // held -> PORTFOLIO
+  var RENAME  = {"xAI": {ticker:"SPCX", name:"SpaceX"}};
+  function reconcile(){
+    document.querySelectorAll('tr.mx-row[data-ticker]').forEach(function(tr){
+      var tk = tr.getAttribute('data-ticker');
+      if (REMOVE[tk]) { tr.remove(); return; }
+      if (PROMOTE[tk]) {
+        tr.classList.remove('mx-st-watch'); tr.classList.add('mx-st-pf');
+        var b = tr.querySelector('.mx-badge');
+        if (b) { b.className = 'mx-badge mx-badge-pf'; b.textContent = '● PORTFOLIO'; }
+      }
+      if (RENAME[tk]) {
+        var r = RENAME[tk];
+        tr.setAttribute('data-ticker', r.ticker);
+        var tkEl = tr.querySelector('.mx-tk'); if (tkEl) tkEl.textContent = r.ticker;
+        var nmEl = tr.querySelector('.mx-nm'); if (nmEl) nmEl.textContent = r.name;
+        var b2 = tr.querySelector('.mx-badge'); if (b2) { b2.className = 'mx-badge mx-badge-pf'; b2.textContent = '● PORTFOLIO'; }
+        var p = tr.querySelector('.pnow'); if (p) { p.id = 'price-' + r.ticker; p.setAttribute('data-ticker', r.ticker); }
+      }
+    });
+  }
+  document.addEventListener('DOMContentLoaded', function(){ reconcile(); setTimeout(reconcile, 1500); setTimeout(reconcile, 4000); });
+})();
+</script>
+
+<script>
+(function(){
   // ── A–E PRICE-CYCLE STAGE (GOD's painting) ───────────────────────────────
   // A rising/accumulate · C peak (don't chase) · B −15% dip-buy · D bottom/base
   // · E breakdown/avoid. Derived from point_b_scan.json (dist from 20d high +
@@ -2792,7 +2823,7 @@ td.mx-eval.oly-tip::after {
 
 <div id="pf-line-compact" class="pf-line-compact">
   TR: <strong id="pf-tr-n">—</strong> positions · Kiwoom: <strong id="pf-kw-n">—</strong> positions · Dry Powder: <strong>€1,500</strong> ·
-  Active Limits: OKLO $57 · CCJ €105 market · UEC €11 · KTOS HOLD May 6 · Next Catalyst: <strong>KTOS earnings May 6</strong>
+  Active Limits: UEC €11 · OKLO $60 · CCJ $100 · Next Catalyst: <strong>live in 🎯 Heads-Up console (proximity-gated)</strong>
 </div>
 
   <div style="font-size:9px;color:var(--es-ink4);font-family:'DM Mono',monospace;padding:6px 16px 0;letter-spacing:0.1em;" id="es-price-status">prices loading...</div>
@@ -3845,12 +3876,19 @@ setInterval(loadLivePrices, 60 * 1000);
 // ══════════════════════════════════════════════════════════════════
 async function loadActiveActions() {
   try {
-    const [resp, fxResp] = await Promise.all([
-      fetch("/active_actions.json?t=" + Date.now()),
-      fetch("/forecasts.json?t=" + Date.now()).catch(function(){ return null; }),
-    ]);
-    if (!resp.ok) throw new Error("HTTP " + resp.status);
-    const data = await resp.json();
+    const t = Date.now();
+    // Resilient: live fetch first, fall back to inline preload so the SO-WHAT
+    // mandate + sentinel strip ALWAYS populate (never stuck on "Loading…").
+    let data;
+    try {
+      data = await OLYMPUS_fetchDash("/active_actions.json", "active_actions", t);
+    } catch (e) {
+      console.warn("active_actions unavailable (no live + no preload):", e && e.message);
+      var swFail = document.getElementById("so-what-mandate-body");
+      if (swFail) swFail.textContent = "active_actions.json unavailable — open dashboard on Minerva host or run server.";
+      return;
+    }
+    const fxResp = await fetch("/forecasts.json?t=" + t).catch(function(){ return null; });
     const actions = data.actions || {};
     const liqGate = data.liquidity_gate || {};
     window.__active_actions = actions;
@@ -4109,6 +4147,12 @@ function renderTacticalBlogSleeve(blogRaw) {
     var it = items[j];
     if (!it || typeof it !== "object") continue;
     var tkRaw = it.ticker != null ? String(it.ticker).trim() : "";
+    // Dedup: never inject a blog row for a ticker that already has a matrix row
+    // (e.g. TSLA is a held PORTFOLIO row — don't duplicate it as BLOG K).
+    if (tkRaw) {
+      var existing = document.querySelector('tr.mx-row[data-ticker="' + tkRaw.replace(/["\\]/g, "") + '"]');
+      if (existing && !existing.hasAttribute("data-tactical-blog")) continue;
+    }
     var nm = String(it.name || tkRaw || "—").trim();
     var sc = parseInt(it.score, 10);
     if (isNaN(sc) || sc < 1) sc = 7;
@@ -4192,6 +4236,12 @@ function renderRadarSector8(blogRaw) {
     "NVDA", "CCJ", "OKLO", "ASTS", "XAI", "BEAM", "NTLA", "CRSP", "ASML", "AMAT",
   ]);
   var html = "";
+  // Purpose + how-to-act header so RADAR reads as a decision feed, not a name dump.
+  html += "<div style=\"margin:0 0 10px;padding:7px 9px;background:#10243a;border-left:4px solid #efc56a;border-radius:4px;color:#cfe3ff;font-size:10px;line-height:1.5;\">"
+    + "<b style=\"color:#ffd27f;\">WHAT RADAR IS:</b> early-warning discovery from the ranto28 blog. "
+    + "<b>DIRECT</b> = names he called outright. <b>THEME</b> = sector waves to map onto your book. <b>OTHER</b> = fresh tickers not yet held. "
+    + "<b style=\"color:#ffd27f;\">HOW TO ACT:</b> blog-score ≥8 → research now · 6–7 → watch · &lt;6 → ignore until it recurs (a one-off mention is noise; a name that clusters across posts is a signal)."
+    + "</div>";
   html += "<div class=\"radar-subh\">SUBSECTION A — DIRECT SIGNALS</div>";
   html += "<div class=\"radar-dir-line\"><b>🎯 DIRECT — POSCO Holdings</b> | 2026-04-11</div>";
   html += "<div class=\"radar-dir-line\">Source: ranto28 blog — Wolsong tritium + H2 steelmaking signal</div>";
@@ -4226,12 +4276,32 @@ function renderRadarSector8(blogRaw) {
     else u = u.toUpperCase();
     return !PORT.has(u) && u !== "POSCO";
   });
-  html += "<div class=\"radar-subh\" style=\"margin-top:14px;\">OTHER BLOG TICKERS</div>";
+  html += "<div class=\"radar-subh\" style=\"margin-top:14px;\">OTHER BLOG TICKERS — scored &amp; ranked</div>";
   if (!items.length) {
     html += "<div style=\"color:var(--es-ink4);font-size:10px;\">None outside portfolio.</div>";
   } else {
-    html += items.slice(0, 8).map(function (b) {
-      return "<div style=\"margin:4px 0;font-size:10px;\"><b>" + olyEsc(b.ticker) + "</b> <span style=\"color:var(--warn);\">NEW SIGNAL</span> <span style=\"color:var(--es-ink4);\">" + olyEsc(b.date || "") + "</span></div>";
+    // Rank by blog-score so the actionable names float to the top.
+    var scored = items.map(function (b) {
+      var sc = parseInt(b.score, 10); if (isNaN(sc)) sc = 0;
+      return { b: b, sc: sc };
+    }).sort(function (x, y) { return y.sc - x.sc; });
+    var researchN = scored.filter(function (s) { return s.sc >= 8; }).length;
+    html += "<div style=\"font-size:10px;color:#9fe0a8;margin:2px 0 6px;\">→ DIRECTION: " + scored.length + " names off-book · "
+      + (researchN ? ("<b>research now: " + scored.slice(0, researchN).map(function (s) { return olyEsc(s.b.ticker); }).join(", ") + "</b>") : "none ≥8 — all watch/log, no action required")
+      + "</div>";
+    html += scored.slice(0, 10).map(function (s) {
+      var b = s.b, sc = s.sc;
+      var action = sc >= 8 ? "RESEARCH" : sc >= 6 ? "WATCH" : "LOG";
+      var aCol = sc >= 8 ? "#8dc26f" : sc >= 6 ? "#efc56a" : "#7a8fa8";
+      var why = b.note || b.theme || b.source_post || "";
+      var scTxt = sc > 0 ? (sc + "/10") : "—";
+      return "<div style=\"margin:4px 0;font-size:10px;display:flex;gap:8px;align-items:baseline;flex-wrap:wrap;\">"
+        + "<b style=\"min-width:70px;\">" + olyEsc(b.ticker) + "</b>"
+        + "<span style=\"background:" + aCol + ";color:#0b1420;padding:0 5px;border-radius:3px;font-weight:700;\">" + action + "</span>"
+        + "<span style=\"color:#a9c7e8;\">blog " + scTxt + "</span>"
+        + "<span style=\"color:var(--es-ink4);\">" + olyEsc(b.date || "") + "</span>"
+        + (why ? "<span style=\"color:#9fb3cc;\">— " + olyEsc(String(why).slice(0, 90)) + "</span>" : "")
+        + "</div>";
     }).join("");
   }
   el.innerHTML = html;

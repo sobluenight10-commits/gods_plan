@@ -287,8 +287,8 @@ THESIS_ALERT_TICKERS: List[str] = [
     "TSM", "PLTR", "UEC", "URNM", "COHR", "NTR",
     "PL", "TMO", "CWEN", "UUUU", "FCX", "RKLB", "MC.PA",
     # Kiwoom holdings
-    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "IAU", "KTOS", "AMAT",
-    "MSFT", "GOOGL", "AVGO", "TSLA", "NVDA",
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "KTOS", "AMAT",
+    "MSFT", "GOOGL", "AVGO", "TSLA", "NVDA", "OKLO", "NTLA",
     # Watchlist
     "CCJ", "OKLO", "ASTS", "CRSP", "NTLA", "BEAM", "ASML",
 ]
