@@ -93,4 +93,7 @@ def run(html_path: str | None = None) -> dict:
 
 
 if __name__ == "__main__":
-    run()
+    # Honor an explicit target path so deploys can embed into the SERVED
+    # /var/www/html/index.html without mutating the tracked repo file (which
+    # otherwise leaves an unstaged change that blocks the next git pull).
+    run(sys.argv[1] if len(sys.argv) > 1 else None)
