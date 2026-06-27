@@ -7,6 +7,7 @@ UNIVERSE = {
     # PORTFOLIO
     "PLTR":      {"entry":130.07,"stop":95,"soros_gap":59,"soros_type":"narrative","ez_low":95,"ez_high":109,"thesis":"intact","macro":"tailwind","conviction":9,"sector":"Intelligence","status":"portfolio","god_score":72},
     "TSM":       {"entry":364.77,"stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"tailwind","conviction":9,"sector":"Intelligence","status":"portfolio","god_score":90},
+    "TSLA":      {"entry":0,     "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"tailwind","conviction":7,"sector":"Intelligence","status":"portfolio","god_score":80},
     "000660.KS": {"entry":85000, "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"tailwind","conviction":10,"sector":"Intelligence","status":"portfolio","currency":"KRW","god_score":95},
     "UEC":       {"entry":13.68, "stop":0, "soros_gap":38,"soros_type":"narrative","ez_low":10,"ez_high":12, "thesis":"intact","macro":"tailwind","conviction":8, "sector":"Energy",      "status":"portfolio","limit":11,"god_score":78},
     "URNM":      {"entry":14.65, "stop":0, "soros_gap":0, "soros_type":"",         "ez_low":0, "ez_high":0,  "thesis":"intact","macro":"tailwind","conviction":7, "sector":"Energy",      "status":"portfolio","god_score":74},
