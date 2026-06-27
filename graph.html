@@ -615,14 +615,15 @@
       physics: {
         enabled: true,
         barnesHut: {
-          gravitationalConstant: -8000,
-          centralGravity: 0.25,
-          springLength: 120,
-          springConstant: 0.04,
-          damping: 0.09,
-          avoidOverlap: 0.2
+          gravitationalConstant: -12000,
+          centralGravity: 0.3,
+          springLength: 150,
+          springConstant: 0.05,
+          damping: 0.4,
+          avoidOverlap: 0.6
         },
-        stabilization: { iterations: 150, fit: true }
+        minVelocity: 0.75,
+        stabilization: { enabled: true, iterations: 400, updateInterval: 25, fit: true }
       },
       interaction: {
         dragNodes: true,
@@ -639,8 +640,10 @@
     };
 
     if (network) {
+      // Refresh: load new data, run physics briefly, then re-freeze.
       network.setData({ nodes: nodesDS, edges: edgesDS });
-      network.stabilize(80);
+      network.setOptions({ physics: { enabled: true } });
+      network.stabilize();
     } else {
       network = new vis.Network(el.graph, { nodes: nodesDS, edges: edgesDS }, options);
       network.on("click", function (params) {
@@ -648,7 +651,11 @@
           openDetail(params.nodes[0]);
         }
       });
-      network.once("stabilizationIterationsDone", function () {
+      // Freeze the layout once stabilized so nodes stop drifting. Persistent
+      // handler (not .once) so each 5-min refresh re-freezes after restabilizing.
+      // Nodes remain draggable; dragging one won't shake the whole graph.
+      network.on("stabilizationIterationsDone", function () {
+        network.setOptions({ physics: { enabled: false } });
         network.fit({ animation: { duration: 400, easingFunction: "easeInOutQuad" } });
       });
     }

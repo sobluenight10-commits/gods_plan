@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -40,8 +41,149 @@ PRIVATE_PROCESSED_KEY = "_processed_posts"
 PRIVATE_WATCH_KEY = "_watch_relevance"
 
 
+# ══════════════════════════════════════════════════════════════════════════════
+# SEMANTIC ONTOLOGY — deterministic cross-post linking.
+# The per-post LLM only links concepts it sees together in ONE post; relatives
+# that recur across posts (Samsung & TSMC, CPI & the Fed) otherwise stay islands.
+# This ontology re-derives those structural links on every recompute so the map
+# reads like the real world: same-sector names cluster, macro drivers interlink.
+# ══════════════════════════════════════════════════════════════════════════════
+
+# One macro cluster: CPI / inflation / rates / FOMC / Fed / liquidity / bonds all
+# belong to the same causal web and are linked together.
+_MACRO_ALIASES = [
+    "fed", "federal reserve", "fomc", "powell", "jerome powell", "fed chair",
+    "interest rate", "interest rates", "rate cut", "rate hike", "monetary policy",
+    "cpi", "inflation", "pce", "ppi", "disinflation", "deflation",
+    "liquidity", "net liquidity", "quantitative easing", "quantitative tightening",
+    "qe", "qt", "reverse repo", "rrp", "tga", "bank reserves", "balance sheet",
+    "treasury", "treasuries", "bond", "bonds", "bond yield", "yield", "yields",
+    "10-year", "10y", "credit spread", "recession", "gdp", "unemployment",
+    "payrolls", "jobs report", "dollar", "dxy",
+]
+
+# Each sector: member nodes get linked to one another (or to a hub if large).
+_SECTOR_GROUPS: Dict[str, List[str]] = {
+    "semiconductors": [
+        "semiconductor", "semiconductors", "chip", "chips", "foundry", "wafer",
+        "tsmc", "taiwan semiconductor", "samsung", "samsung electronics",
+        "sk hynix", "hynix", "nvidia", "nvda", "asml", "applied materials", "amat",
+        "micron", "intel", "broadcom", "avgo", "qualcomm", "arm", "hbm", "dram",
+        "nand", "lithography", "euv", "wf6", "tungsten",
+    ],
+    "uranium_nuclear": [
+        "uranium", "nuclear", "enrichment", "reactor", "smr", "uec", "cameco",
+        "ccj", "oklo", "centrus", "leu", "yellowcake", "sprott", "urnm",
+    ],
+    "ai_compute": [
+        "artificial intelligence", "ai infrastructure", "ai capex", "data center",
+        "datacenter", "gpu", "accelerator", "llm", "large language model", "compute",
+        "hyperscaler", "openai", "anthropic", "palantir", "pltr",
+    ],
+    "space": [
+        "space", "spacex", "rocket", "satellite", "launch", "rocket lab", "rklb",
+        "planet labs", "starlink", "constellation",
+    ],
+    "defense": [
+        "defense", "defence", "missile", "drone", "munition", "kratos", "ktos",
+        "aerovironment", "avav", "hanwha", "lockheed", "raytheon", "weapon",
+    ],
+    "energy_power": [
+        "power grid", "electricity", "utility", "grid", "transmission",
+        "natural gas", "lng", "solar", "wind", "renewable", "vertiv", "vrt",
+    ],
+    "biotech": [
+        "biotech", "gene editing", "crispr", "mrna", "clinical trial", "oncology",
+        "regeneron", "regn", "beam", "ntla", "crsp", "fda",
+    ],
+    "battery_ev": [
+        "battery", "lithium", "solid-state", "electric vehicle", "tesla", "tsla",
+        "byd", "cathode", "anode",
+    ],
+    "critical_minerals": [
+        "copper", "rare earth", "rare earths", "gallium", "germanium", "cobalt",
+        "nickel", "graphite", "critical mineral", "critical minerals", "freeport",
+        "fcx",
+    ],
+}
+
+
 def _now_iso() -> str:
     return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _node_text(node: Dict[str, Any]) -> str:
+    return f"{node.get('id', '')} {node.get('label', '')}".lower()
+
+
+def _tokenize(text: str) -> set:
+    return set(re.findall(r"[a-z0-9]+", text))
+
+
+def _alias_hit(alias: str, text: str, tokens: set) -> bool:
+    """Multiword/hyphenated aliases match as substrings; single tokens must match
+    a whole word (so 'arm' hits 'Arm Holdings' but not 'alarm')."""
+    if " " in alias or "-" in alias:
+        return alias in text
+    return alias in tokens
+
+
+def _group_member_ids(node_by_id: Dict[str, Dict[str, Any]], aliases: List[str]) -> List[str]:
+    out: List[str] = []
+    for nid, node in node_by_id.items():
+        text = _node_text(node)
+        toks = _tokenize(text)
+        if any(_alias_hit(a, text, toks) for a in aliases):
+            out.append(nid)
+    return out
+
+
+def _set_semantic_edge(
+    edge_by_key: Dict[Tuple[str, str], Dict[str, Any]],
+    a: str, b: str, relation: str, now: str,
+) -> None:
+    if not a or not b or a == b:
+        return
+    k = _edge_key(a, b)
+    if k in edge_by_key:
+        return  # a real (post-derived) edge already connects these — leave it
+    edge_by_key[k] = {
+        "source": k[0], "target": k[1], "weight": 2,
+        "relation": relation, "last_seen": now, "kind": "semantic",
+    }
+
+
+def _link_group(
+    node_by_id: Dict[str, Dict[str, Any]],
+    edge_by_key: Dict[Tuple[str, str], Dict[str, Any]],
+    ids: List[str], relation: str, now: str,
+) -> None:
+    ids = sorted(set(ids))
+    if len(ids) < 2:
+        return
+    if len(ids) > 14:
+        # Large cluster: star to the heaviest member to bound edge count.
+        hub = max(ids, key=lambda i: _safe_int(node_by_id.get(i, {}).get("weight"), 0))
+        for nid in ids:
+            _set_semantic_edge(edge_by_key, hub, nid, relation, now)
+        return
+    for i in range(len(ids)):
+        for j in range(i + 1, len(ids)):
+            _set_semantic_edge(edge_by_key, ids[i], ids[j], relation, now)
+
+
+def _add_semantic_links(
+    node_by_id: Dict[str, Dict[str, Any]],
+    edge_by_key: Dict[Tuple[str, str], Dict[str, Any]],
+) -> int:
+    """Add deterministic ontology edges. Returns count added. Idempotent: callers
+    must drop existing kind=='semantic' edges first."""
+    before = len(edge_by_key)
+    now = _now_iso()
+    _link_group(node_by_id, edge_by_key, _group_member_ids(node_by_id, _MACRO_ALIASES), "macro", now)
+    for name, aliases in _SECTOR_GROUPS.items():
+        _link_group(node_by_id, edge_by_key, _group_member_ids(node_by_id, aliases), f"sector:{name}", now)
+    return len(edge_by_key) - before
 
 
 def _parse_iso(value: Any) -> str:
@@ -554,6 +696,12 @@ def recompute(g: Dict[str, Any]) -> Dict[str, Any]:
     if not isinstance(watch_meta, dict):
         watch_meta = {}
         g[PRIVATE_WATCH_KEY] = watch_meta
+
+    # Regenerate semantic ontology edges fresh (drop stale ones first so their
+    # fixed weight never compounds across repeated recompute() calls).
+    for k in [k for k, e in edge_by_key.items() if isinstance(e, dict) and e.get("kind") == "semantic"]:
+        del edge_by_key[k]
+    _add_semantic_links(node_by_id, edge_by_key)
 
     degree_count: Dict[str, int] = defaultdict(int)
     weighted_degree: Dict[str, int] = defaultdict(int)
