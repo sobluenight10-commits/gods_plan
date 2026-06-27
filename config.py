@@ -265,18 +265,32 @@ PORTFOLIO: Dict[str, List[Dict]] = {
     ],
     "Kiwoom US": [
         {"ticker": "KTOS", "name": "Kratos Defense", "score": 9, "action": "HOLD pending May 6", "thesis": "Hypersonics / C5ISR"},
+        {"ticker": "OKLO", "name": "Oklo", "score": 7, "action": "HOLD", "thesis": "SMR / advanced fission"},
+        {"ticker": "UEC", "name": "Uranium Energy", "score": 9, "action": "HOLD", "thesis": "US uranium restart"},
+        {"ticker": "TSLA", "name": "Tesla", "score": 7, "action": "HOLD — top-10 dip-buy", "thesis": "EV + autonomy + energy; top-10 mega-cap test sleeve"},
+        {"ticker": "NVDA", "name": "Nvidia", "score": 9, "action": "HOLD", "thesis": "AI compute layer"},
+        {"ticker": "MSFT", "name": "Microsoft", "score": 8, "action": "HOLD — top-10 dip-buy", "thesis": "Azure + Copilot; top-10 sleeve"},
+        {"ticker": "GOOGL", "name": "Alphabet", "score": 8, "action": "HOLD — top-10 dip-buy", "thesis": "Search + Gemini + cloud; top-10 sleeve"},
+        {"ticker": "AVGO", "name": "Broadcom", "score": 8, "action": "HOLD — top-10 dip-buy", "thesis": "AI networking + custom silicon; top-10 sleeve"},
+        {"ticker": "TMO", "name": "Thermo Fisher", "score": 7, "action": "HOLD", "thesis": "Life-science tools"},
+        {"ticker": "FCX", "name": "Freeport-McMoRan", "score": 6, "action": "HOLD", "thesis": "Copper / critical minerals"},
+        {"ticker": "PL", "name": "Planet Labs", "score": 6, "action": "HOLD", "thesis": "EO satellite data"},
+        {"ticker": "ARKQ", "name": "ARK Autonomous & Robotics ETF", "score": 6, "action": "HOLD", "thesis": "Robotics/autonomy basket"},
+        {"ticker": "BOTZ", "name": "Global X Robotics & AI ETF", "score": 6, "action": "HOLD", "thesis": "Robotics basket"},
+        {"ticker": "UUUU", "name": "Energy Fuels", "score": 6, "action": "HOLD", "thesis": "US uranium + rare earths"},
     ],
 }
 
 # Held positions monitored for intraday tiered thesis alerts (see price_alert.check_thesis_alerts)
 THESIS_ALERT_TICKERS: List[str] = [
     # TR holdings
-    "TSM", "PLTR", "UEC", "URNM", "COHR", "1810.HK", "NTR",
+    "TSM", "PLTR", "UEC", "URNM", "COHR", "NTR",
     "PL", "TMO", "CWEN", "UUUU", "FCX", "RKLB", "MC.PA",
     # Kiwoom holdings
-    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "VRT", "IAU", "KTOS", "AMAT",
+    "000660.KS", "272210.KS", "ARKQ", "BOTZ", "IAU", "KTOS", "AMAT",
+    "MSFT", "GOOGL", "AVGO", "TSLA", "NVDA",
     # Watchlist
-    "NVDA", "CCJ", "OKLO", "ASTS", "CRSP", "NTLA", "BEAM", "ASML",
+    "CCJ", "OKLO", "ASTS", "CRSP", "NTLA", "BEAM", "ASML",
 ]
 
 WATCHLIST: List[Dict] = [

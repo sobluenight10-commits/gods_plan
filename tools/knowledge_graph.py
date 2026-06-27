@@ -60,6 +60,10 @@ _MACRO_ALIASES = [
     "treasury", "treasuries", "bond", "bonds", "bond yield", "yield", "yields",
     "10-year", "10y", "credit spread", "recession", "gdp", "unemployment",
     "payrolls", "jobs report", "dollar", "dxy",
+    # inflation MEASURES belong to the macro web (a method of evaluating CPI/PCE
+    # is not a lone island — GOD: "Trimmed Averages is a method, why alone?").
+    "trimmed average", "trimmed averages", "trimmed mean", "core cpi", "core pce",
+    "supercore", "median cpi", "sticky cpi", "breakeven", "inflation expectations",
 ]
 
 # Each sector: member nodes get linked to one another (or to a hub if large).
@@ -83,6 +87,9 @@ _SECTOR_GROUPS: Dict[str, List[str]] = {
     "space": [
         "space", "spacex", "rocket", "satellite", "launch", "rocket lab", "rklb",
         "planet labs", "starlink", "constellation",
+        # GOD: "Volume Constraints — isn't this related to Launch Capacity?"
+        "launch capacity", "launch cadence", "volume constraint", "volume constraints",
+        "payload", "reusability", "launch vehicle", "space data center",
     ],
     "defense": [
         "defense", "defence", "missile", "drone", "munition", "kratos", "ktos",
@@ -104,6 +111,19 @@ _SECTOR_GROUPS: Dict[str, List[str]] = {
         "copper", "rare earth", "rare earths", "gallium", "germanium", "cobalt",
         "nickel", "graphite", "critical mineral", "critical minerals", "freeport",
         "fcx",
+    ],
+    # GOD: "Netanyahu, Economic Corridor — isn't this related to IMEC?"
+    "imec_corridor": [
+        "imec", "india-middle east-europe", "india middle east europe",
+        "economic corridor", "trade corridor", "netanyahu", "israel", "saudi arabia",
+        "uae", "red sea", "suez", "belt and road", "bri",
+    ],
+    # GOD: "SEC — isn't this related to Hynix and ADR?" Filings/listings web.
+    "filings_listings": [
+        "sec", "securities and exchange commission", "adr",
+        "american depositary receipt", "american depositary", "ipo", "listing",
+        "relisting", "nasdaq", "nyse", "form 4", "8-k", "10-k", "10-q", "20-f",
+        "prospectus", "s-1", "delisting", "dual listing",
     ],
 }
 
@@ -156,34 +176,27 @@ def _canon_resolve(node_id: str, label: str, ntype: str) -> Optional[Tuple[str, 
     return None
 
 
-def _merge_canonical(
+def _norm_key(s: Any) -> str:
+    """Aggressive dedup key: lowercase, drop ALL non-alphanumerics. So 'S.E.C.',
+    'SEC', 'sec' and 'S E C' collapse; 'AI/Compute', 'AI - Compute' collapse."""
+    return re.sub(r"[^a-z0-9]", "", str(s or "").lower())
+
+
+def _collapse_nodes(
     node_by_id: Dict[str, Dict[str, Any]],
     edge_by_key: Dict[Tuple[str, str], Dict[str, Any]],
+    remap: Dict[str, str],
 ) -> int:
-    """Collapse duplicate synonym nodes into their canonical node, rewiring edges.
-    Idempotent and safe to run on every recompute. Returns number of nodes merged."""
-    remap: Dict[str, Tuple[str, str, str]] = {}
-    for nid in list(node_by_id.keys()):
-        node = node_by_id[nid]
-        canon = _canon_resolve(nid, str(node.get("label") or ""), str(node.get("type") or ""))
-        if canon and canon[0] != nid:
-            remap[nid] = canon
+    """Merge each old_id -> canon_id (canon must already exist), rewiring edges.
+    Sums weights/mentions, unions tickers/posts, keeps target label/summary."""
+    remap = {o: c for o, c in remap.items() if o != c and c in node_by_id}
     if not remap:
         return 0
-
-    for old_id, (cid, clabel, ctype) in remap.items():
+    for old_id, cid in remap.items():
+        if old_id not in node_by_id:
+            continue
         old = node_by_id.pop(old_id)
-        if cid not in node_by_id:
-            node_by_id[cid] = {
-                "id": cid, "label": clabel, "type": ctype, "weight": 0, "degree": 0,
-                "weighted_degree": 0, "centrality": 0.0, "mentions": 0,
-                "first_seen": old.get("first_seen") or _now_iso(),
-                "last_seen": old.get("last_seen") or _now_iso(),
-                "summary": old.get("summary", ""), "tickers": [], "posts": [],
-            }
         tgt = node_by_id[cid]
-        tgt["label"] = clabel
-        tgt["type"] = ctype
         tgt["weight"] = _safe_int(tgt.get("weight"), 0) + _safe_int(old.get("weight"), 0)
         tgt["mentions"] = _safe_int(tgt.get("mentions"), 0) + _safe_int(old.get("mentions"), 0)
         if not tgt.get("summary"):
@@ -192,8 +205,7 @@ def _merge_canonical(
         tgt["posts"] = list(dict.fromkeys([*(tgt.get("posts") or []), *(old.get("posts") or [])]))[-20:]
 
     def _rid(x: str) -> str:
-        r = remap.get(x)
-        return r[0] if r else x
+        return remap.get(x, x)
 
     new_edges: Dict[Tuple[str, str], Dict[str, Any]] = {}
     for (a, b), e in edge_by_key.items():
@@ -210,6 +222,59 @@ def _merge_canonical(
     edge_by_key.clear()
     edge_by_key.update(new_edges)
     return len(remap)
+
+
+def _merge_canonical(
+    node_by_id: Dict[str, Dict[str, Any]],
+    edge_by_key: Dict[Tuple[str, str], Dict[str, Any]],
+) -> int:
+    """Collapse known synonym nodes into their canonical node (TSMC == Taiwan
+    Semiconductor Manufacturing Company). Idempotent."""
+    remap: Dict[str, str] = {}
+    for nid in list(node_by_id.keys()):
+        node = node_by_id[nid]
+        canon = _canon_resolve(nid, str(node.get("label") or ""), str(node.get("type") or ""))
+        if canon and canon[0] != nid:
+            cid, clabel, ctype = canon
+            if cid not in node_by_id:
+                node_by_id[cid] = {
+                    "id": cid, "label": clabel, "type": ctype, "weight": 0, "degree": 0,
+                    "weighted_degree": 0, "centrality": 0.0, "mentions": 0,
+                    "first_seen": node.get("first_seen") or _now_iso(),
+                    "last_seen": node.get("last_seen") or _now_iso(),
+                    "summary": node.get("summary", ""), "tickers": [], "posts": [],
+                }
+            else:
+                node_by_id[cid]["label"] = clabel
+                node_by_id[cid]["type"] = ctype
+            remap[nid] = cid
+    return _collapse_nodes(node_by_id, edge_by_key, remap)
+
+
+def _merge_by_normalized_key(
+    node_by_id: Dict[str, Dict[str, Any]],
+    edge_by_key: Dict[Tuple[str, str], Dict[str, Any]],
+) -> int:
+    """General dedup: collapse nodes whose labels are identical after stripping
+    case + punctuation (abbreviation/'/'/'-'/Capital variants). Keeps the
+    highest-weight, longest-label node as canonical."""
+    groups: Dict[str, List[str]] = {}
+    for nid, node in node_by_id.items():
+        key = _norm_key(node.get("label") or nid) or _norm_key(nid)
+        if key:
+            groups.setdefault(key, []).append(nid)
+    remap: Dict[str, str] = {}
+    for _key, ids in groups.items():
+        if len(ids) < 2:
+            continue
+        canon = max(ids, key=lambda i: (
+            _safe_int(node_by_id[i].get("weight"), 0),
+            len(str(node_by_id[i].get("label") or "")),
+        ))
+        for i in ids:
+            if i != canon:
+                remap[i] = canon
+    return _collapse_nodes(node_by_id, edge_by_key, remap)
 
 
 def _now_iso() -> str:
@@ -808,6 +873,9 @@ def recompute(g: Dict[str, Any]) -> Dict[str, Any]:
     # Collapse synonym duplicates into canonical entities FIRST (TSMC == Taiwan
     # Semiconductor Manufacturing Company), rewiring edges onto the canonical id.
     _merge_canonical(node_by_id, edge_by_key)
+    # Then a general dedup pass: any remaining nodes whose labels match after
+    # stripping case + punctuation (S.E.C./SEC, AI/Compute vs AI-Compute) collapse.
+    _merge_by_normalized_key(node_by_id, edge_by_key)
 
     # Regenerate semantic ontology edges fresh (drop stale ones first so their
     # fixed weight never compounds across repeated recompute() calls).
