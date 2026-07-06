@@ -1,10 +1,10 @@
 {
-  "updated": "2026-07-03 15:35",
+  "updated": "2026-07-06 07:05",
   "source": "Minerva server \u00b7 yfinance",
   "prices": {
     "000660.KS": {
-      "price": 2425000.0,
-      "change_pct": 10.88,
+      "price": 2381000.0,
+      "change_pct": -1.53,
       "currency": "KRW",
       "yf": "000660.KS"
     },
@@ -21,8 +21,8 @@
       "yf": "PLTR"
     },
     "1810.HK": {
-      "price": 22.96,
-      "change_pct": 1.59,
+      "price": 23.46,
+      "change_pct": 2.18,
       "currency": "HKD",
       "yf": "1810.HK"
     },
@@ -93,8 +93,8 @@
       "yf": "BEAM"
     },
     "272210.KS": {
-      "price": 75500.0,
-      "change_pct": 1.89,
+      "price": 79700.0,
+      "change_pct": 7.12,
       "currency": "KRW",
       "yf": "272210.KS"
     },
@@ -171,8 +171,8 @@
       "yf": "PKX"
     },
     "MC.PA": {
-      "price": 494.0,
-      "change_pct": -0.64,
+      "price": 495.7,
+      "change_pct": -0.3,
       "currency": "EUR",
       "yf": "MC.PA"
     },
