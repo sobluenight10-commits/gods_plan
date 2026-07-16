@@ -1,220 +1,220 @@
 {
-  "updated": "2026-07-15 15:35",
+  "updated": "2026-07-16 07:05",
   "source": "Minerva server \u00b7 yfinance",
   "prices": {
     "000660.KS": {
-      "price": 2082000.0,
-      "change_pct": 8.83,
+      "price": 1833000.0,
+      "change_pct": -13.37,
       "currency": "KRW",
       "yf": "000660.KS"
     },
     "TSM": {
-      "price": 427.3,
-      "change_pct": 0.81,
+      "price": 419.48,
+      "change_pct": -1.04,
       "currency": "USD",
       "yf": "TSM"
     },
     "PLTR": {
-      "price": 136.06,
-      "change_pct": 1.33,
+      "price": 133.76,
+      "change_pct": -0.39,
       "currency": "USD",
       "yf": "PLTR"
     },
     "1810.HK": {
-      "price": 25.86,
-      "change_pct": -0.69,
+      "price": 27.48,
+      "change_pct": 6.26,
       "currency": "HKD",
       "yf": "1810.HK"
     },
     "IONQ": {
-      "price": 40.01,
-      "change_pct": 0.91,
+      "price": 37.51,
+      "change_pct": -5.4,
       "currency": "USD",
       "yf": "IONQ"
     },
     "NVDA": {
-      "price": 213.35,
-      "change_pct": 0.72,
+      "price": 212.5,
+      "change_pct": 0.32,
       "currency": "USD",
       "yf": "NVDA"
     },
     "UEC": {
-      "price": 10.47,
-      "change_pct": 0.19,
+      "price": 10.11,
+      "change_pct": -3.25,
       "currency": "USD",
       "yf": "UEC"
     },
     "URNM": {
-      "price": 51.8,
-      "change_pct": -0.27,
+      "price": 50.88,
+      "change_pct": -2.04,
       "currency": "USD",
       "yf": "URNM"
     },
     "CCJ": {
-      "price": 92.45,
-      "change_pct": 1.15,
+      "price": 90.98,
+      "change_pct": -0.46,
       "currency": "USD",
       "yf": "CCJ"
     },
     "OKLO": {
-      "price": 47.46,
-      "change_pct": 2.06,
+      "price": 45.69,
+      "change_pct": -1.74,
       "currency": "USD",
       "yf": "OKLO"
     },
     "RKLB": {
-      "price": 80.5,
-      "change_pct": 1.23,
+      "price": 76.2,
+      "change_pct": -4.17,
       "currency": "USD",
       "yf": "RKLB"
     },
     "ASTS": {
-      "price": 69.22,
-      "change_pct": 0.53,
+      "price": 66.31,
+      "change_pct": -3.7,
       "currency": "USD",
       "yf": "ASTS"
     },
     "CRSP": {
-      "price": 50.54,
-      "change_pct": -0.4,
+      "price": 51.37,
+      "change_pct": 1.22,
       "currency": "USD",
       "yf": "CRSP"
     },
     "NTLA": {
-      "price": 13.23,
-      "change_pct": -0.68,
+      "price": 13.04,
+      "change_pct": -2.1,
       "currency": "USD",
       "yf": "NTLA"
     },
     "BEAM": {
-      "price": 30.42,
-      "change_pct": -1.87,
+      "price": 30.84,
+      "change_pct": -0.52,
       "currency": "USD",
       "yf": "BEAM"
     },
     "272210.KS": {
       "price": 65800.0,
-      "change_pct": 5.11,
+      "change_pct": -0.6,
       "currency": "KRW",
       "yf": "272210.KS"
     },
     "KTOS": {
-      "price": 54.0,
-      "change_pct": 5.24,
+      "price": 49.68,
+      "change_pct": -3.18,
       "currency": "USD",
       "yf": "KTOS"
     },
     "UUUU": {
-      "price": 13.22,
-      "change_pct": -0.48,
+      "price": 12.67,
+      "change_pct": -4.62,
       "currency": "USD",
       "yf": "UUUU"
     },
     "CWEN": {
-      "price": 34.97,
-      "change_pct": 1.67,
+      "price": 34.45,
+      "change_pct": 0.17,
       "currency": "USD",
       "yf": "CWEN"
     },
     "AVAV": {
-      "price": 148.8,
-      "change_pct": 3.03,
+      "price": 141.22,
+      "change_pct": -2.22,
       "currency": "USD",
       "yf": "AVAV"
     },
     "ARKQ": {
-      "price": 124.24,
-      "change_pct": 1.31,
+      "price": 121.52,
+      "change_pct": -0.91,
       "currency": "USD",
       "yf": "ARKQ"
     },
     "BOTZ": {
-      "price": 36.32,
-      "change_pct": 0.89,
+      "price": 36.03,
+      "change_pct": 0.08,
       "currency": "USD",
       "yf": "BOTZ"
     },
     "COHR": {
-      "price": 309.38,
-      "change_pct": -1.16,
+      "price": 299.38,
+      "change_pct": -4.35,
       "currency": "USD",
       "yf": "COHR"
     },
     "VRT": {
-      "price": 307.35,
-      "change_pct": 0.79,
+      "price": 304.57,
+      "change_pct": -0.12,
       "currency": "USD",
       "yf": "VRT"
     },
     "TMO": {
-      "price": 536.57,
-      "change_pct": 0.01,
+      "price": 535.29,
+      "change_pct": -0.23,
       "currency": "USD",
       "yf": "TMO"
     },
     "AMAT": {
-      "price": 596.72,
-      "change_pct": -1.38,
+      "price": 579.43,
+      "change_pct": -4.24,
       "currency": "USD",
       "yf": "AMAT"
     },
     "NTR": {
-      "price": 68.64,
-      "change_pct": -0.88,
+      "price": 68.33,
+      "change_pct": -1.33,
       "currency": "USD",
       "yf": "NTR"
     },
     "PKX": {
-      "price": 52.94,
-      "change_pct": 1.34,
+      "price": 51.89,
+      "change_pct": -0.67,
       "currency": "USD",
       "yf": "PKX"
     },
     "MC.PA": {
-      "price": 487.9,
-      "change_pct": 0.82,
+      "price": 495.8,
+      "change_pct": 2.45,
       "currency": "EUR",
       "yf": "MC.PA"
     },
     "GEVO": {
-      "price": 1.55,
-      "change_pct": 7.99,
+      "price": 1.59,
+      "change_pct": 10.42,
       "currency": "USD",
       "yf": "GEVO"
     },
     "HUYA": {
-      "price": 2.47,
-      "change_pct": 3.3,
+      "price": 2.4,
+      "change_pct": 0.42,
       "currency": "USD",
       "yf": "HUYA"
     },
     "FCX": {
-      "price": 62.14,
-      "change_pct": 0.31,
+      "price": 60.97,
+      "change_pct": -1.58,
       "currency": "USD",
       "yf": "FCX"
     },
     "IAU": {
-      "price": 76.33,
-      "change_pct": 0.05,
+      "price": 76.28,
+      "change_pct": -0.03,
       "currency": "USD",
       "yf": "IAU"
     },
     "TSMC": {
-      "price": 427.3,
-      "change_pct": 0.81,
+      "price": 419.48,
+      "change_pct": -1.04,
       "currency": "USD",
       "yf": "TSM"
     },
     "ASML": {
-      "price": 1780.37,
-      "change_pct": -1.46,
+      "price": 1815.27,
+      "change_pct": 0.47,
       "currency": "EUR",
       "yf": "ASML"
     },
     "PL": {
-      "price": 26.21,
-      "change_pct": 2.42,
+      "price": 24.9,
+      "change_pct": -2.7,
       "currency": "USD",
       "yf": "PL"
     }
