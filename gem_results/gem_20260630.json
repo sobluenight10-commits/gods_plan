@@ -1,0 +1,2670 @@
+{
+  "run_date": "2026-06-30",
+  "run_time": "06:00",
+  "total_positions": 28,
+  "grade_summary": {
+    "A": 1,
+    "B+": 4,
+    "B": 12,
+    "C+": 5,
+    "C": 3,
+    "F": 3
+  },
+  "grade_changes": [
+    {
+      "ticker": "TSLA",
+      "from": "C+",
+      "to": "B",
+      "reason": "Grade B (GEM 41/100): 1y +2.8%, 5y +78.2%, worst -63.2%, bull +131.2%"
+    },
+    {
+      "ticker": "PLTR",
+      "from": "C+",
+      "to": "B",
+      "reason": "Grade B (GEM 41/100): 1y +18.2%, 5y +189.2%, worst -68.4%, bull +178.5%"
+    },
+    {
+      "ticker": "RKLB",
+      "from": "D",
+      "to": "F",
+      "reason": "Grade F (GEM 8/100): 1y -23.8%, 5y +67.2%, worst -77.8%, bull +96.7%"
+    },
+    {
+      "ticker": "PL",
+      "from": "C+",
+      "to": "C",
+      "reason": "Grade C (GEM 25/100): 1y +2.8%, 5y +140.3%, worst -72.1%, bull +155.7%"
+    },
+    {
+      "ticker": "272210.KS",
+      "from": "C+",
+      "to": "B",
+      "reason": "Grade B (GEM 40/100): 1y +9.3%, 5y +249.6%, worst -59.9%, bull +151.4%"
+    },
+    {
+      "ticker": "CWEN",
+      "from": "B",
+      "to": "B+",
+      "reason": "Grade B+ (GEM 56/100): 1y +11.4%, 5y +23.6%, worst -29.2%, bull +78.7%"
+    },
+    {
+      "ticker": "MC.PA",
+      "from": "C+",
+      "to": "B",
+      "reason": "Grade B (GEM 40/100): 1y -3.1%, 5y +52.0%, worst -46.8%, bull +70.9%"
+    },
+    {
+      "ticker": "ARKQ",
+      "from": "B+",
+      "to": "B",
+      "reason": "Grade B (GEM 49/100): 1y +1.6%, 5y +59.5%, worst -46.3%, bull +92.9%"
+    }
+  ],
+  "alerts": [],
+  "results": [
+    {
+      "ticker": "CCJ",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 103.47,
+      "entry_price": null,
+      "god_score": 82,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 19.4,
+        "current_vs_ev_5y_pct": 95.95,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 89.5,
+          "normal": 106.46,
+          "bull": 124.85,
+          "ev": 103.36,
+          "upside_pct": -0.11,
+          "worst_drop_pct": -13.5,
+          "bull_gain_pct": 20.67
+        },
+        "6m": {
+          "worst": 66.79,
+          "normal": 104.48,
+          "bull": 156.29,
+          "ev": 99.77,
+          "upside_pct": -3.58,
+          "worst_drop_pct": -35.45,
+          "bull_gain_pct": 51.05
+        },
+        "1y": {
+          "worst": 48.1,
+          "normal": 124.63,
+          "bull": 272.24,
+          "ev": 123.54,
+          "upside_pct": 19.4,
+          "worst_drop_pct": -53.51,
+          "bull_gain_pct": 163.11
+        },
+        "3y": {
+          "worst": 49.28,
+          "normal": 164.82,
+          "bull": 536.14,
+          "ev": 192.87,
+          "upside_pct": 86.4,
+          "worst_drop_pct": -52.37,
+          "bull_gain_pct": 418.16
+        },
+        "5y": {
+          "worst": 37.68,
+          "normal": 152.59,
+          "bull": 633.22,
+          "ev": 202.75,
+          "upside_pct": 95.95,
+          "worst_drop_pct": -63.58,
+          "bull_gain_pct": 511.98
+        }
+      },
+      "grading": {
+        "gem_score": 61.4,
+        "upside_1y_pct": 19.4,
+        "upside_5y_pct": 95.95,
+        "worst_drop_1y_pct": -53.51,
+        "bull_gain_1y_pct": 163.11,
+        "grade": "A",
+        "gem_universe": true,
+        "gem_portfolio": true,
+        "god_score_warning": null,
+        "dd_from_high_pct": -22.8,
+        "downtrend_capped": false,
+        "reason": "Grade A (GEM 61/100): 1y +19.4%, 5y +96.0%, worst -53.5%, bull +163.1%",
+        "risk_integrated": true,
+        "risk_avg": 3.9,
+        "risk_level": "MODERATE",
+        "precision_tier": 1,
+        "precision_grade": "A.I",
+        "precision_composite": null
+      },
+      "so_what": {
+        "action": "Hold",
+        "signal": "Hold. Thesis intact. Near: UNDERVALUED, Long: UNDERVALUED. Monitor monthly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "monthly"
+      }
+    },
+    {
+      "ticker": "NVDA",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 194.97,
+      "entry_price": null,
+      "god_score": 96,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 3.69,
+        "current_vs_ev_5y_pct": 253.22,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED \u00b7 LONG-TERM UNDERVALUED (+45% narrative gap)",
+      "projections": {
+        "1m": {
+          "worst": 161.73,
+          "normal": 199.96,
+          "bull": 242.97,
+          "ev": 193.27,
+          "upside_pct": -0.87,
+          "worst_drop_pct": -17.05,
+          "bull_gain_pct": 24.62
+        },
+        "6m": {
+          "worst": 111.11,
+          "normal": 192.36,
+          "bull": 315.27,
+          "ev": 184.44,
+          "upside_pct": -5.4,
+          "worst_drop_pct": -43.01,
+          "bull_gain_pct": 61.7
+        },
+        "1y": {
+          "worst": 80.5,
+          "normal": 203.94,
+          "bull": 441.91,
+          "ev": 202.16,
+          "upside_pct": 3.69,
+          "worst_drop_pct": -58.71,
+          "bull_gain_pct": 126.66
+        },
+        "3y": {
+          "worst": 93.47,
+          "normal": 344.66,
+          "bull": 1054.46,
+          "ev": 386.14,
+          "upside_pct": 98.05,
+          "worst_drop_pct": -52.06,
+          "bull_gain_pct": 440.83
+        },
+        "5y": {
+          "worst": 97.27,
+          "normal": 522.9,
+          "bull": 2203.07,
+          "ev": 688.68,
+          "upside_pct": 253.22,
+          "worst_drop_pct": -50.11,
+          "bull_gain_pct": 1029.96
+        }
+      },
+      "grading": {
+        "gem_score": 57.4,
+        "upside_1y_pct": 3.69,
+        "upside_5y_pct": 253.22,
+        "worst_drop_1y_pct": -58.71,
+        "bull_gain_1y_pct": 126.66,
+        "grade": "B+",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -17.2,
+        "downtrend_capped": false,
+        "reason": "Grade B+ (GEM 57/100): 1y +3.7%, 5y +253.2%, worst -58.7%, bull +126.7%",
+        "risk_integrated": true,
+        "risk_avg": 2.6,
+        "risk_level": "LOW",
+        "precision_tier": 1,
+        "precision_grade": "B+.I",
+        "precision_composite": 0.734
+      },
+      "so_what": {
+        "action": "Hold",
+        "signal": "Hold. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor monthly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "monthly"
+      }
+    },
+    {
+      "ticker": "FCX",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 61.62,
+      "entry_price": 52.0,
+      "god_score": 45,
+      "versus": {
+        "unrealized_pnl_pct": 18.5,
+        "current_vs_ev_1y_pct": 11.0,
+        "current_vs_ev_5y_pct": 59.92,
+        "entry_vs_ev_1y_pct": 31.54,
+        "entry_vs_ev_5y_pct": 89.5,
+        "entry_margin_of_safety_1y_pct": 38.85
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED \u00b7 LONG-TERM UNDERVALUED (+32% narrative gap)",
+      "projections": {
+        "1m": {
+          "worst": 52.83,
+          "normal": 61.64,
+          "bull": 71.01,
+          "ev": 59.99,
+          "upside_pct": -2.65,
+          "worst_drop_pct": -14.27,
+          "bull_gain_pct": 15.24
+        },
+        "6m": {
+          "worst": 41.02,
+          "normal": 60.99,
+          "bull": 87.2,
+          "ev": 58.25,
+          "upside_pct": -5.48,
+          "worst_drop_pct": -33.43,
+          "bull_gain_pct": 41.51
+        },
+        "1y": {
+          "worst": 29.61,
+          "normal": 72.2,
+          "bull": 138.37,
+          "ev": 68.4,
+          "upside_pct": 11.0,
+          "worst_drop_pct": -51.95,
+          "bull_gain_pct": 124.55
+        },
+        "3y": {
+          "worst": 28.61,
+          "normal": 84.21,
+          "bull": 203.66,
+          "ev": 85.86,
+          "upside_pct": 39.34,
+          "worst_drop_pct": -53.57,
+          "bull_gain_pct": 230.52
+        },
+        "5y": {
+          "worst": 28.41,
+          "normal": 90.47,
+          "bull": 254.92,
+          "ev": 98.54,
+          "upside_pct": 59.91,
+          "worst_drop_pct": -53.89,
+          "bull_gain_pct": 313.69
+        }
+      },
+      "grading": {
+        "gem_score": 57.0,
+        "upside_1y_pct": 11.0,
+        "upside_5y_pct": 59.91,
+        "worst_drop_1y_pct": -51.95,
+        "bull_gain_1y_pct": 124.55,
+        "grade": "B+",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -14.1,
+        "downtrend_capped": false,
+        "reason": "Grade B+ (GEM 57/100): 1y +11.0%, 5y +59.9%, worst -52.0%, bull +124.5%",
+        "risk_integrated": true,
+        "risk_avg": 3.0,
+        "risk_level": "MODERATE",
+        "precision_tier": 2,
+        "precision_grade": "B+.II",
+        "precision_composite": 0.44
+      },
+      "so_what": {
+        "action": "Hold",
+        "signal": "Hold. Thesis intact. Near: UNDERVALUED, Long: UNDERVALUED. Monitor monthly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "monthly"
+      }
+    },
+    {
+      "ticker": "TSM",
+      "sector": "Intelligence/AI",
+      "track": "A",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 455.1,
+      "entry_price": 287.4,
+      "god_score": 90.0,
+      "versus": {
+        "unrealized_pnl_pct": 58.35,
+        "current_vs_ev_1y_pct": 1.26,
+        "current_vs_ev_5y_pct": 92.48,
+        "entry_vs_ev_1y_pct": 60.34,
+        "entry_vs_ev_5y_pct": 204.8,
+        "entry_margin_of_safety_1y_pct": 72.03
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 410.21,
+          "normal": 469.41,
+          "bull": 531.3,
+          "ev": 458.11,
+          "upside_pct": 0.66,
+          "worst_drop_pct": -9.86,
+          "bull_gain_pct": 16.74
+        },
+        "6m": {
+          "worst": 330.89,
+          "normal": 467.98,
+          "bull": 639.2,
+          "ev": 447.39,
+          "upside_pct": -1.69,
+          "worst_drop_pct": -27.29,
+          "bull_gain_pct": 40.45
+        },
+        "1y": {
+          "worst": 229.05,
+          "normal": 494.4,
+          "bull": 857.27,
+          "ev": 460.83,
+          "upside_pct": 1.26,
+          "worst_drop_pct": -49.67,
+          "bull_gain_pct": 88.37
+        },
+        "3y": {
+          "worst": 243.28,
+          "normal": 711.94,
+          "bull": 1635.02,
+          "ev": 709.09,
+          "upside_pct": 55.81,
+          "worst_drop_pct": -46.54,
+          "bull_gain_pct": 259.27
+        },
+        "5y": {
+          "worst": 220.71,
+          "normal": 779.57,
+          "bull": 2379.41,
+          "ev": 875.99,
+          "upside_pct": 92.48,
+          "worst_drop_pct": -51.5,
+          "bull_gain_pct": 422.83
+        }
+      },
+      "grading": {
+        "gem_score": 56.2,
+        "upside_1y_pct": 1.26,
+        "upside_5y_pct": 92.48,
+        "worst_drop_1y_pct": -49.67,
+        "bull_gain_1y_pct": 88.37,
+        "grade": "B+",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -2.7,
+        "downtrend_capped": false,
+        "reason": "Grade B+ (GEM 56/100): 1y +1.3%, 5y +92.5%, worst -49.7%, bull +88.4%",
+        "risk_integrated": true,
+        "risk_avg": 2.1,
+        "risk_level": "LOW",
+        "precision_tier": 3,
+        "precision_grade": "B+.III",
+        "precision_composite": 0.195
+      },
+      "so_what": {
+        "action": "Hold",
+        "signal": "Hold. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor monthly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "monthly"
+      }
+    },
+    {
+      "ticker": "CWEN",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 35.18,
+      "entry_price": 29.32,
+      "god_score": 68,
+      "versus": {
+        "unrealized_pnl_pct": 19.99,
+        "current_vs_ev_1y_pct": 11.37,
+        "current_vs_ev_5y_pct": 23.56,
+        "entry_vs_ev_1y_pct": 33.63,
+        "entry_vs_ev_5y_pct": 48.26,
+        "entry_margin_of_safety_1y_pct": 41.88
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 32.44,
+          "normal": 35.3,
+          "bull": 38.15,
+          "ev": 34.72,
+          "upside_pct": -1.3,
+          "worst_drop_pct": -7.8,
+          "bull_gain_pct": 8.45
+        },
+        "6m": {
+          "worst": 28.72,
+          "normal": 35.67,
+          "bull": 43.35,
+          "ev": 34.42,
+          "upside_pct": -2.15,
+          "worst_drop_pct": -18.37,
+          "bull_gain_pct": 23.23
+        },
+        "1y": {
+          "worst": 24.91,
+          "normal": 41.6,
+          "bull": 62.86,
+          "ev": 39.18,
+          "upside_pct": 11.36,
+          "worst_drop_pct": -29.18,
+          "bull_gain_pct": 78.67
+        },
+        "3y": {
+          "worst": 25.7,
+          "normal": 46.74,
+          "bull": 79.86,
+          "ev": 44.95,
+          "upside_pct": 27.77,
+          "worst_drop_pct": -26.95,
+          "bull_gain_pct": 127.0
+        },
+        "5y": {
+          "worst": 22.51,
+          "normal": 44.44,
+          "bull": 83.45,
+          "ev": 43.47,
+          "upside_pct": 23.57,
+          "worst_drop_pct": -36.0,
+          "bull_gain_pct": 137.22
+        }
+      },
+      "grading": {
+        "gem_score": 55.8,
+        "upside_1y_pct": 11.36,
+        "upside_5y_pct": 23.57,
+        "worst_drop_1y_pct": -29.18,
+        "bull_gain_1y_pct": 78.67,
+        "grade": "B+",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -14.7,
+        "downtrend_capped": false,
+        "reason": "Grade B+ (GEM 56/100): 1y +11.4%, 5y +23.6%, worst -29.2%, bull +78.7%",
+        "risk_integrated": true,
+        "risk_avg": 4.6,
+        "risk_level": "HIGH",
+        "precision_tier": 3,
+        "precision_grade": "B+.III",
+        "precision_composite": 0.35
+      },
+      "so_what": {
+        "action": "Hold",
+        "signal": "Hold. Thesis intact. Near: UNDERVALUED, Long: FAIR. Monitor monthly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "FAIR",
+        "cadence": "monthly"
+      }
+    },
+    {
+      "ticker": "272210.KS",
+      "sector": "Robotics/Defense",
+      "track": "A",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 74300.0,
+      "entry_price": 45000.0,
+      "god_score": 92.0,
+      "versus": {
+        "unrealized_pnl_pct": 65.11,
+        "current_vs_ev_1y_pct": 9.31,
+        "current_vs_ev_5y_pct": 249.58,
+        "entry_vs_ev_1y_pct": 80.49,
+        "entry_vs_ev_5y_pct": 477.2,
+        "entry_margin_of_safety_1y_pct": 77.39
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 64270.99,
+          "normal": 76446.08,
+          "bull": 89654.74,
+          "ev": 74217.78,
+          "upside_pct": -0.11,
+          "worst_drop_pct": -13.5,
+          "bull_gain_pct": 20.67
+        },
+        "6m": {
+          "worst": 47958.25,
+          "normal": 75026.55,
+          "bull": 112230.24,
+          "ev": 71639.97,
+          "upside_pct": -3.58,
+          "worst_drop_pct": -35.45,
+          "bull_gain_pct": 51.05
+        },
+        "1y": {
+          "worst": 29816.76,
+          "normal": 79825.0,
+          "bull": 186811.79,
+          "ev": 81219.06,
+          "upside_pct": 9.31,
+          "worst_drop_pct": -59.87,
+          "bull_gain_pct": 151.43
+        },
+        "3y": {
+          "worst": 29911.2,
+          "normal": 124726.56,
+          "bull": 450439.6,
+          "ev": 151943.03,
+          "upside_pct": 104.5,
+          "worst_drop_pct": -59.74,
+          "bull_gain_pct": 506.24
+        },
+        "5y": {
+          "worst": 31668.48,
+          "normal": 176025.39,
+          "bull": 883305.56,
+          "ev": 259738.66,
+          "upside_pct": 249.58,
+          "worst_drop_pct": -57.38,
+          "bull_gain_pct": 1088.84
+        }
+      },
+      "grading": {
+        "gem_score": 40.4,
+        "upside_1y_pct": 9.31,
+        "upside_5y_pct": 249.58,
+        "worst_drop_1y_pct": -59.87,
+        "bull_gain_1y_pct": 151.43,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -54.2,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 40/100): 1y +9.3%, 5y +249.6%, worst -59.9%, bull +151.4%",
+        "risk_integrated": true,
+        "risk_avg": 4.6,
+        "risk_level": "HIGH",
+        "precision_tier": 1,
+        "precision_grade": "B.I",
+        "precision_composite": 0.854
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: UNDERVALUED, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "PLTR",
+      "sector": "Intelligence/AI",
+      "track": "A",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 115.7,
+      "entry_price": 109.32,
+      "god_score": 93.5,
+      "versus": {
+        "unrealized_pnl_pct": 5.84,
+        "current_vs_ev_1y_pct": 18.2,
+        "current_vs_ev_5y_pct": 189.22,
+        "entry_vs_ev_1y_pct": 25.1,
+        "entry_vs_ev_5y_pct": 206.1,
+        "entry_margin_of_safety_1y_pct": 31.91
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 91.93,
+          "normal": 118.17,
+          "bull": 148.79,
+          "ev": 113.8,
+          "upside_pct": -1.64,
+          "worst_drop_pct": -20.54,
+          "bull_gain_pct": 28.6
+        },
+        "6m": {
+          "worst": 57.86,
+          "normal": 110.98,
+          "bull": 199.26,
+          "ev": 107.39,
+          "upside_pct": -7.18,
+          "worst_drop_pct": -49.99,
+          "bull_gain_pct": 72.22
+        },
+        "1y": {
+          "worst": 36.57,
+          "normal": 144.2,
+          "bull": 322.27,
+          "ev": 136.76,
+          "upside_pct": 18.2,
+          "worst_drop_pct": -68.39,
+          "bull_gain_pct": 178.54
+        },
+        "3y": {
+          "worst": 41.35,
+          "normal": 236.26,
+          "bull": 762.28,
+          "ev": 263.5,
+          "upside_pct": 127.74,
+          "worst_drop_pct": -64.27,
+          "bull_gain_pct": 558.84
+        },
+        "5y": {
+          "worst": 34.04,
+          "normal": 251.6,
+          "bull": 1101.86,
+          "ev": 334.63,
+          "upside_pct": 189.22,
+          "worst_drop_pct": -70.58,
+          "bull_gain_pct": 852.34
+        }
+      },
+      "grading": {
+        "gem_score": 41.4,
+        "upside_1y_pct": 18.2,
+        "upside_5y_pct": 189.22,
+        "worst_drop_1y_pct": -68.39,
+        "bull_gain_1y_pct": 178.54,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -44.2,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 41/100): 1y +18.2%, 5y +189.2%, worst -68.4%, bull +178.5%",
+        "risk_integrated": true,
+        "risk_avg": 3.0,
+        "risk_level": "MODERATE",
+        "precision_tier": 1,
+        "precision_grade": "B.I",
+        "precision_composite": 0.831
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: UNDERVALUED, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "URNM",
+      "sector": "Energy/Uranium",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 53.13,
+      "entry_price": 14.65,
+      "god_score": 74.0,
+      "versus": {
+        "unrealized_pnl_pct": 262.66,
+        "current_vs_ev_1y_pct": 3.9,
+        "current_vs_ev_5y_pct": 149.03,
+        "entry_vs_ev_1y_pct": 276.79,
+        "entry_vs_ev_5y_pct": 803.14,
+        "entry_margin_of_safety_1y_pct": 282.25
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 44.62,
+          "normal": 53.07,
+          "bull": 62.24,
+          "ev": 51.53,
+          "upside_pct": -3.02,
+          "worst_drop_pct": -16.02,
+          "bull_gain_pct": 17.15
+        },
+        "6m": {
+          "worst": 33.29,
+          "normal": 52.09,
+          "bull": 77.92,
+          "ev": 49.74,
+          "upside_pct": -6.39,
+          "worst_drop_pct": -37.33,
+          "bull_gain_pct": 46.65
+        },
+        "1y": {
+          "worst": 22.52,
+          "normal": 56.0,
+          "bull": 118.98,
+          "ev": 55.2,
+          "upside_pct": 3.9,
+          "worst_drop_pct": -57.62,
+          "bull_gain_pct": 123.95
+        },
+        "3y": {
+          "worst": 21.22,
+          "normal": 74.06,
+          "bull": 223.08,
+          "ev": 82.73,
+          "upside_pct": 55.71,
+          "worst_drop_pct": -60.06,
+          "bull_gain_pct": 319.88
+        },
+        "5y": {
+          "worst": 22.51,
+          "normal": 104.07,
+          "bull": 408.42,
+          "ev": 132.31,
+          "upside_pct": 149.04,
+          "worst_drop_pct": -57.63,
+          "bull_gain_pct": 668.72
+        }
+      },
+      "grading": {
+        "gem_score": 42.1,
+        "upside_1y_pct": 3.9,
+        "upside_5y_pct": 149.04,
+        "worst_drop_1y_pct": -57.62,
+        "bull_gain_1y_pct": 123.95,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -36.7,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 42/100): 1y +3.9%, 5y +149.0%, worst -57.6%, bull +124.0%",
+        "risk_integrated": true,
+        "risk_avg": 4.2,
+        "risk_level": "MODERATE",
+        "precision_tier": 1,
+        "precision_grade": "B.I",
+        "precision_composite": 0.483
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "TSLA",
+      "sector": "Intelligence",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 411.84,
+      "entry_price": null,
+      "god_score": 80.0,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 2.84,
+        "current_vs_ev_5y_pct": 78.23,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 331.68,
+          "normal": 410.08,
+          "bull": 498.28,
+          "ev": 396.36,
+          "upside_pct": -3.76,
+          "worst_drop_pct": -19.46,
+          "bull_gain_pct": 20.99
+        },
+        "6m": {
+          "worst": 227.87,
+          "normal": 394.49,
+          "bull": 646.55,
+          "ev": 378.25,
+          "upside_pct": -8.16,
+          "worst_drop_pct": -44.67,
+          "bull_gain_pct": 56.99
+        },
+        "1y": {
+          "worst": 151.64,
+          "normal": 431.2,
+          "bull": 952.04,
+          "ev": 423.55,
+          "upside_pct": 2.84,
+          "worst_drop_pct": -63.18,
+          "bull_gain_pct": 131.17
+        },
+        "3y": {
+          "worst": 152.81,
+          "normal": 600.4,
+          "bull": 1807.57,
+          "ev": 662.8,
+          "upside_pct": 60.94,
+          "worst_drop_pct": -62.9,
+          "bull_gain_pct": 338.9
+        },
+        "5y": {
+          "worst": 116.15,
+          "normal": 580.86,
+          "bull": 2276.06,
+          "ev": 734.01,
+          "upside_pct": 78.23,
+          "worst_drop_pct": -71.8,
+          "bull_gain_pct": 452.66
+        }
+      },
+      "grading": {
+        "gem_score": 41.3,
+        "upside_1y_pct": 2.84,
+        "upside_5y_pct": 78.23,
+        "worst_drop_1y_pct": -63.18,
+        "bull_gain_1y_pct": 131.17,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -15.9,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 41/100): 1y +2.8%, 5y +78.2%, worst -63.2%, bull +131.2%",
+        "risk_integrated": true,
+        "risk_avg": 3.3,
+        "risk_level": "MODERATE",
+        "precision_tier": 1,
+        "precision_grade": "B.I",
+        "precision_composite": 0.267
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "COHR",
+      "sector": "Intelligence/AI",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 391.22,
+      "entry_price": 214.21,
+      "god_score": 76.0,
+      "versus": {
+        "unrealized_pnl_pct": 82.63,
+        "current_vs_ev_1y_pct": 1.67,
+        "current_vs_ev_5y_pct": 75.37,
+        "entry_vs_ev_1y_pct": 85.68,
+        "entry_vs_ev_5y_pct": 220.28,
+        "entry_margin_of_safety_1y_pct": 92.71
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 315.07,
+          "normal": 389.54,
+          "bull": 473.33,
+          "ev": 376.51,
+          "upside_pct": -3.76,
+          "worst_drop_pct": -19.46,
+          "bull_gain_pct": 20.99
+        },
+        "6m": {
+          "worst": 216.46,
+          "normal": 374.74,
+          "bull": 614.18,
+          "ev": 359.32,
+          "upside_pct": -8.16,
+          "worst_drop_pct": -44.67,
+          "bull_gain_pct": 56.99
+        },
+        "1y": {
+          "worst": 145.74,
+          "normal": 412.8,
+          "bull": 871.7,
+          "ev": 397.75,
+          "upside_pct": 1.67,
+          "worst_drop_pct": -62.75,
+          "bull_gain_pct": 122.82
+        },
+        "3y": {
+          "worst": 148.32,
+          "normal": 574.78,
+          "bull": 1696.75,
+          "ev": 628.59,
+          "upside_pct": 60.67,
+          "worst_drop_pct": -62.09,
+          "bull_gain_pct": 333.71
+        },
+        "5y": {
+          "worst": 111.73,
+          "normal": 539.76,
+          "bull": 2127.42,
+          "ev": 686.08,
+          "upside_pct": 75.37,
+          "worst_drop_pct": -71.44,
+          "bull_gain_pct": 443.79
+        }
+      },
+      "grading": {
+        "gem_score": 42.7,
+        "upside_1y_pct": 1.67,
+        "upside_5y_pct": 75.37,
+        "worst_drop_1y_pct": -62.75,
+        "bull_gain_1y_pct": 122.82,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -8.4,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 43/100): 1y +1.7%, 5y +75.4%, worst -62.8%, bull +122.8%",
+        "risk_integrated": true,
+        "risk_avg": 3.1,
+        "risk_level": "MODERATE",
+        "precision_tier": 2,
+        "precision_grade": "B.II",
+        "precision_composite": 0.239
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "ARKQ",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 128.39,
+      "entry_price": 55.0,
+      "god_score": 62,
+      "versus": {
+        "unrealized_pnl_pct": 133.44,
+        "current_vs_ev_1y_pct": 1.65,
+        "current_vs_ev_5y_pct": 59.54,
+        "entry_vs_ev_1y_pct": 137.29,
+        "entry_vs_ev_5y_pct": 272.42,
+        "entry_margin_of_safety_1y_pct": 142.71
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 115.73,
+          "normal": 132.43,
+          "bull": 149.89,
+          "ev": 129.24,
+          "upside_pct": 0.66,
+          "worst_drop_pct": -9.86,
+          "bull_gain_pct": 16.74
+        },
+        "6m": {
+          "worst": 93.35,
+          "normal": 132.02,
+          "bull": 180.33,
+          "ev": 126.21,
+          "upside_pct": -1.69,
+          "worst_drop_pct": -27.29,
+          "bull_gain_pct": 40.45
+        },
+        "1y": {
+          "worst": 68.97,
+          "normal": 133.49,
+          "bull": 247.62,
+          "ev": 130.51,
+          "upside_pct": 1.65,
+          "worst_drop_pct": -46.28,
+          "bull_gain_pct": 92.86
+        },
+        "3y": {
+          "worst": 70.19,
+          "normal": 167.45,
+          "bull": 407.98,
+          "ev": 176.65,
+          "upside_pct": 37.59,
+          "worst_drop_pct": -45.33,
+          "bull_gain_pct": 217.76
+        },
+        "5y": {
+          "worst": 63.26,
+          "normal": 175.04,
+          "bull": 547.56,
+          "ev": 204.83,
+          "upside_pct": 59.54,
+          "worst_drop_pct": -50.73,
+          "bull_gain_pct": 326.49
+        }
+      },
+      "grading": {
+        "gem_score": 49.1,
+        "upside_1y_pct": 1.65,
+        "upside_5y_pct": 59.54,
+        "worst_drop_1y_pct": -46.28,
+        "bull_gain_1y_pct": 92.86,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -10.7,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 49/100): 1y +1.6%, 5y +59.5%, worst -46.3%, bull +92.9%",
+        "risk_integrated": true,
+        "risk_avg": 4.3,
+        "risk_level": "MODERATE",
+        "precision_tier": 2,
+        "precision_grade": "B.II",
+        "precision_composite": 0.195
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "000660.KS",
+      "sector": "Intelligence/AI",
+      "track": "A",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 2654000.0,
+      "entry_price": 85000.0,
+      "god_score": 95.0,
+      "versus": {
+        "unrealized_pnl_pct": 3022.35,
+        "current_vs_ev_1y_pct": 5.26,
+        "current_vs_ev_5y_pct": 39.34,
+        "entry_vs_ev_1y_pct": 3186.69,
+        "entry_vs_ev_5y_pct": 4250.57,
+        "entry_margin_of_safety_1y_pct": 3280.82
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 2324440.63,
+          "normal": 2732971.56,
+          "bull": 3171042.1,
+          "ev": 2657173.29,
+          "upside_pct": 0.12,
+          "worst_drop_pct": -12.42,
+          "bull_gain_pct": 19.48
+        },
+        "6m": {
+          "worst": 1776830.53,
+          "normal": 2696097.17,
+          "bull": 3924327.33,
+          "ev": 2574036.54,
+          "upside_pct": -3.01,
+          "worst_drop_pct": -33.05,
+          "bull_gain_pct": 47.86
+        },
+        "1y": {
+          "worst": 1246290.18,
+          "normal": 2873700.0,
+          "bull": 5728446.71,
+          "ev": 2793685.41,
+          "upside_pct": 5.26,
+          "worst_drop_pct": -53.04,
+          "bull_gain_pct": 115.84
+        },
+        "3y": {
+          "worst": 1277668.03,
+          "normal": 4001339.88,
+          "bull": 11323119.6,
+          "ev": 4376227.08,
+          "upside_pct": 64.89,
+          "worst_drop_pct": -51.86,
+          "bull_gain_pct": 326.64
+        },
+        "5y": {
+          "worst": 764606.55,
+          "normal": 2965457.52,
+          "bull": 11029792.23,
+          "ev": 3697984.07,
+          "upside_pct": 39.34,
+          "worst_drop_pct": -71.19,
+          "bull_gain_pct": 315.59
+        }
+      },
+      "grading": {
+        "gem_score": 49.4,
+        "upside_1y_pct": 5.26,
+        "upside_5y_pct": 39.34,
+        "worst_drop_1y_pct": -53.04,
+        "bull_gain_1y_pct": 115.84,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -9.1,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 49/100): 1y +5.3%, 5y +39.3%, worst -53.0%, bull +115.8%",
+        "risk_integrated": true,
+        "risk_avg": 2.9,
+        "risk_level": "LOW",
+        "precision_tier": 2,
+        "precision_grade": "B.II",
+        "precision_composite": 0.197
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: UNDERVALUED, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "AMAT",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 694.64,
+      "entry_price": null,
+      "god_score": 79,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 6.07,
+        "current_vs_ev_5y_pct": 18.06,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 618.47,
+          "normal": 716.02,
+          "bull": 819.08,
+          "ev": 697.61,
+          "upside_pct": 0.43,
+          "worst_drop_pct": -10.96,
+          "bull_gain_pct": 17.91
+        },
+        "6m": {
+          "worst": 487.8,
+          "normal": 710.81,
+          "bull": 997.72,
+          "ev": 678.99,
+          "upside_pct": -2.25,
+          "worst_drop_pct": -29.78,
+          "bull_gain_pct": 43.63
+        },
+        "1y": {
+          "worst": 380.7,
+          "normal": 750.87,
+          "bull": 1420.86,
+          "ev": 736.8,
+          "upside_pct": 6.07,
+          "worst_drop_pct": -45.19,
+          "bull_gain_pct": 104.55
+        },
+        "3y": {
+          "worst": 398.27,
+          "normal": 941.89,
+          "bull": 2262.78,
+          "ev": 988.62,
+          "upside_pct": 42.32,
+          "worst_drop_pct": -42.66,
+          "bull_gain_pct": 225.75
+        },
+        "5y": {
+          "worst": 266.29,
+          "normal": 736.62,
+          "bull": 2094.69,
+          "ev": 820.1,
+          "upside_pct": 18.06,
+          "worst_drop_pct": -61.66,
+          "bull_gain_pct": 201.55
+        }
+      },
+      "grading": {
+        "gem_score": 49.8,
+        "upside_1y_pct": 6.07,
+        "upside_5y_pct": 18.06,
+        "worst_drop_1y_pct": -45.19,
+        "bull_gain_1y_pct": 104.55,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -0.0,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 50/100): 1y +6.1%, 5y +18.1%, worst -45.2%, bull +104.5%",
+        "risk_integrated": true,
+        "risk_avg": 2.6,
+        "risk_level": "LOW",
+        "precision_tier": 2,
+        "precision_grade": "B.II",
+        "precision_composite": 0.151
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: UNDERVALUED, Long: FAIR. Monitor quarterly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "FAIR",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "BOTZ",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 36.86,
+      "entry_price": 23.0,
+      "god_score": 60,
+      "versus": {
+        "unrealized_pnl_pct": 60.26,
+        "current_vs_ev_1y_pct": -1.9,
+        "current_vs_ev_5y_pct": 60.5,
+        "entry_vs_ev_1y_pct": 57.22,
+        "entry_vs_ev_5y_pct": 157.22,
+        "entry_margin_of_safety_1y_pct": 59.78
+      },
+      "two_layer_verdict": "NEAR-TERM OVERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 32.92,
+          "normal": 36.95,
+          "bull": 41.08,
+          "ev": 36.16,
+          "upside_pct": -1.89,
+          "worst_drop_pct": -10.7,
+          "bull_gain_pct": 11.45
+        },
+        "6m": {
+          "worst": 27.54,
+          "normal": 37.05,
+          "bull": 48.39,
+          "ev": 35.52,
+          "upside_pct": -3.65,
+          "worst_drop_pct": -25.28,
+          "bull_gain_pct": 31.27
+        },
+        "1y": {
+          "worst": 19.59,
+          "normal": 36.75,
+          "bull": 68.13,
+          "ev": 36.16,
+          "upside_pct": -1.89,
+          "worst_drop_pct": -46.85,
+          "bull_gain_pct": 84.83
+        },
+        "3y": {
+          "worst": 19.69,
+          "normal": 46.1,
+          "bull": 107.16,
+          "ev": 47.75,
+          "upside_pct": 29.54,
+          "worst_drop_pct": -46.59,
+          "bull_gain_pct": 190.73
+        },
+        "5y": {
+          "worst": 19.77,
+          "normal": 53.7,
+          "bull": 148.87,
+          "ev": 59.16,
+          "upside_pct": 60.5,
+          "worst_drop_pct": -46.36,
+          "bull_gain_pct": 303.88
+        }
+      },
+      "grading": {
+        "gem_score": 45.6,
+        "upside_1y_pct": -1.89,
+        "upside_5y_pct": 60.5,
+        "worst_drop_1y_pct": -46.85,
+        "bull_gain_1y_pct": 84.83,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -11.4,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 46/100): 1y -1.9%, 5y +60.5%, worst -46.9%, bull +84.8%",
+        "risk_integrated": true,
+        "risk_avg": 4.3,
+        "risk_level": "MODERATE",
+        "precision_tier": 3,
+        "precision_grade": "B.III",
+        "precision_composite": 0.139
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "MC.PA",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 492.3,
+      "entry_price": null,
+      "god_score": 75,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": -3.11,
+        "current_vs_ev_5y_pct": 52.03,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM OVERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 443.2,
+          "normal": 493.6,
+          "bull": 544.96,
+          "ev": 483.71,
+          "upside_pct": -1.74,
+          "worst_drop_pct": -9.97,
+          "bull_gain_pct": 10.7
+        },
+        "6m": {
+          "worst": 376.22,
+          "normal": 496.08,
+          "bull": 636.3,
+          "ev": 476.18,
+          "upside_pct": -3.27,
+          "worst_drop_pct": -23.58,
+          "bull_gain_pct": 29.25
+        },
+        "1y": {
+          "worst": 261.89,
+          "normal": 510.0,
+          "bull": 841.24,
+          "ev": 477.0,
+          "upside_pct": -3.11,
+          "worst_drop_pct": -46.8,
+          "bull_gain_pct": 70.88
+        },
+        "3y": {
+          "worst": 251.78,
+          "normal": 594.86,
+          "bull": 1135.85,
+          "ev": 565.83,
+          "upside_pct": 14.94,
+          "worst_drop_pct": -48.86,
+          "bull_gain_pct": 130.72
+        },
+        "5y": {
+          "worst": 297.67,
+          "normal": 755.07,
+          "bull": 1636.6,
+          "ev": 748.42,
+          "upside_pct": 52.02,
+          "worst_drop_pct": -39.54,
+          "bull_gain_pct": 232.44
+        }
+      },
+      "grading": {
+        "gem_score": 40.3,
+        "upside_1y_pct": -3.11,
+        "upside_5y_pct": 52.02,
+        "worst_drop_1y_pct": -46.8,
+        "bull_gain_1y_pct": 70.88,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -23.3,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 40/100): 1y -3.1%, 5y +52.0%, worst -46.8%, bull +70.9%",
+        "risk_integrated": true,
+        "risk_avg": 3.1,
+        "risk_level": "MODERATE",
+        "precision_tier": 3,
+        "precision_grade": "B.III",
+        "precision_composite": 0.095
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "ASML",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 1883.11,
+      "entry_price": null,
+      "god_score": 87,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 0.3,
+        "current_vs_ev_5y_pct": 39.19,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 1718.2,
+          "normal": 1943.46,
+          "bull": 2176.41,
+          "ev": 1899.94,
+          "upside_pct": 0.89,
+          "worst_drop_pct": -8.76,
+          "bull_gain_pct": 15.58
+        },
+        "6m": {
+          "worst": 1416.83,
+          "normal": 1944.54,
+          "bull": 2585.03,
+          "ev": 1861.55,
+          "upside_pct": -1.14,
+          "worst_drop_pct": -24.76,
+          "bull_gain_pct": 37.27
+        },
+        "1y": {
+          "worst": 895.61,
+          "normal": 2047.64,
+          "bull": 3557.57,
+          "ev": 1888.81,
+          "upside_pct": 0.3,
+          "worst_drop_pct": -52.44,
+          "bull_gain_pct": 88.92
+        },
+        "3y": {
+          "worst": 863.04,
+          "normal": 2708.0,
+          "bull": 5851.69,
+          "ev": 2598.75,
+          "upside_pct": 38.0,
+          "worst_drop_pct": -54.17,
+          "bull_gain_pct": 210.75
+        },
+        "5y": {
+          "worst": 701.1,
+          "normal": 2547.29,
+          "bull": 6608.5,
+          "ev": 2621.06,
+          "upside_pct": 39.19,
+          "worst_drop_pct": -62.77,
+          "bull_gain_pct": 250.94
+        }
+      },
+      "grading": {
+        "gem_score": 41.8,
+        "upside_1y_pct": 0.3,
+        "upside_5y_pct": 39.19,
+        "worst_drop_1y_pct": -52.44,
+        "bull_gain_1y_pct": 88.92,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -2.4,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 42/100): 1y +0.3%, 5y +39.2%, worst -52.4%, bull +88.9%",
+        "risk_integrated": true,
+        "risk_avg": 3.9,
+        "risk_level": "MODERATE",
+        "precision_tier": 3,
+        "precision_grade": "B.III",
+        "precision_composite": 0.115
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "TMO",
+      "sector": "Bio-Engineering",
+      "track": "A",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 506.42,
+      "entry_price": 438.66,
+      "god_score": 68.0,
+      "versus": {
+        "unrealized_pnl_pct": 15.45,
+        "current_vs_ev_1y_pct": 1.43,
+        "current_vs_ev_5y_pct": 35.66,
+        "entry_vs_ev_1y_pct": 17.1,
+        "entry_vs_ev_5y_pct": 56.62,
+        "entry_margin_of_safety_1y_pct": 23.22
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 455.91,
+          "normal": 507.76,
+          "bull": 560.59,
+          "ev": 497.59,
+          "upside_pct": -1.74,
+          "worst_drop_pct": -9.97,
+          "bull_gain_pct": 10.7
+        },
+        "6m": {
+          "worst": 387.01,
+          "normal": 510.31,
+          "bull": 654.55,
+          "ev": 489.84,
+          "upside_pct": -3.27,
+          "worst_drop_pct": -23.58,
+          "bull_gain_pct": 29.25
+        },
+        "1y": {
+          "worst": 312.13,
+          "normal": 540.5,
+          "bull": 862.99,
+          "ev": 513.65,
+          "upside_pct": 1.43,
+          "worst_drop_pct": -38.37,
+          "bull_gain_pct": 70.41
+        },
+        "3y": {
+          "worst": 322.51,
+          "normal": 630.44,
+          "bull": 1164.44,
+          "ev": 614.07,
+          "upside_pct": 21.26,
+          "worst_drop_pct": -36.31,
+          "bull_gain_pct": 129.94
+        },
+        "5y": {
+          "worst": 320.77,
+          "normal": 687.39,
+          "bull": 1418.73,
+          "ev": 687.01,
+          "upside_pct": 35.66,
+          "worst_drop_pct": -36.66,
+          "bull_gain_pct": 180.15
+        }
+      },
+      "grading": {
+        "gem_score": 45.0,
+        "upside_1y_pct": 1.43,
+        "upside_5y_pct": 35.66,
+        "worst_drop_1y_pct": -38.37,
+        "bull_gain_1y_pct": 70.41,
+        "grade": "B",
+        "gem_universe": true,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -20.6,
+        "downtrend_capped": false,
+        "reason": "Grade B (GEM 45/100): 1y +1.4%, 5y +35.7%, worst -38.4%, bull +70.4%",
+        "risk_integrated": true,
+        "risk_avg": 3.4,
+        "risk_level": "MODERATE",
+        "precision_tier": 3,
+        "precision_grade": "B.III",
+        "precision_composite": 0.124
+      },
+      "so_what": {
+        "action": "Hold \u2014 monitor",
+        "signal": "Hold \u2014 monitor. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor quarterly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "quarterly"
+      }
+    },
+    {
+      "ticker": "BEAM",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + rev_ps_1y3y5y",
+      "heston_used": true,
+      "current_price": 34.95,
+      "entry_price": null,
+      "god_score": 70,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 3.66,
+        "current_vs_ev_5y_pct": 1022.58,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 26.38,
+          "normal": 34.57,
+          "bull": 44.32,
+          "ev": 33.24,
+          "upside_pct": -4.88,
+          "worst_drop_pct": -24.53,
+          "bull_gain_pct": 26.8
+        },
+        "6m": {
+          "worst": 15.87,
+          "normal": 32.02,
+          "bull": 60.19,
+          "ev": 31.2,
+          "upside_pct": -10.74,
+          "worst_drop_pct": -54.59,
+          "bull_gain_pct": 72.23
+        },
+        "1y": {
+          "worst": 5.07,
+          "normal": 24.46,
+          "bull": 122.07,
+          "ev": 36.23,
+          "upside_pct": 3.65,
+          "worst_drop_pct": -85.5,
+          "bull_gain_pct": 249.26
+        },
+        "3y": {
+          "worst": 1.75,
+          "normal": 42.19,
+          "bull": 600.0,
+          "ev": 137.57,
+          "upside_pct": 293.63,
+          "worst_drop_pct": -95.0,
+          "bull_gain_pct": 1616.74
+        },
+        "5y": {
+          "worst": 1.75,
+          "normal": 79.1,
+          "bull": 1800.0,
+          "ev": 392.34,
+          "upside_pct": 1022.57,
+          "worst_drop_pct": -95.0,
+          "bull_gain_pct": 5050.21
+        }
+      },
+      "grading": {
+        "gem_score": 33.4,
+        "upside_1y_pct": 3.65,
+        "upside_5y_pct": 1022.57,
+        "worst_drop_1y_pct": -85.5,
+        "bull_gain_1y_pct": 249.26,
+        "grade": "C+",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -1.6,
+        "downtrend_capped": false,
+        "reason": "Grade C+ (GEM 33/100): 1y +3.6%, 5y +1022.6%, worst -85.5%, bull +249.3%",
+        "risk_integrated": true,
+        "risk_avg": 6.1,
+        "risk_level": "CRITICAL",
+        "precision_tier": 1,
+        "precision_grade": "C+.I",
+        "precision_composite": 0.803
+      },
+      "so_what": {
+        "action": "Watch closely",
+        "signal": "Watch closely. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "UEC",
+      "sector": "Energy/Uranium",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 10.83,
+      "entry_price": 12.19,
+      "god_score": 72.0,
+      "versus": {
+        "unrealized_pnl_pct": -11.16,
+        "current_vs_ev_1y_pct": 7.11,
+        "current_vs_ev_5y_pct": 308.96,
+        "entry_vs_ev_1y_pct": -4.84,
+        "entry_vs_ev_5y_pct": 263.33,
+        "entry_margin_of_safety_1y_pct": -7.71
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 8.54,
+          "normal": 10.76,
+          "bull": 13.31,
+          "ev": 10.38,
+          "upside_pct": -4.13,
+          "worst_drop_pct": -21.16,
+          "bull_gain_pct": 22.91
+        },
+        "6m": {
+          "worst": 5.62,
+          "normal": 10.24,
+          "bull": 17.56,
+          "ev": 9.85,
+          "upside_pct": -9.02,
+          "worst_drop_pct": -48.13,
+          "bull_gain_pct": 62.11
+        },
+        "1y": {
+          "worst": 3.12,
+          "normal": 11.25,
+          "bull": 29.25,
+          "ev": 11.6,
+          "upside_pct": 7.09,
+          "worst_drop_pct": -71.2,
+          "bull_gain_pct": 170.12
+        },
+        "3y": {
+          "worst": 2.8,
+          "normal": 17.58,
+          "bull": 75.6,
+          "ev": 23.27,
+          "upside_pct": 114.88,
+          "worst_drop_pct": -74.15,
+          "bull_gain_pct": 598.06
+        },
+        "5y": {
+          "worst": 2.99,
+          "normal": 24.72,
+          "bull": 166.05,
+          "ev": 44.29,
+          "upside_pct": 309.0,
+          "worst_drop_pct": -72.36,
+          "bull_gain_pct": 1433.24
+        }
+      },
+      "grading": {
+        "gem_score": 32.0,
+        "upside_1y_pct": 7.09,
+        "upside_5y_pct": 309.0,
+        "worst_drop_1y_pct": -71.2,
+        "bull_gain_1y_pct": 170.12,
+        "grade": "C+",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -46.2,
+        "downtrend_capped": false,
+        "reason": "Grade C+ (GEM 32/100): 1y +7.1%, 5y +309.0%, worst -71.2%, bull +170.1%",
+        "risk_integrated": true,
+        "risk_avg": 3.9,
+        "risk_level": "MODERATE",
+        "precision_tier": 2,
+        "precision_grade": "C+.II",
+        "precision_composite": 0.457
+      },
+      "so_what": {
+        "action": "Watch closely",
+        "signal": "Watch closely. Thesis intact. Near: UNDERVALUED, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "UUUU",
+      "sector": "Energy/Uranium",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 14.59,
+      "entry_price": 18.21,
+      "god_score": 72.0,
+      "versus": {
+        "unrealized_pnl_pct": -19.88,
+        "current_vs_ev_1y_pct": 8.91,
+        "current_vs_ev_5y_pct": 210.62,
+        "entry_vs_ev_1y_pct": -12.74,
+        "entry_vs_ev_5y_pct": 148.87,
+        "entry_margin_of_safety_1y_pct": -14.33
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 11.26,
+          "normal": 14.47,
+          "bull": 18.22,
+          "ev": 13.93,
+          "upside_pct": -4.51,
+          "worst_drop_pct": -22.86,
+          "bull_gain_pct": 24.86
+        },
+        "6m": {
+          "worst": 7.08,
+          "normal": 13.59,
+          "bull": 24.4,
+          "ev": 13.15,
+          "upside_pct": -9.89,
+          "worst_drop_pct": -51.45,
+          "bull_gain_pct": 67.21
+        },
+        "1y": {
+          "worst": 3.86,
+          "normal": 15.6,
+          "bull": 40.54,
+          "ev": 15.89,
+          "upside_pct": 8.92,
+          "worst_drop_pct": -73.57,
+          "bull_gain_pct": 177.88
+        },
+        "3y": {
+          "worst": 3.31,
+          "normal": 22.46,
+          "bull": 90.55,
+          "ev": 28.42,
+          "upside_pct": 94.78,
+          "worst_drop_pct": -77.33,
+          "bull_gain_pct": 520.64
+        },
+        "5y": {
+          "worst": 3.34,
+          "normal": 28.62,
+          "bull": 162.69,
+          "ev": 45.32,
+          "upside_pct": 210.64,
+          "worst_drop_pct": -77.09,
+          "bull_gain_pct": 1015.09
+        }
+      },
+      "grading": {
+        "gem_score": 31.5,
+        "upside_1y_pct": 8.92,
+        "upside_5y_pct": 210.64,
+        "worst_drop_1y_pct": -73.57,
+        "bull_gain_1y_pct": 177.88,
+        "grade": "C+",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -47.4,
+        "downtrend_capped": false,
+        "reason": "Grade C+ (GEM 32/100): 1y +8.9%, 5y +210.6%, worst -73.6%, bull +177.9%",
+        "risk_integrated": true,
+        "risk_avg": 4.0,
+        "risk_level": "MODERATE",
+        "precision_tier": 2,
+        "precision_grade": "C+.II",
+        "precision_composite": 0.46
+      },
+      "so_what": {
+        "action": "Watch closely",
+        "signal": "Watch closely. Thesis intact. Near: UNDERVALUED, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "CRSP",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + rev_ps_1y3y5y",
+      "heston_used": true,
+      "current_price": 56.35,
+      "entry_price": null,
+      "god_score": 48,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 4.12,
+        "current_vs_ev_5y_pct": 429.16,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 43.47,
+          "normal": 55.88,
+          "bull": 70.36,
+          "ev": 53.81,
+          "upside_pct": -4.51,
+          "worst_drop_pct": -22.86,
+          "bull_gain_pct": 24.86
+        },
+        "6m": {
+          "worst": 27.36,
+          "normal": 52.48,
+          "bull": 94.22,
+          "ev": 50.78,
+          "upside_pct": -9.89,
+          "worst_drop_pct": -51.45,
+          "bull_gain_pct": 67.21
+        },
+        "1y": {
+          "worst": 11.33,
+          "normal": 47.06,
+          "bull": 176.58,
+          "ev": 58.67,
+          "upside_pct": 4.12,
+          "worst_drop_pct": -79.89,
+          "bull_gain_pct": 213.37
+        },
+        "3y": {
+          "worst": 6.59,
+          "normal": 79.53,
+          "bull": 542.12,
+          "ev": 142.87,
+          "upside_pct": 153.54,
+          "worst_drop_pct": -88.31,
+          "bull_gain_pct": 862.05
+        },
+        "5y": {
+          "worst": 7.68,
+          "normal": 120.96,
+          "bull": 1233.62,
+          "ev": 298.18,
+          "upside_pct": 429.16,
+          "worst_drop_pct": -86.37,
+          "bull_gain_pct": 2089.21
+        }
+      },
+      "grading": {
+        "gem_score": 30.7,
+        "upside_1y_pct": 4.12,
+        "upside_5y_pct": 429.16,
+        "worst_drop_1y_pct": -79.89,
+        "bull_gain_1y_pct": 213.37,
+        "grade": "C+",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -26.6,
+        "downtrend_capped": false,
+        "reason": "Grade C+ (GEM 31/100): 1y +4.1%, 5y +429.2%, worst -79.9%, bull +213.4%",
+        "risk_integrated": true,
+        "risk_avg": 5.4,
+        "risk_level": "HIGH",
+        "precision_tier": 3,
+        "precision_grade": "C+.III",
+        "precision_composite": 0.426
+      },
+      "so_what": {
+        "action": "Watch closely",
+        "signal": "Watch closely. Thesis wounded. Near: FAIR, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "NTR",
+      "sector": "Global Issue",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 61.18,
+      "entry_price": 65.94,
+      "god_score": 72.5,
+      "versus": {
+        "unrealized_pnl_pct": -7.22,
+        "current_vs_ev_1y_pct": -0.46,
+        "current_vs_ev_5y_pct": 45.26,
+        "entry_vs_ev_1y_pct": -7.64,
+        "entry_vs_ev_5y_pct": 34.77,
+        "entry_margin_of_safety_1y_pct": -5.37
+      },
+      "two_layer_verdict": "NEAR-TERM OVERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 54.64,
+          "normal": 61.32,
+          "bull": 68.19,
+          "ev": 60.02,
+          "upside_pct": -1.89,
+          "worst_drop_pct": -10.7,
+          "bull_gain_pct": 11.45
+        },
+        "6m": {
+          "worst": 45.71,
+          "normal": 61.5,
+          "bull": 80.31,
+          "ev": 58.95,
+          "upside_pct": -3.65,
+          "worst_drop_pct": -25.28,
+          "bull_gain_pct": 31.27
+        },
+        "1y": {
+          "worst": 30.84,
+          "normal": 62.4,
+          "bull": 118.01,
+          "ev": 60.9,
+          "upside_pct": -0.46,
+          "worst_drop_pct": -49.59,
+          "bull_gain_pct": 92.9
+        },
+        "3y": {
+          "worst": 29.13,
+          "normal": 70.11,
+          "bull": 158.05,
+          "ev": 71.31,
+          "upside_pct": 16.56,
+          "worst_drop_pct": -52.38,
+          "bull_gain_pct": 158.34
+        },
+        "5y": {
+          "worst": 32.2,
+          "normal": 85.34,
+          "bull": 209.28,
+          "ev": 88.87,
+          "upside_pct": 45.27,
+          "worst_drop_pct": -47.36,
+          "bull_gain_pct": 242.07
+        }
+      },
+      "grading": {
+        "gem_score": 37.2,
+        "upside_1y_pct": -0.46,
+        "upside_5y_pct": 45.27,
+        "worst_drop_1y_pct": -49.59,
+        "bull_gain_1y_pct": 92.9,
+        "grade": "C+",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -26.6,
+        "downtrend_capped": false,
+        "reason": "Grade C+ (GEM 37/100): 1y -0.5%, 5y +45.3%, worst -49.6%, bull +92.9%",
+        "risk_integrated": true,
+        "risk_avg": 4.1,
+        "risk_level": "MODERATE",
+        "precision_tier": 3,
+        "precision_grade": "C+.III",
+        "precision_composite": 0.0
+      },
+      "so_what": {
+        "action": "Watch closely",
+        "signal": "Watch closely. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "NTLA",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + rev_ps_1y3y5y",
+      "heston_used": true,
+      "current_price": 16.61,
+      "entry_price": null,
+      "god_score": 55,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": 19.63,
+        "current_vs_ev_5y_pct": 1009.81,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 12.26,
+          "normal": 16.39,
+          "bull": 21.38,
+          "ev": 15.74,
+          "upside_pct": -5.26,
+          "worst_drop_pct": -26.17,
+          "bull_gain_pct": 28.74
+        },
+        "6m": {
+          "worst": 7.04,
+          "normal": 14.96,
+          "bull": 29.43,
+          "ev": 14.69,
+          "upside_pct": -11.58,
+          "worst_drop_pct": -57.6,
+          "bull_gain_pct": 77.19
+        },
+        "1y": {
+          "worst": 2.12,
+          "normal": 11.63,
+          "bull": 71.87,
+          "ev": 19.87,
+          "upside_pct": 19.64,
+          "worst_drop_pct": -87.23,
+          "bull_gain_pct": 332.69
+        },
+        "3y": {
+          "worst": 0.83,
+          "normal": 16.33,
+          "bull": 336.93,
+          "ev": 74.25,
+          "upside_pct": 347.03,
+          "worst_drop_pct": -95.0,
+          "bull_gain_pct": 1928.5
+        },
+        "5y": {
+          "worst": 0.83,
+          "normal": 25.61,
+          "bull": 868.81,
+          "ev": 184.34,
+          "upside_pct": 1009.8,
+          "worst_drop_pct": -95.0,
+          "bull_gain_pct": 5130.62
+        }
+      },
+      "grading": {
+        "gem_score": 28.4,
+        "upside_1y_pct": 19.64,
+        "upside_5y_pct": 1009.8,
+        "worst_drop_1y_pct": -87.23,
+        "bull_gain_1y_pct": 332.69,
+        "grade": "C",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -40.6,
+        "downtrend_capped": false,
+        "reason": "Grade C (GEM 28/100): 1y +19.6%, 5y +1009.8%, worst -87.2%, bull +332.7%",
+        "risk_integrated": true,
+        "risk_avg": 5.7,
+        "risk_level": "HIGH",
+        "precision_tier": 1,
+        "precision_grade": "C.I",
+        "precision_composite": 1.0
+      },
+      "so_what": {
+        "action": "Trim candidate",
+        "signal": "Trim candidate. Thesis wounded. Near: UNDERVALUED, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "UNDERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "PL",
+      "sector": "Space/Logistics",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + rev_ps_1y3y5y",
+      "heston_used": true,
+      "current_price": 31.28,
+      "entry_price": 28.83,
+      "god_score": 84.0,
+      "versus": {
+        "unrealized_pnl_pct": 8.5,
+        "current_vs_ev_1y_pct": 2.81,
+        "current_vs_ev_5y_pct": 140.35,
+        "entry_vs_ev_1y_pct": 11.55,
+        "entry_vs_ev_5y_pct": 160.77,
+        "entry_margin_of_safety_1y_pct": 9.85
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 24.13,
+          "normal": 31.02,
+          "bull": 39.06,
+          "ev": 29.87,
+          "upside_pct": -4.51,
+          "worst_drop_pct": -22.86,
+          "bull_gain_pct": 24.86
+        },
+        "6m": {
+          "worst": 15.19,
+          "normal": 29.13,
+          "bull": 52.3,
+          "ev": 28.19,
+          "upside_pct": -9.89,
+          "worst_drop_pct": -51.45,
+          "bull_gain_pct": 67.21
+        },
+        "1y": {
+          "worst": 8.73,
+          "normal": 31.67,
+          "bull": 79.99,
+          "ev": 32.16,
+          "upside_pct": 2.8,
+          "worst_drop_pct": -72.1,
+          "bull_gain_pct": 155.72
+        },
+        "3y": {
+          "worst": 8.4,
+          "normal": 49.48,
+          "bull": 183.97,
+          "ev": 59.94,
+          "upside_pct": 91.64,
+          "worst_drop_pct": -73.15,
+          "bull_gain_pct": 488.14
+        },
+        "5y": {
+          "worst": 8.16,
+          "normal": 50.86,
+          "bull": 257.86,
+          "ev": 75.18,
+          "upside_pct": 140.35,
+          "worst_drop_pct": -73.9,
+          "bull_gain_pct": 724.37
+        }
+      },
+      "grading": {
+        "gem_score": 25.4,
+        "upside_1y_pct": 2.8,
+        "upside_5y_pct": 140.35,
+        "worst_drop_1y_pct": -72.1,
+        "bull_gain_1y_pct": 155.72,
+        "grade": "C",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -39.1,
+        "downtrend_capped": false,
+        "reason": "Grade C (GEM 25/100): 1y +2.8%, 5y +140.3%, worst -72.1%, bull +155.7%",
+        "risk_integrated": true,
+        "risk_avg": 5.0,
+        "risk_level": "HIGH",
+        "precision_tier": 2,
+        "precision_grade": "C.II",
+        "precision_composite": 0.019
+      },
+      "so_what": {
+        "action": "Trim candidate",
+        "signal": "Trim candidate. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "KTOS",
+      "sector": "Robotics/Defense",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + eps_pe_1y3y5y",
+      "heston_used": true,
+      "current_price": 46.95,
+      "entry_price": 85.5,
+      "god_score": 80.0,
+      "versus": {
+        "unrealized_pnl_pct": -45.09,
+        "current_vs_ev_1y_pct": 1.81,
+        "current_vs_ev_5y_pct": 144.05,
+        "entry_vs_ev_1y_pct": -44.09,
+        "entry_vs_ev_5y_pct": 34.01,
+        "entry_margin_of_safety_1y_pct": -42.22
+      },
+      "two_layer_verdict": "NEAR-TERM UNDERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 38.62,
+          "normal": 46.83,
+          "bull": 55.9,
+          "ev": 45.36,
+          "upside_pct": -3.39,
+          "worst_drop_pct": -17.75,
+          "bull_gain_pct": 19.07
+        },
+        "6m": {
+          "worst": 27.66,
+          "normal": 45.53,
+          "bull": 71.27,
+          "ev": 43.53,
+          "upside_pct": -7.29,
+          "worst_drop_pct": -41.09,
+          "bull_gain_pct": 51.8
+        },
+        "1y": {
+          "worst": 17.38,
+          "normal": 49.4,
+          "bull": 105.44,
+          "ev": 47.8,
+          "upside_pct": 1.81,
+          "worst_drop_pct": -62.98,
+          "bull_gain_pct": 124.59
+        },
+        "3y": {
+          "worst": 16.8,
+          "normal": 71.14,
+          "bull": 211.77,
+          "ev": 77.53,
+          "upside_pct": 65.13,
+          "worst_drop_pct": -64.23,
+          "bull_gain_pct": 351.06
+        },
+        "5y": {
+          "worst": 17.96,
+          "normal": 90.62,
+          "bull": 355.73,
+          "ev": 114.58,
+          "upside_pct": 144.04,
+          "worst_drop_pct": -61.75,
+          "bull_gain_pct": 657.69
+        }
+      },
+      "grading": {
+        "gem_score": 26.5,
+        "upside_1y_pct": 1.81,
+        "upside_5y_pct": 144.04,
+        "worst_drop_1y_pct": -62.98,
+        "bull_gain_1y_pct": 124.59,
+        "grade": "C",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -64.1,
+        "downtrend_capped": false,
+        "reason": "Grade C (GEM 26/100): 1y +1.8%, 5y +144.0%, worst -63.0%, bull +124.6%",
+        "risk_integrated": true,
+        "risk_avg": 3.1,
+        "risk_level": "MODERATE",
+        "precision_tier": 3,
+        "precision_grade": "C.III",
+        "precision_composite": 0.003
+      },
+      "so_what": {
+        "action": "Trim candidate",
+        "signal": "Trim candidate. Thesis intact. Near: FAIR, Long: UNDERVALUED. Monitor weekly.",
+        "near_term": "FAIR",
+        "long_term": "UNDERVALUED",
+        "cadence": "weekly"
+      }
+    },
+    {
+      "ticker": "OKLO",
+      "sector": "Energy/Uranium",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + rev_ps_1y3y5y",
+      "heston_used": true,
+      "current_price": 52.76,
+      "entry_price": null,
+      "god_score": 78.0,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": -28.89,
+        "current_vs_ev_5y_pct": 290.94,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM OVERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 37.5,
+          "normal": 53.13,
+          "bull": 73.15,
+          "ev": 50.88,
+          "upside_pct": -3.56,
+          "worst_drop_pct": -28.93,
+          "bull_gain_pct": 38.65
+        },
+        "6m": {
+          "worst": 18.58,
+          "normal": 46.11,
+          "bull": 104.21,
+          "ev": 46.72,
+          "upside_pct": -11.45,
+          "worst_drop_pct": -64.78,
+          "bull_gain_pct": 97.52
+        },
+        "1y": {
+          "worst": 4.64,
+          "normal": 38.04,
+          "bull": 102.26,
+          "ev": 37.52,
+          "upside_pct": -28.88,
+          "worst_drop_pct": -91.2,
+          "bull_gain_pct": 93.83
+        },
+        "3y": {
+          "worst": 2.72,
+          "normal": 15.82,
+          "bull": 358.93,
+          "ev": 79.2,
+          "upside_pct": 50.12,
+          "worst_drop_pct": -94.85,
+          "bull_gain_pct": 580.32
+        },
+        "5y": {
+          "worst": 2.72,
+          "normal": 30.38,
+          "bull": 965.13,
+          "ev": 206.26,
+          "upside_pct": 290.95,
+          "worst_drop_pct": -94.85,
+          "bull_gain_pct": 1729.29
+        }
+      },
+      "grading": {
+        "gem_score": 0.0,
+        "upside_1y_pct": -28.88,
+        "upside_5y_pct": 290.95,
+        "worst_drop_1y_pct": -91.2,
+        "bull_gain_1y_pct": 93.83,
+        "grade": "F",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -69.7,
+        "downtrend_capped": false,
+        "reason": "Grade F (GEM 0/100): 1y -28.9%, 5y +290.9%, worst -91.2%, bull +93.8%",
+        "risk_integrated": true,
+        "risk_avg": 4.4,
+        "risk_level": "MODERATE",
+        "precision_tier": 1,
+        "precision_grade": "F.I",
+        "precision_composite": 0.898
+      },
+      "so_what": {
+        "action": "Avoid / Exit",
+        "signal": "Avoid / Exit. Thesis intact. Near: OVERVALUED, Long: UNDERVALUED. Monitor daily.",
+        "near_term": "OVERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "daily"
+      }
+    },
+    {
+      "ticker": "RKLB",
+      "sector": "Space/Logistics",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + rev_ps_1y3y5y",
+      "heston_used": true,
+      "current_price": 98.01,
+      "entry_price": 59.67,
+      "god_score": 58.0,
+      "versus": {
+        "unrealized_pnl_pct": 64.25,
+        "current_vs_ev_1y_pct": -23.8,
+        "current_vs_ev_5y_pct": 67.26,
+        "entry_vs_ev_1y_pct": 25.16,
+        "entry_vs_ev_5y_pct": 174.73,
+        "entry_margin_of_safety_1y_pct": 14.98
+      },
+      "two_layer_verdict": "NEAR-TERM OVERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 73.97,
+          "normal": 96.95,
+          "bull": 124.28,
+          "ev": 93.22,
+          "upside_pct": -4.88,
+          "worst_drop_pct": -24.53,
+          "bull_gain_pct": 26.8
+        },
+        "6m": {
+          "worst": 44.51,
+          "normal": 89.8,
+          "bull": 168.8,
+          "ev": 87.48,
+          "upside_pct": -10.74,
+          "worst_drop_pct": -54.59,
+          "bull_gain_pct": 72.23
+        },
+        "1y": {
+          "worst": 21.71,
+          "normal": 68.61,
+          "bull": 192.78,
+          "ev": 74.68,
+          "upside_pct": -23.8,
+          "worst_drop_pct": -77.85,
+          "bull_gain_pct": 96.7
+        },
+        "3y": {
+          "worst": 19.2,
+          "normal": 117.16,
+          "bull": 411.86,
+          "ev": 136.92,
+          "upside_pct": 39.7,
+          "worst_drop_pct": -80.41,
+          "bull_gain_pct": 320.22
+        },
+        "5y": {
+          "worst": 14.45,
+          "normal": 106.76,
+          "bull": 577.2,
+          "ev": 163.93,
+          "upside_pct": 67.25,
+          "worst_drop_pct": -85.26,
+          "bull_gain_pct": 488.92
+        }
+      },
+      "grading": {
+        "gem_score": 8.1,
+        "upside_1y_pct": -23.8,
+        "upside_5y_pct": 67.25,
+        "worst_drop_1y_pct": -77.85,
+        "bull_gain_1y_pct": 96.7,
+        "grade": "F",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -34.8,
+        "downtrend_capped": false,
+        "reason": "Grade F (GEM 8/100): 1y -23.8%, 5y +67.2%, worst -77.8%, bull +96.7%",
+        "risk_integrated": true,
+        "risk_avg": 4.6,
+        "risk_level": "HIGH",
+        "precision_tier": 2,
+        "precision_grade": "F.II",
+        "precision_composite": 0.35
+      },
+      "so_what": {
+        "action": "Avoid / Exit",
+        "signal": "Avoid / Exit. Thesis intact. Near: OVERVALUED, Long: UNDERVALUED. Monitor daily.",
+        "near_term": "OVERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "daily"
+      }
+    },
+    {
+      "ticker": "ASTS",
+      "sector": "",
+      "track": "B",
+      "valuation_mode": "heston_1m6m + rev_ps_1y3y5y",
+      "heston_used": true,
+      "current_price": 86.77,
+      "entry_price": null,
+      "god_score": 72,
+      "versus": {
+        "unrealized_pnl_pct": null,
+        "current_vs_ev_1y_pct": -41.21,
+        "current_vs_ev_5y_pct": 99.95,
+        "entry_vs_ev_1y_pct": null,
+        "entry_vs_ev_5y_pct": null,
+        "entry_margin_of_safety_1y_pct": null
+      },
+      "two_layer_verdict": "NEAR-TERM OVERVALUED",
+      "projections": {
+        "1m": {
+          "worst": 63.09,
+          "normal": 87.66,
+          "bull": 118.56,
+          "ev": 84.01,
+          "upside_pct": -3.18,
+          "worst_drop_pct": -27.29,
+          "bull_gain_pct": 36.63
+        },
+        "6m": {
+          "worst": 32.9,
+          "normal": 77.46,
+          "bull": 167.14,
+          "ev": 77.57,
+          "upside_pct": -10.6,
+          "worst_drop_pct": -62.08,
+          "bull_gain_pct": 92.62
+        },
+        "1y": {
+          "worst": 8.41,
+          "normal": 62.56,
+          "bull": 113.1,
+          "ev": 51.01,
+          "upside_pct": -41.22,
+          "worst_drop_pct": -90.31,
+          "bull_gain_pct": 30.35
+        },
+        "3y": {
+          "worst": 4.47,
+          "normal": 7.63,
+          "bull": 220.71,
+          "ev": 48.98,
+          "upside_pct": -43.55,
+          "worst_drop_pct": -94.85,
+          "bull_gain_pct": 154.37
+        },
+        "5y": {
+          "worst": 4.47,
+          "normal": 15.45,
+          "bull": 827.68,
+          "ev": 173.5,
+          "upside_pct": 99.96,
+          "worst_drop_pct": -94.85,
+          "bull_gain_pct": 853.88
+        }
+      },
+      "grading": {
+        "gem_score": 0.0,
+        "upside_1y_pct": -41.22,
+        "upside_5y_pct": 99.96,
+        "worst_drop_1y_pct": -90.31,
+        "bull_gain_1y_pct": 30.35,
+        "grade": "F",
+        "gem_universe": false,
+        "gem_portfolio": false,
+        "god_score_warning": null,
+        "dd_from_high_pct": -34.8,
+        "downtrend_capped": false,
+        "reason": "Grade F (GEM 0/100): 1y -41.2%, 5y +100.0%, worst -90.3%, bull +30.4%",
+        "risk_integrated": true,
+        "risk_avg": 5.4,
+        "risk_level": "HIGH",
+        "precision_tier": 3,
+        "precision_grade": "F.III",
+        "precision_composite": 0.095
+      },
+      "so_what": {
+        "action": "Avoid / Exit",
+        "signal": "Avoid / Exit. Thesis intact. Near: OVERVALUED, Long: UNDERVALUED. Monitor daily.",
+        "near_term": "OVERVALUED",
+        "long_term": "UNDERVALUED",
+        "cadence": "daily"
+      }
+    }
+  ]
+}

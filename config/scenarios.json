@@ -1,0 +1,89 @@
+{
+  "scenarios": [
+    {
+      "id": "fed_pivot_2026",
+      "name": "Fed pivot → liquidity release",
+      "probability": 0.55,
+      "horizon_days": 150,
+      "thesis": "New Fed Chair confirmed; Powell investigation halted. Coordinated push with administration to add reserves and drain RRP to support equities into midterm vote.",
+      "liquidity_uplift_b": 250,
+      "sector_uplift_pct": {
+        "Intelligence": 12,
+        "Intelligence/AI": 12,
+        "Energy": 8,
+        "Energy/Uranium": 10,
+        "Space": 7,
+        "Space/Logistics": 7,
+        "Bio": 6,
+        "Bio-Engineering": 6,
+        "Robotics": 9,
+        "Robotics/Defense": 9,
+        "Infrastructure": 8,
+        "Global Issue": 5
+      },
+      "confirmation_signals": [
+        "Fed Chair confirmation announced (Senate vote)",
+        "FOMC dot-plot revised dovish",
+        "Reserves (WRESBAL) week-over-week ≥ +$30B",
+        "RRP balance week-over-week ≤ -$20B",
+        "DXY breaks below 102"
+      ]
+    },
+    {
+      "id": "geopolitical_deescalation",
+      "name": "War ends / de-escalation before midterms",
+      "probability": 0.4,
+      "horizon_days": 150,
+      "thesis": "Russia-Ukraine ceasefire or major de-escalation lands before US Nov vote. Risk-on impulse, defense names rotate down, energy/copper find a floor.",
+      "liquidity_uplift_b": 50,
+      "sector_uplift_pct": {
+        "Intelligence": 5,
+        "Intelligence/AI": 5,
+        "Energy": 4,
+        "Energy/Uranium": 3,
+        "Space": 3,
+        "Space/Logistics": 3,
+        "Bio": 4,
+        "Bio-Engineering": 4,
+        "Robotics": -3,
+        "Robotics/Defense": -8,
+        "Infrastructure": 4,
+        "Global Issue": 6
+      },
+      "confirmation_signals": [
+        "Ceasefire announced",
+        "VIX < 16",
+        "ITA / XAR ETF -5% on the news",
+        "Brent crude -8% on relief"
+      ]
+    },
+    {
+      "id": "scenario_fail_recession",
+      "name": "Recession / earnings recession deepens",
+      "probability": 0.2,
+      "horizon_days": 150,
+      "thesis": "Q2 2026 earnings disappoint, AI capex pause confirmed, credit spreads widen, no Fed rescue in time. Defensive rotation; cash and gold outperform.",
+      "liquidity_uplift_b": -150,
+      "sector_uplift_pct": {
+        "Intelligence": -15,
+        "Intelligence/AI": -15,
+        "Energy": -10,
+        "Energy/Uranium": -8,
+        "Space": -12,
+        "Space/Logistics": -12,
+        "Bio": -8,
+        "Bio-Engineering": -8,
+        "Robotics": -10,
+        "Robotics/Defense": -5,
+        "Infrastructure": -10,
+        "Global Issue": -5
+      },
+      "confirmation_signals": [
+        "ISM Mfg < 47",
+        "HYG drawdown > -5% from 60d high",
+        "Yield curve re-inverts hard",
+        "Q2 earnings beat-rate < 60%"
+      ]
+    }
+  ]
+}
