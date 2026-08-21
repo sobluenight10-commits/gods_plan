@@ -97,6 +97,16 @@ def _mark_sent(keys: list[str]) -> None:
 
 def main() -> int:
     _load_env()
+    import datetime as _dt
+    try:
+        from zoneinfo import ZoneInfo
+        _now = _dt.datetime.now(ZoneInfo("Europe/Berlin"))
+    except Exception:
+        _now = _dt.datetime.utcnow()
+    if _now.weekday() >= 5:
+        print("[staleness_watch] weekend - silent")
+        return 0
+
     stale = []
     for name, path, threshold_h in CHECKS:
         age = _age_hours(path)

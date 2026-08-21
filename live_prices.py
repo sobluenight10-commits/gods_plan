@@ -129,8 +129,17 @@ def _send_plunge_alert(ticker, price, change_pct, prev_close, direction):
         print(f"  [ALERT] Telegram send failed: {e}", flush=True)
 
 
+def _market_session_open():
+    now = datetime.now(BERLIN)
+    if now.weekday() >= 5:
+        return False
+    return True
+
+
 def check_plunge_alerts(prices):
     """Check all prices for significant moves and alert once per ticker per day."""
+    if not _market_session_open():
+        return
     alerted = _load_alerted_today()
 
     for ticker, data in prices.items():
