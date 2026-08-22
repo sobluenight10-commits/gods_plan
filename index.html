@@ -52,6 +52,7 @@ details{font-size:11px}summary{cursor:pointer;color:#7b241c;font-weight:600}
   <div class="card"><h3>🎯 GOD SCORE — 관찰/신규 후보 TOP 10</h3><table id="twatch"></table></div>
   <div class="card"><h3>🧪 SGI — 소로스 갭 지수 (심리 할인 vs 펀더멘털 갭 · 게이트 우선)</h3><div class="comp" style="margin-bottom:4px">원인불명=점수 정지(SK하이닉스 구제 원칙) · 밸류에이션/상대괴리=[AUTO] · 사실밀도/강제매물/게이트=[MINERVA 판정]</div><table id="tsgi"></table></div>
   <div class="card"><h3>⚡ 괴리 엔진 — 동인 vs 종목 (원인-결과 파열 감지) · 상류 데이터</h3><div id="dvalert"></div><div id="upstr" style="margin:4px 0"></div><table id="tdv"></table></div>
+  <div class="card"><h3>⚖ 논제 파괴도 (TDR) — 가격 낙폭 vs 실질 매출 피해</h3><div class="comp" style="margin-bottom:4px">TDR = |낙폭| ÷ 실질피해율 · ≥2.5 과잉반응=눌림 후보 / 1~2.5 정당 / &lt;1 과소반응=위험 · 무이벤트=논제 무사</div><table id="ttdr"></table></div>
   <div class="card"><h3>📅 포워드 이벤트 — 내 포트폴리오 연관만 (미래·근접 필터)</h3><table id="tfwd"></table></div>
   <div class="card"><h3>🔥 핫토픽 TOP — 영향도×가속도</h3><table id="ttop"></table></div>
   <div class="card"><h3>📐 수식 체계 — 철학의 수학화</h3><div class="phil" id="formulas"></div></div>
@@ -61,7 +62,7 @@ details{font-size:11px}summary{cursor:pointer;color:#7b241c;font-weight:600}
 <div id="v-ledger" style="display:none"><iframe class="frame" id="fledger"></iframe></div>
 <script>
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let T=null,DS=null,FEED=null,SC=null,LA=null,LH=null,DV=null;
+let T=null,DS=null,FEED=null,SC=null,LA=null,LH=null,DV=null,TH=null;
 const loaded={};
 async function j(u){const r=await fetch(u+"?"+Date.now());const t=await r.text();return JSON.parse(t.replace(/:\s*NaN/g,':null'))}
 function route(t){if(!t)return "—";return `<a class="route" href="#" onclick="go('graph','${esc(t)}');return false">🕸그래프</a><a class="route" href="#" onclick="go('ledger','${esc(t)}');return false">📜근거</a><a class="route" href="#" onclick="go('dash','${esc(t)}');return false">📊</a>`}
@@ -93,7 +94,7 @@ function row(x){
   <td style="min-width:200px">${evid(x)}</td>
   <td>${route(x.t)}</td></tr>`}
 async function load(){
-  [T,DS,SC,LA,LH,DV]=await Promise.all([j('/data/ranto28/topics.json'),j('/data/dashboard_state.json'),j('/data/scores.json'),j('/data/liquidity_anchors.json'),j('/data/liquidity_history.json'),j('/data/divergence.json')]);
+  [T,DS,SC,LA,LH,DV,TH]=await Promise.all([j('/data/ranto28/topics.json'),j('/data/dashboard_state.json'),j('/data/scores.json'),j('/data/liquidity_anchors.json'),j('/data/liquidity_history.json'),j('/data/divergence.json'),j('/data/thesis_status.json')]);
   const ft=await fetch('/data/ranto28/full_feed_v2.jsonl?'+Date.now());
   FEED=(await ft.text()).replace(/:\s*NaN/g,':null').trim().split('\n').map(l=>{try{return JSON.parse(l)}catch(e){return null}}).filter(Boolean);
   const lq=DS.liquidity||{}, mc=DS.macro||{};
@@ -146,6 +147,14 @@ async function load(){
         : (x.mac?('해석: '+x.mac):('간접 변수 — '+x.aff.slice(0,3).map(t=>esc(t)).join(', ')));
       if(x.r.date==='확정')return `<tr><td style="white-space:nowrap"><b>${esc(x.r.ewin)}</b> ${badge('확정','b-act')}</td><td><b>${esc(x.r.fevent)}</b></td><td style="font-size:11px">${esc(x.mac)} ${x.heldHit.length?'· 타격: '+x.heldHit.map(t=>`<b>${esc(t)}</b>`).join(' '):''}</td><td>—</td><td>${route((x.heldHit[0]||''))}</td></tr>`;
       return `<tr><td style="white-space:nowrap">${esc(x.r.ewin)}${x.near?' '+badge('근접','b-trim'):''}</td><td>${esc(x.r.fevent)}</td><td style="font-size:11px">${why}</td><td><a href="${esc(x.r.url)}" target="_blank" style="color:#555">${esc(x.r.date)}</a></td><td>${route((x.heldHit[0]||x.aff[0]))}</td></tr>`}).join('')||'<tr><td colspan="5" style="color:#999">포트폴리오 연관 미래 이벤트 없음 — 위 매크로 캘린더(잭슨홀·FOMC) 참조</td></tr>');
+  // ── TDR 논제 상태
+  const thT=TH.tickers||{};
+  const thRows=SC.scores.filter(x=>x.held).map(x=>({t:x.t,...(thT[x.t]||{})}));
+  document.getElementById('ttdr').innerHTML='<tr><th>티커</th><th>논제</th><th>판정</th><th>TDR</th><th>낙폭P / 피해R</th><th>킬 기준</th></tr>'+
+    thRows.map(r=>`<tr><td><b>${esc(r.t)}</b></td><td class="comp" style="min-width:160px">${esc(r.thesis||'—')}</td>
+    <td class="comp" style="color:${r.tdr>=2.5?'#1e8449':r.tdr!=null&&r.tdr<1?'#922b21':'#555'}">${esc(r.status||'—')}${r.worst?`<div style="color:#999">└ ${esc(r.worst)}</div>`:''}</td>
+    <td><b>${r.tdr??'—'}</b></td><td class="comp">${r.P??'—'}% / ${r.R!=null?r.R+'%':'—'}</td>
+    <td class="comp" style="color:#922b21">${esc(r.kill||'—')}</td></tr>`).join('');
   // ── 괴리 엔진
   const dva=DV.alerts||[];
   document.getElementById('dvalert').innerHTML=dva.length
