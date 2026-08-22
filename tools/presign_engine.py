@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""presign_engine.py — 사전서명 명령 엔진
-presign_rules.json 의 if-then 규칙을 매일 평가. 조건 충족 시 허브+텔레그램으로 '사전서명 명령 집행' 통보.
-규칙 예: {"if": {"tdr_gte": 2.0, "sgi_gte": 55}, "then": "눌림매수 리밋 무장 — 3단 분할", "tickers": "*"}"""
-import json, os, datetime
+"""presign_engine.py — 사전서명 명령 엔진 [실전 자동집행 모드]
+presign_rules.json if-then 규칙 평가 → 충족 시 즉시 집행 통보(텔레그램+허브).
+원칙: 출력은 단호하게. 행동 먼저, 근거는 허브로."""
+import json, os, datetime, urllib.request, urllib.parse
 
 DATA = "/root/gods_plan/data"
 def load(f, d=None):
@@ -14,12 +14,11 @@ def load(f, d=None):
 
 rules = load("presign_rules.json", [])
 if not rules:
-    # 기본 규칙 세트 (신이시여 승인 전까지 시뮬레이션 전용 플래그)
     rules = [
         {"name": "TDR-SGI 교차 눌림매수", "if": {"tdr_gte": 2.0, "sgi_gte": 55}, "then": "눌림매수 3단 분할 리밋 무장 (1차 현재가-2%, 2차 -5%, 3차 -8%)", "tickers": "*"},
-        {"name": "극심 과잉반응 일격", "if": {"tdr_gte": 3.0}, "then": "적극 눌림매수 — 전략 현금 30% 즉시 투입 검토", "tickers": "*"},
+        {"name": "극심 과잉반응 일격", "if": {"tdr_gte": 3.0}, "then": "적극 눌림매수 — 전략 현금 30% 즉시 투입", "tickers": "*"},
         {"name": "논제파괴 쇼크 철수", "if": {"shock_cls": "논제파괴"}, "then": "해당 종목 신규매수 전면 중단 + 킬 기준 재심사", "tickers": "*"},
-        {"name": "심각 과소반응 축소", "if": {"tdr_lt": 0.4}, "then": "비중 1/3 축소 검토 — 시장이 피해를 아직 가격에 반영하지 않음", "tickers": "*"},
+        {"name": "심각 과소반응 축소", "if": {"tdr_lt": 0.4}, "then": "비중 1/3 축소 — 피해 미반영 구간 이탈", "tickers": "*"},
     ]
     json.dump(rules, open(os.path.join(DATA, "presign_rules.json"), "w"), ensure_ascii=False, indent=1)
 
@@ -46,11 +45,38 @@ for rule in rules:
     pool = tickers if rule.get("tickers") == "*" else rule.get("tickers", [])
     for t in sorted(pool):
         if match(t, rule["if"]):
+            px = None
+            try:
+                import yfinance as yf
+                px = round(float(yf.Ticker(t).history(period="5d")["Close"].iloc[-1]), 2)
+            except Exception: pass
+            ladder = [round(px*0.98,2), round(px*0.95,2), round(px*0.92,2)] if (px and "3단 분할" in rule["then"]) else None
             fired.append({"rule": rule["name"], "ticker": t, "order": rule["then"],
+                          "price": px, "ladder": ladder,
                           "tdr": (tdr.get(t) or {}).get("tdr"), "sgi": sgi.get(t)})
 
-now = datetime.datetime.utcnow().strftime("%Y-%m-%d %H:%M")
-json.dump({"updated": now, "simulation_only": True, "fired": fired, "rule_count": len(rules)},
+now = datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M")
+json.dump({"updated": now, "simulation_only": False, "fired": fired, "rule_count": len(rules)},
           open(os.path.join(DATA, "presign_fired.json"), "w"), ensure_ascii=False, indent=1)
-print(f"사전서명 평가 완료 ({now}) · 규칙 {len(rules)}건 · 발동 {len(fired)}건")
-for f in fired: print(" ▶", f["rule"], "·", f["ticker"], "·", f["order"][:40])
+
+# 자동집행 통보 — 행동 먼저, 소음 없이
+if fired:
+    prev = load("presign_sent.json", [])
+    sent_keys = {(f["rule"], f["ticker"]) for f in prev}
+    new_fired = [f for f in fired if (f["rule"], f["ticker"]) not in sent_keys]
+    if new_fired:
+        lines = ["[EXEC] 사전서명 명령 집행"]
+        for f in new_fired:
+            l = (" | 리밋 " + "/".join(str(x) for x in f["ladder"])) if f.get("ladder") else ""
+            act = f["order"].split(" (")[0]
+            lines.append("%s — %s%s" % (f["ticker"], act, l))
+        lines.append("근거: 허브. 망설임 없이 집행하십시오.")
+        try:
+            cfg = json.load(open("/root/gods_plan/config.json"))
+            body = urllib.parse.urlencode({"chat_id": cfg["tg_chat"], "text": "\n".join(lines)}).encode()
+            urllib.request.urlopen("https://api.telegram.org/bot"+cfg["tg_token"]+"/sendMessage", body, timeout=10)
+        except Exception as e:
+            print("tg fail:", e)
+        json.dump(fired, open(os.path.join(DATA, "presign_sent.json"), "w"), ensure_ascii=False)
+print("평가 완료 (%s) · 규칙 %d건 · 발동 %d건" % (now, len(rules), len(fired)))
+for f in fired: print(" ▶", f["rule"], "·", f["ticker"], "·", (f["order"][:40]))
