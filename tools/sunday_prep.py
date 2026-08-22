@@ -43,6 +43,12 @@ for job, ts in hb.items():
     except Exception: pass
 lines.append(f"④ 유지보수: {'⚠ stale: ' + ', '.join(stale) if stale else '전 잡 정상'}")
 
+sl = _load(os.path.join(BASE, "signal_ledger.json"), {})
+if sl.get("by_action"):
+    lines.append("")
+    lines.append("④-2 신호 성적표 (누적):")
+    for act, s in sl["by_action"].items():
+        lines.append(f"  · {act}: {s['n']}건 중 적중률 {int((s['hit_rate'] or 0)*100)}% · 평균 초과수익 {s['avg_alpha']}%")
 lines.append("")
 lines.append("⑤ 이번 주 ONE COMMAND (기본값):")
 if zone == "CLOSED":
