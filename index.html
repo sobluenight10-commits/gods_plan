@@ -79,9 +79,9 @@ function evid(x){
   const ev=x.evidence||[];
   if(!ev.length)return '<span class="comp">원장 근거 없음</span>';
   return `<details><summary>📖 근거 ${ev.length}건 (Mer 원장)</summary>`+ev.map(e=>
-    `<div class="evrow"><span class="badge ${e.prio==='P0'?'b-act':e.prio==='P1'?'b-watch':'b-in'}">${e.prio}</span> <a href="${esc(e.url)}" target="_blank">${esc(e.date)} — ${esc(e.title.slice(0,38))}</a>${e.fevent&&e.fevent!=='NONE'?`<div class="comp">➤ ${esc(e.fevent)} (${esc(e.ewin||'')})</div>`:''}</div>`).join('')+'</details>'}
+    `<div class="evrow"><span class="badge ${e.prio==='P0'?'b-act':e.prio==='P1'?'b-watch':'b-in'}">${e.prio}</span> ${e.c!=null?`<span class="badge" style="background:${e.c>0?'#eaf6ec':'#fdedec'};color:${e.c>0?'#1e8449':'#922b21'}">${e.c>0?'▲':'▼'}${e.c>0?'+':''}${e.c}</span> `:''}<a href="${esc(e.url)}" target="_blank">${esc(e.date)} — ${esc(e.title.slice(0,38))}</a>${e.fevent&&e.fevent!=='NONE'?`<div class="comp">➤ ${esc(e.fevent)} (${esc(e.ewin||'')})</div>`:''}</div>`).join('')+'</details>'}
 function row(x){
-  return `<tr><td style="white-space:nowrap"><b>${esc(x.t)}</b>${x.held?' '+badge('보유','b-hold'):''}<div class="comp">${x.psych?badge(x.psych,PB[x.psych]):''} ${esc(x.letter||'')}${x.sent?` <span class="badge" style="background:${x.sent>0?'#eaf6ec':'#fdedec'};color:${x.sent>0?'#1e8449':'#922b21'}">언급 ${x.sent>0?'+':''}${x.sent} ${x.sent>0?'긍정':'부정'}</span>`:''}</div></td>
+  return `<tr><td style="white-space:nowrap"><b>${esc(x.t)}</b>${x.held?' '+badge('보유','b-hold'):''}<div class="comp">${x.psych?badge(x.psych,PB[x.psych]):''} ${esc(x.letter||'')}${x.sent?` <span class="badge" style="background:${x.sent>0?'#eaf6ec':'#fdedec'};color:${x.sent>0?'#1e8449':'#922b21'}">언급 ${x.sent>0?'+':''}${x.sent} ${x.sent>2?'긍정':x.sent<-2?'부정':'중립'}${x.sent_ext!=null?' ⊕교차검증':''}</span>`:''}</div></td>
   <td><span class="score" style="color:${x.god>=70?'#1e8449':x.god>=55?'#9c640c':'#922b21'}">${x.god}</span><div class="gbar"><i style="width:${x.god}%"></i></div></td>
   <td>${badge(x.action,AB[x.action]||'b-watch')}<div class="comp">${esc(x.why)}</div></td>
   <td>${comp(x)}</td>
@@ -102,7 +102,7 @@ async function load(){
   <div class="comp" style="margin-top:4px">${esc((LA||{}).note||'')}</div></details>`;
   document.getElementById('cmd').innerHTML=`<span class="kicker">ONE COMMAND — 점수 엔진 실시간 생성 · 기준일 ${esc(SC.generated)}</span><br>⚡ ${esc(SC.command||DS.one_command||'—')}`;
   const CAL=[['08-26','NVDA 실적','보유 NVDA 직격. 가이던스가 005930.KS·000660.KS·TSM(전부 보유) HBM 수요 기대를 결정. 어닝 미스 시 AI 체인 전체 조정 트리거'],
-['08-27~29','잭슨홀','파월 발언이 9월 금리 경로를 사실상 확정. 비둘기=성장주(PLTR·TSLA·RKLB 보유분) 재평가, 매파=유동성 게이트 WARNING 지속 시 신규 매수 중단'],
+['08-28 10:00ET','잭슨홀 — 워시(Warsh) 의장 기조연설','취임 후 첫 정책 연설. 워시는 포워드 가이던스 폐기+대차대조표 축소(=순유동성↓) 매파 성향, 연준 내부 3명 인상 주장 중. 인상 시사=성장주(PLTR·TSLA·RKLB) 직격+게이트 CLOSED 위험, 관망=현 게이트 WARNING(×1.0) 유지. 파월 아님 — 2026-05-22 워시 취임'],
 ['09-16','FOMC','금리 결정+점도표. QT 종료/완화 신호 여부가 순유동성($1,982B) 방향을 결정 — 게이트 배수(현재 ×1.0)의 실질 스위치'],
 ['11-04','QRA','재무부 국채발행계획 = TGA/단기물 비중 → 순유동성 직결. 2023년 11월 QRA가 그해 4분기 랠리를 만든 전례']];
   document.getElementById('cal').innerHTML=CAL.map(c=>`<div class="cal" style="display:block;margin:3px 0"><b>${c[0]}</b> ${c[1]} <span style="color:#555">— ${c[2]}</span></div>`).join('');
@@ -114,10 +114,15 @@ async function load(){
   const heldSet=new Set(SC.scores.filter(x=>x.held).map(x=>x.t));
   const sentMap={}; (T.tickers||[]).forEach(x=>sentMap[x.t]=x.sent||0);
   const SURF={'005930.KS':['삼성전자'],'000660.KS':['하이닉스','SK하이닉스'],'NVDA':['엔비디아'],'TSLA':['테슬라'],'TSM':['TSMC','대만'],'AAPL':['애플'],'MSFT':['마이크로소프트'],'GOOGL':['구글'],'AVGO':['브로드컴'],'PLTR':['팔란티어'],'OKLO':['오클로'],'UEC':['우라늄에너지'],'UUUU':['에너지퓨얼'],'URNM':['우라늄'],'RKLB':['로켓랩'],'KTOS':['크라토스'],'FCX':['프리포트','구리'],'NTLA':['인텔리아'],'REGN':['리제네론'],'MC.PA':['루이비통','LVMH'],'COHR':['코히런트'],'NTR':['뉴트리엔'],'TMO':['써모피셔'],'272210.KS':['한화시스템'],'009540.KS':['한국조선해양','HD한국'],'CWEN':['클리어웨이'],'PRY.MI':['프리즈미안'],'SPCX':['우주'],'ARKQ':['ARK'],'BOTZ':['로봇'],'PL':['플래닛랩','플래닛'],'TER':['테라다인'],'BWXT':['BWX'],'CDNS':['케이던스']};
-  const MACWHY=[[/중간선거|선거/,'재정·관세·방산 정책 방향이 바뀐다 — 보유 방산(KTOS·272210.KS)·에너지(UEC·UUUU·URNM)·인프라(PRY.MI) 밸류에이션 프리미엄에 직결'],[/지진|태풍|허리케인/,'규슈=TSMC 구마모토·소니·도쿄일렉트론 공급망 — 보유 005930.KS·000660.KS·TSM·CDNS 반도체 체인 단기 변동성'],[/금리|FOMC|연준|잭슨홀/,'유동성 게이트 배수의 스위치 — 신규 자금 투입 속도를 결정'],[/관세|무역|제재/,'수출 의존 보유종목(005930.KS·000660.KS·TSM·FCX) 마진에 직접 영향'],[/MSCI|지수/,'패시브 자금 유출입 — 대형 보유종목 수급 이벤트']];
+  const MACWHY=[[/중간선거|선거/,'재정·관세·방산 정책 방향이 바뀐다 — 보유 방산(KTOS·272210.KS)·에너지(UEC·UUUU·URNM)·인프라(PRY.MI) 밸류에이션 프리미엄에 직결'],[/지진|태풍|허리케인/,'규슈=TSMC 구마모토·소니·도쿄일렉트론 공급망 — 보유 005930.KS·000660.KS·TSM·CDNS 반도체 체인 단기 변동성'],[/금리|FOMC|연준|잭슨홀/,'유동성 게이트 배수의 스위치 — 신규 자금 투입 속도를 결정'],[/관세|무역|제재/,'수출 의존 보유종목(005930.KS·000660.KS·TSM·FCX) 마진에 직접 영향']];
   const dirOf=t=>{const s=sentMap[t]||0;return s>2?'긍정':s<-2?'부정':'중립'};
   const DAY=864e5, NEAR=120*DAY;
-  const fwd=FEED.filter(r=>r.verify==='PENDING'&&r.ewin&&r.ewin!=='NONE').map(r=>{
+  const FIXED=[{ewin:'2026-08-26',fevent:'NVDA 실적 발표 (Q2 FY27)',aff:['NVDA','005930.KS','000660.KS','TSM','AVGO'],url:'https://5.189.176.185',date:'확정',why0:'보유 NVDA 직격 + HBM 수요 기대(삼성·하이닉스·TSM 전부 보유) 결정 — 가이던스 미스 시 AI 체인 동반 조정'},
+{ewin:'2026-08-28',fevent:'잭슨홀 — 워시 의장 첫 기조연설 (10:00 ET)',aff:['TSLA','PLTR','RKLB','OKLO'],url:'https://www.federalreserve.gov',date:'확정',why0:'포워드가이던스 폐기한 매파 의장의 첫 연설 — 대차대조표 축소 시사 시 순유동성↓·성장주 직격, 관망 시 게이트 WARNING 유지'},
+{ewin:'2026-09-16',fevent:'FOMC 금리 결정 + 점도표',aff:['전체'],url:'https://www.federalreserve.gov',date:'확정',why0:'QT 종료/완화 신호 = 순유동성($1,982B) 방향 스위치 = 신규 투입 배수 결정'},
+{ewin:'2026-11-04',fevent:'QRA 분기 국채발행계획',aff:['전체'],url:'https://home.treasury.gov',date:'확정',why0:'TGA·단기물 비중 = 순유동성 직결 — 2023-11 QRA가 그 해 4분기 랠리 트리거였던 전례'}];
+  const fwd=FIXED.map(x=>({r:{ewin:x.ewin,fevent:x.fevent,url:x.url,date:x.date},ts:new Date(x.ewin).getTime(),aff:x.aff,heldHit:x.aff.filter(t=>heldSet.has(t)),near:true,mac:x.why0}))
+  .concat(FEED.filter(r=>r.verify==='PENDING'&&r.ewin&&r.ewin!=='NONE').map(r=>{
     const m=r.ewin.match(/(20\d\d)[-.\/]?\s?(\d{1,2})/); if(!m)return null;
     const ts=new Date(+m[1],+m[2]-1,1).getTime(); if(ts<today)return null;  // 미래만
     const aff=(r.named||[]).concat(r.inferred||[]);
@@ -126,13 +131,15 @@ async function load(){
     const near=ts-today<=NEAR;
     const mac=(MACWHY.find(([re])=>re.test(r.fevent||''))||[])[1];
     if(![...heldHit].length&&!near&&!mac)return null;   // 내 포트 타격 or 근접 or 매크로 해석 가능 이벤트만
+    if(FIXED.some(x=>x.fevent.slice(0,6)===r.fevent.slice(0,6)))return null; // 확정 캘린더와 중복 제거
     return {r,ts,aff,heldHit:[...heldHit],near,mac};
-  }).filter(Boolean).sort((a,b)=>a.ts-b.ts)
+  })).filter(Boolean).sort((a,b)=>a.ts-b.ts)
   .filter(x=>{const k=x.r.fevent.slice(0,25);if(seen.has(k))return false;seen.add(k);return true}).slice(0,10);
   document.getElementById('tfwd').innerHTML='<tr><th>윈도우</th><th>이벤트</th><th>왜 내 돈에 중요한가 (포트폴리오 연결)</th><th>출처</th><th>링크</th></tr>'+
     (fwd.map(x=>{const why=x.heldHit.length
         ? x.heldHit.slice(0,4).map(t=>`<b>${esc(t)}</b>(보유·${dirOf(t)})`).join(' ')+' — 이 이벤트가 내 보유 종목에 직접 영향'
         : (x.mac?('해석: '+x.mac):('간접 변수 — '+x.aff.slice(0,3).map(t=>esc(t)).join(', ')));
+      if(x.r.date==='확정')return `<tr><td style="white-space:nowrap"><b>${esc(x.r.ewin)}</b> ${badge('확정','b-act')}</td><td><b>${esc(x.r.fevent)}</b></td><td style="font-size:11px">${esc(x.mac)} ${x.heldHit.length?'· 타격: '+x.heldHit.map(t=>`<b>${esc(t)}</b>`).join(' '):''}</td><td>—</td><td>${route((x.heldHit[0]||''))}</td></tr>`;
       return `<tr><td style="white-space:nowrap">${esc(x.r.ewin)}${x.near?' '+badge('근접','b-trim'):''}</td><td>${esc(x.r.fevent)}</td><td style="font-size:11px">${why}</td><td><a href="${esc(x.r.url)}" target="_blank" style="color:#555">${esc(x.r.date)}</a></td><td>${route((x.heldHit[0]||x.aff[0]))}</td></tr>`}).join('')||'<tr><td colspan="5" style="color:#999">포트폴리오 연관 미래 이벤트 없음 — 위 매크로 캘린더(잭슨홀·FOMC) 참조</td></tr>');
   const hot=T.topics.filter(t=>t.hot).sort((a,b)=>b.accel-a.accel||b.impact-a.impact).slice(0,8);
   document.getElementById('ttop').innerHTML='<tr><th>토픽</th><th>영향도</th><th>빈도</th><th>30일</th><th>가속도</th><th>연결 티커</th></tr>'+
