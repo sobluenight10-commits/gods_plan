@@ -237,7 +237,7 @@ def _run_olympus():
                 for r in sc.get("scores", []) if r.get("held") and r.get("action") in ("ACCUMULATE", "BUY ON DIP", "TRIM")][:6]
         if acts:
             lines.append("📌 보유 종목 액션: " + " · ".join(acts))
-    lines.append("📅 다음 주: 잭슨홀(8/27~29, 파월 발언=9월 금리 경로) 이후 9/16 FOMC · 11/4 QRA")
+    lines.append("📅 다음 주: 잭슨홀(8/28 10시ET 워시 의장 첫 기조연설 — 매파 성향, 포워드가이던스 폐기자) 이후 9/16 FOMC · 11/4 QRA")
     lines.append("🕸 상세: http://5.189.176.185/index.html (WHAT TO DO)")
     send_telegram("\n".join(lines))
     logger.info("Olympus weekly heads-up sent")
