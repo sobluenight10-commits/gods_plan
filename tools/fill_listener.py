@@ -1,0 +1,43 @@
+#!/usr/bin/env python3
+"""fill_listener.py — 텔레그램 답장 '체결 TICKER 가격 수량 [메모]' 자동 기록 → executions.jsonl
+신호 원장이 '발송된 신호'가 아니라 '실제 체결'을 채점하기 위한 입력."""
+import json, os, re, urllib.request, urllib.parse, datetime
+
+DATA = "/root/gods_plan/data"
+cfg = json.load(open("/root/gods_plan/config.json"))
+tok, chat = cfg["tg_token"], str(cfg["tg_chat"])
+off_p = os.path.join(DATA, "tg_offset.txt")
+offset = int(open(off_p).read()) if os.path.exists(off_p) else 0
+
+url = "https://api.telegram.org/bot%s/getUpdates?offset=%d&timeout=0" % (tok, offset)
+try:
+    upd = json.loads(urllib.request.urlopen(url, timeout=15).read())
+except Exception as e:
+    print("poll fail:", e); raise SystemExit
+
+exec_p = os.path.join(DATA, "executions.jsonl")
+PAT = re.compile(r"^체결\s+(\S+)\s+([0-9.,]+)\s*([0-9.,]+)?\s*(.*)$")
+n = 0
+for u in upd.get("result", []):
+    offset = max(offset, u["update_id"] + 1)
+    msg = u.get("message") or {}
+    if str(msg.get("chat", {}).get("id")) != chat: continue
+    text = (msg.get("text") or "").strip()
+    m = PAT.match(text)
+    if not m: continue
+    tk, price, qty, memo = m.group(1), m.group(2).replace(",", ""), m.group(3), m.group(4)
+    rec = {"date": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M"),
+           "t": tk, "side": "FILL", "price": float(price),
+           "qty": float(qty.replace(",", "")) if qty else None,
+           "thesis": memo.strip() or None, "src": "telegram"}
+    with open(exec_p, "a") as f:
+        f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+    n += 1
+    # 접수 확인 답장
+    try:
+        body = urllib.parse.urlencode({"chat_id": chat, "text": "기록 완료: %s @ %s%s — 30일 후 심문 예정" % (tk, price, (" x"+qty) if qty else "")}).encode()
+        urllib.request.urlopen("https://api.telegram.org/bot%s/sendMessage" % tok, body, timeout=10)
+    except Exception: pass
+
+open(off_p, "w").write(str(offset))
+print("fills recorded:", n)
