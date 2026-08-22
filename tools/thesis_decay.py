@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """thesis_decay.py — 논제 부패 시계 (청산 엔진 · 교훈 #12)
 가격 손절 아님. 시간과 논제로 자른다. 스트라이크는 증거가 있을 때만 적립.
-① 진입 6개월+ (스코어 히스토리 증거) ② 카탈리스트 기한 경과 ③ 논제 미갱신 90일+ ④ 자금조달 이벤트
+① 진입 6개월+ (스코어 히스토리 증거) ② 카탈리스트 기한 경과 ③ 논제 미갱신 30일+ ④ 자금조달 이벤트
 2개+ → 강제 재심사 상신(제시형). 데이터 부재는 스트라이크가 아니라 메모."""
 import json, os, re, datetime, urllib.request, urllib.parse
 
@@ -71,11 +71,11 @@ for t in sorted(set(HELD) | set(TM.keys())):
     rev = v.get("reviewed")
     if rev:
         try:
-            if (now - datetime.datetime.fromisoformat(str(rev)).replace(tzinfo=datetime.UTC)).days >= 90:
-                strikes.append("논제 미갱신 90일+")
+            if (now - datetime.datetime.fromisoformat(str(rev)).replace(tzinfo=datetime.UTC)).days >= 30:
+                strikes.append("논제 미갱신 30일+")
         except Exception: pass
-    elif map_age >= 90:
-        strikes.append("논제 지도 생성 후 무갱신 90일+")
+    elif map_age >= 30:
+        strikes.append("논제 지도 생성 후 무갱신 30일+")
     else:
         notes.append("논제 지도 신생 — 갱신 시계 미개시")
     if t in fund_hit: strikes.append("자금조달 이벤트: " + fund_hit[t][0])

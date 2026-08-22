@@ -23,6 +23,22 @@ for u in upd.get("result", []):
     msg = u.get("message") or {}
     if str(msg.get("chat", {}).get("id")) != chat: continue
     text = (msg.get("text") or "").strip()
+    mg = re.match(r"^논제갱신\s+(\S+)\s*(.*)$", text)
+    if mg:
+        import os as _os
+        tmp = "/root/gods_plan/data/thesis_map.json"
+        tm = json.load(open(tmp))
+        tk2, memo2 = mg.group(1), mg.group(2).strip()
+        if tk2 in tm:
+            tm[tk2]["reviewed"] = datetime.date.today().isoformat()
+            if memo2: tm[tk2]["review_note"] = memo2
+            json.dump(tm, open(tmp, "w"), ensure_ascii=False, indent=1)
+            try:
+                body = urllib.parse.urlencode({"chat_id": chat, "text": "논제 갱신 완료: %s — 부패 시계 리셋" % tk2}).encode()
+                urllib.request.urlopen("https://api.telegram.org/bot%s/sendMessage" % tok, body, timeout=10)
+            except Exception: pass
+            n += 1
+        continue
     m = PAT.match(text)
     if not m: continue
     tk, price, qty, memo = m.group(1), m.group(2).replace(",", ""), m.group(3), m.group(4)

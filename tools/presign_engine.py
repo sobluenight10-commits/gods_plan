@@ -1,25 +1,28 @@
 #!/usr/bin/env python3
-"""presign_engine.py — 사전서명 명령 엔진 [실전 · 제시형 · 계층 필터]
-계층: 1=셔블(CDNS BWXT LIN PRY.MI) 2=LEGEND(000660.KS 272210.KS) → 매수 실행 가능
-      3=보유 위성 → 청산 관리 전용 (매수 알림 억제)  4=관찰 → 정보용
-근거 출처 태그: [출처: SEC 8-K]=검증됨 / [추정·미검증]=자동집행 보류 / 정량화 불가=대시보드 확인
-사다리: ATR(14) 배수, 단계당 하한 3% ~ 상한 15%
-쿨다운: 14일 경과 또는 직전 알림가 대비 1 ATR 추가 하락 시 재발동
-유효기한: 발동 후 48시간, 이후 자동 소멸"""
-import json, os, datetime, urllib.request, urllib.parse
+"""presign_engine.py — 사전서명 명령 엔진 v4 [입증 부담 방식]
+§08 최상위 원칙: 어떤 종목도 금지되지 않는다. 핵심에서 멀수록 증거 요구치가 가팔라진다.
+계층별 문턱: 1셔블 GOD≥55(사이즈 1.0) · 2LEGEND ≥65(0.5) · 3위성 ≥75+사실게이트+스틸맨(0.25) · 4관찰 ≥85+전게이트+논제등재(0.1 스타터)
+위험 예산: 신규 자본의 27.5% = 기회 예산(분기). 3·4계층 매수만 소진. 소진 시 해당 분기 차단.
+알림 표기: 3σ 20일 예상최대손실 — 사후 확인이 아니라 사전 승인."""
+import json, os, math, datetime, urllib.request, urllib.parse
 
 DATA = "/root/gods_plan/data"
-TIER1 = {"CDNS", "BWXT", "LIN", "PRY.MI"}
-TIER2 = {"000660.KS", "272210.KS"}
-EXEC_TIERS = TIER1 | TIER2
-BUY_WORDS = ("눌림매수", "적극 눌림", "매수 3단", "현금 30%")
-
 def load(f, d=None):
-    p = os.path.join(DATA, f)
+    p = f if f.startswith("/") else os.path.join(DATA, f)
     if os.path.exists(p):
         try: return json.load(open(p))
         except Exception: pass
     return {} if d is None else d
+
+TIERS = load("tiers.json", [])
+if not TIERS:
+    TIERS = {"1": ["CDNS", "BWXT", "LIN", "PRY.MI"], "2": ["000660.KS", "272210.KS"]}
+    json.dump(TIERS, open(os.path.join(DATA, "tiers.json"), "w"), ensure_ascii=False, indent=1)
+TIER_OF = {t: int(k) for k, v in TIERS.items() for t in v}
+
+THRESH = {1: 55, 2: 65, 3: 75, 4: 85}
+SIZE = {1: 1.0, 2: 0.5, 3: 0.25, 4: 0.1}
+OPP_PCT = 0.275  # 분기 신규자본 대비 기회 예산
 
 rules = load("presign_rules.json", [])
 tdr = load("thesis_status.json").get("tickers", {})
@@ -27,66 +30,97 @@ TM = load("thesis_map.json")
 scores = load("scores.json")
 rows = scores.get("rows") or scores.get("scores") or []
 gate = scores.get("gate", {})
-god = {r.get("t") or r.get("ticker"): r.get("god") or r.get("score") for r in rows}
-sgi = {r.get("t") or r.get("ticker"): (r.get("sgi") or {}).get("score") if isinstance(r.get("sgi"), dict) else r.get("sgi") for r in rows}
+god = {r.get("t"): r.get("god") for r in rows}
+held_set = {r.get("t") for r in rows if r.get("held")}
+sgi = {r.get("t"): (r.get("sgi") or {}).get("score") if isinstance(r.get("sgi"), dict) else r.get("sgi") for r in rows}
 scls = load("shock_class.json").get("by_ticker", {})
 sevents = load("shock_events.json", [])
+steel = load("steelman.json", [])
+budget = load("risk_budget.json", [])
+if not budget:
+    budget = {"monthly_capital_eur": None, "opp_pct": OPP_PCT, "quarter": "%dQ%d" % (datetime.date.today().year, (datetime.date.today().month-1)//3+1), "opp_spent": 0.0}
 
-def match(t, cond):
+def tier_of(t):
+    if t in TIER_OF: return TIER_OF[t]
+    return 3 if t in held_set else 4
+
+def match_cond(t, cond):
     tv = (tdr.get(t) or {}).get("tdr")
     sv = sgi.get(t)
     if "tdr_gte" in cond and not (tv is not None and tv >= cond["tdr_gte"]): return False
     if "tdr_lt" in cond and not (tv is not None and tv < cond["tdr_lt"]): return False
     if "sgi_gte" in cond and not (sv is not None and sv >= cond["sgi_gte"]): return False
     if "shock_cls" in cond:
-        cats = [x["cls"] for x in scls.get(t, [])]
-        if cond["shock_cls"] not in cats: return False
+        if cond["shock_cls"] not in [x["cls"] for x in scls.get(t, [])]: return False
     return True
 
 def atr_data(t):
     try:
         import yfinance as yf
         h = yf.Ticker(t).history(period="3mo")
-        if len(h) < 20: return None, None
+        if len(h) < 20: return None, None, None
         atr = float((h["High"] - h["Low"]).abs().tail(14).mean())
-        return float(h["Close"].iloc[-1]), atr
+        vol20 = float(h["Close"].pct_change().tail(20).std())
+        return float(h["Close"].iloc[-1]), atr, vol20
     except Exception:
-        return None, None
+        return None, None, None
 
 def ladder(px, atr):
-    """ATR 배수 사다리, 단계당 하한 3% ~ 상한 15%"""
-    out = []
-    for k in (1.0, 2.0, 3.0):
-        pct = min(max(k * atr / px * 100, 3.0), 15.0)
-        out.append(round(px * (1 - pct / 100), 2))
-    return out
+    return [round(px * (1 - min(max(k * atr / px * 100, 3.0), 15.0) / 100), 2) for k in (1.0, 2.0, 3.0)]
 
 def provenance(t):
-    """근거 출처 태그: SEC 8-K 확인 → 검증됨 / 뉴스·키워드 기반 → 추정·미검증"""
     for e in reversed(sevents):
         if e.get("t") == t and e.get("sec_8k"):
             return "[출처: SEC 8-K]", True
     if (tdr.get(t) or {}).get("worst"):
         return "[추정·미검증]", False
-    return "[정량화 불가 — 대시보드 확인 요망]", False
+    return "[정량화 불가]", False
 
+BUY_WORDS = ("눌림매수", "적극 눌림", "매수 3단", "현금 30%")
 now = datetime.datetime.now(datetime.UTC)
-tickers = set(tdr) | set(sgi) | set(scls)
-fired, suppressed = [], []
+qnow = "%dQ%d" % (now.year, (now.month-1)//3+1)
+if budget.get("quarter") != qnow:
+    budget["quarter"], budget["opp_spent"] = qnow, 0.0
+
+fired, blocked = [], []
 for rule in rules:
-    pool = tickers if rule.get("tickers") == "*" else rule.get("tickers", [])
+    pool = set(tdr) | set(sgi) | set(scls) | set(god)
+    if rule.get("tickers") != "*": pool = set(rule.get("tickers", []))
     for t in sorted(pool):
-        if not match(t, rule["if"]): continue
+        if not match_cond(t, rule["if"]): continue
         is_buy = any(w in rule["then"] for w in BUY_WORDS)
-        if is_buy and t not in EXEC_TIERS:
-            suppressed.append({"rule": rule["name"], "ticker": t, "why": "계층 3·4 — 매수 알림 억제 (청산 관리 전용)"})
-            continue
-        px, atr = atr_data(t)
-        lad = ladder(px, atr) if (px and atr and is_buy) else None
+        tr = tier_of(t)
+        px, atr, vol20 = atr_data(t)
         prov, verified = provenance(t)
-        fired.append({"rule": rule["name"], "ticker": t, "order": rule["then"],
+        g = god.get(t)
+        if is_buy:
+            # 입증 부담: 점수 문턱
+            if g is None or g < THRESH[tr]:
+                blocked.append({"ticker": t, "rule": rule["name"], "why": "GOD %s < 문턱 %d (계층%d)" % (g, THRESH[tr], tr)})
+                continue
+            # 3·4계층 추가 게이트
+            if tr >= 3:
+                if not verified:
+                    blocked.append({"ticker": t, "rule": rule["name"], "why": "사실게이트 미통과 — SEC 공시 근거 필요"})
+                    continue
+                if t not in steel:
+                    blocked.append({"ticker": t, "rule": rule["name"], "why": "스틸맨 미문서화 — 반대 논거 명시 필요"})
+                    continue
+                need = SIZE[tr]
+                if budget["opp_spent"] + need > budget["opp_pct"]:
+                    blocked.append({"ticker": t, "rule": rule["name"], "why": "기회 예산 소진 (분기 %.3f/%.3f)" % (budget["opp_spent"], budget["opp_pct"])})
+                    continue
+            if tr == 4 and not (TM.get(t) or {}).get("thesis"):
+                blocked.append({"ticker": t, "rule": rule["name"], "why": "논제 미등재 — thesis_map 등록 필요"})
+                continue
+            budget["opp_spent"] += SIZE[tr] if tr >= 3 else 0.0
+        lad = ladder(px, atr) if (px and atr and is_buy) else None
+        maxloss = round(3 * vol20 * math.sqrt(20) * 100, 1) if vol20 else None
+        fired.append({"rule": rule["name"], "ticker": t, "order": rule["then"], "tier": tr,
                       "price": round(px,2) if px else None, "ladder": lad,
-                      "god": god.get(t), "kill": (TM.get(t) or {}).get("kill", ""),
+                      "size_unit": SIZE[tr], "max_loss_3sigma_pct": maxloss,
+                      "god": g, "kill": (TM.get(t) or {}).get("kill", ""),
+                      "kill_src": (TM.get(t) or {}).get("kill_src", ""),
                       "gate": gate.get("zone"), "prov": prov, "verified": verified,
                       "auto_ok": verified or not is_buy,
                       "tdr": (tdr.get(t) or {}).get("tdr"), "sgi": sgi.get(t),
@@ -94,44 +128,42 @@ for rule in rules:
                       "ts": now.isoformat(), "expires": (now + datetime.timedelta(hours=48)).isoformat()})
 
 json.dump({"updated": now.strftime("%Y-%m-%d %H:%M"), "simulation_only": False,
-           "fired": fired, "suppressed": suppressed, "rule_count": len(rules)},
+           "fired": fired, "blocked": blocked,
+           "budget": {"opp_pct": budget["opp_pct"], "opp_spent": budget["opp_spent"], "quarter": budget["quarter"]}},
           open(os.path.join(DATA, "presign_fired.json"), "w"), ensure_ascii=False, indent=1)
+json.dump(budget, open(os.path.join(DATA, "risk_budget.json"), "w"), ensure_ascii=False, indent=1)
 
-# 쿨다운: 14일 경과 또는 직전 알림가 대비 1 ATR 추가 하락 시 재발동
 COOLDOWN_D = 14
 prev = load("presign_sent.json", [])
-fresh, new_fired = [], []
-for p in prev:
-    try:
-        if (now - datetime.datetime.fromisoformat(p["ts"])).days < COOLDOWN_D:
-            fresh.append(p)
-    except Exception: pass
+fresh = [p for p in prev if (now - datetime.datetime.fromisoformat(p.get("ts", now.isoformat()).replace("Z",""))).days < COOLDOWN_D] if isinstance(prev, list) else []
+new_fired = []
 for f in fired:
-    dup = next((p for p in fresh if p["rule"] == f["rule"] and p["ticker"] == f["ticker"]), None)
+    dup = next((p for p in fresh if p.get("rule") == f["rule"] and p.get("ticker") == f["ticker"]), None)
     if dup is None:
         new_fired.append(f)
     else:
-        # 1 ATR 추가 하락 시 쿨다운 무시하고 재발동 (기회가 깊어지는 구간 봉쇄 방지)
-        px, atr = atr_data(f["ticker"])
-        prev_px = dup.get("price")
-        if px and atr and prev_px and px <= prev_px - atr:
+        px, atr, _ = atr_data(f["ticker"])
+        if px and atr and dup.get("price") and px <= dup["price"] - atr:
             new_fired.append(f)
 
 if new_fired:
     lines = ["⚖ 사전서명 조건 충족 — 승인 시 아래 주문 접수 (유효 48시간)"]
     for f in new_fired:
         l = (" | 사다리 " + "/".join(str(x) for x in f["ladder"])) if f.get("ladder") else ""
-        lines.append("▶ %s — %s%s" % (f["ticker"], f["order"], l))
+        sz = "사이즈 %.2f단위" % f["size_unit"]
+        ml = (" · 3σ최대손실 −%s%%" % f["max_loss_3sigma_pct"]) if f.get("max_loss_3sigma_pct") else ""
+        lines.append("▶ %s [계층%d] — %s%s" % (f["ticker"], f["tier"], f["order"], l))
+        lines.append("  %s%s" % (sz, ml))
         ev = []
-        if f.get("god") is not None: ev.append("점수 %s" % f["god"])
-        if f.get("reason"): ev.append("근거 %s %s" % (str(f["reason"])[:50], f["prov"]))
+        if f.get("god") is not None: ev.append("점수 %.1f" % f["god"])
+        if f.get("reason"): ev.append("근거 %s %s" % (str(f["reason"])[:45], f["prov"]))
         if f.get("gate"): ev.append("게이트 %s" % f["gate"])
-        if f.get("kill"): ev.append("킬 %s" % str(f["kill"])[:45])
+        if f.get("kill"): ev.append("킬 %s[%s]" % (str(f["kill"])[:40], f.get("kill_src") or "미분류"))
         lines.append("  " + " · ".join(ev))
         if not f["auto_ok"]:
             lines.append("  ⚠ 미검증 근거 — 자동집행 보류, 확인 후 판단 요망")
-    if suppressed:
-        lines.append("(매수 억제 %d건: 계층 3·4 — 청산 관리 전용)" % len(suppressed))
+    if blocked:
+        lines.append("(입증 부담 미충족 %d건 — 허브에서 사유 확인)" % len(blocked))
     lines.append("거부하셔도 됩니다 — 판단은 신이시여의 몫입니다.")
     try:
         cfg = json.load(open("/root/gods_plan/config.json"))
@@ -142,5 +174,6 @@ if new_fired:
     fresh.extend(new_fired)
     json.dump(fresh, open(os.path.join(DATA, "presign_sent.json"), "w"), ensure_ascii=False)
 
-print("평가 완료 · 발동 %d건 (매수억제 %d건) · 신규통보 %d건" % (len(fired), len(suppressed), len(new_fired)))
-for f in fired: print(" ▶", f["rule"], "·", f["ticker"], f["prov"])
+print("평가 완료 · 발동 %d건 · 차단 %d건 · 신규통보 %d건 · 기회예산 %.3f/%.3f" % (len(fired), len(blocked), len(new_fired), budget["opp_spent"], budget["opp_pct"]))
+for f in fired: print(" ▶", f["ticker"], "[계층%d]" % f["tier"], f["rule"], "3σ", f.get("max_loss_3sigma_pct"))
+for bl in blocked[:5]: print(" ✗", bl["ticker"], "—", bl["why"])
