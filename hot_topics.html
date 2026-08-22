@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>RANTO28 핫토픽 인텔리전스 그래프</title>
+<style>
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#faf9f7;color:#222;max-width:1240px;margin:0 auto;padding:14px}
+h1{font-size:17px;margin:4px 0}.sub{font-size:12px;color:#888;margin-bottom:8px}
+.legend{font-size:11px;color:#666;background:#f4f2ee;border-radius:8px;padding:6px 10px;margin:6px 0;line-height:1.7}
+.bar{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0;align-items:center}
+button{border:1px solid #ddd;background:#fff;border-radius:14px;padding:4px 10px;font-size:12px;cursor:pointer}
+button.on{background:#122B49;color:#fff;border-color:#122B49}
+#cv{border:1px solid #e5e0da;border-radius:10px;background:#fff;width:100%;cursor:grab}
+#panel{position:fixed;right:14px;top:60px;width:330px;background:#fff;border:1px solid #ddd;border-radius:12px;padding:14px;font-size:12px;display:none;box-shadow:0 4px 18px rgba(0,0,0,.12);z-index:9;max-height:80vh;overflow-y:auto}
+#panel h3{margin:0 0 6px;font-size:15px}
+.prow{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed #eee}
+.phil{background:#f8f6f2;border-radius:8px;padding:6px 8px;margin-top:6px}
+.phil b{color:#122B49}
+.badge{display:inline-block;border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:4px}
+.b-eu{background:#fdedec;color:#922b21}.b-pa{background:#eaf2f8;color:#1a5276}.b-in{background:#f2f3f4;color:#7f8c8d}
+.b-act{background:#7b241c;color:#fff}.b-hold{background:#b7950b;color:#fff}
+a.deep{color:#7b241c;font-weight:700}
+</style></head><body>
+<div style="font-size:11px;margin-bottom:2px"><a href="/index.html" style="color:#7b241c">🏠 OLYMPUS 허브</a></div><h1>🕸 RANTO28 핫토픽 인텔리전스 그래프</h1>
+<div class="sub" id="meta">로딩 중…</div>
+<div class="legend">
+<b>의미 강제 규칙</b> — 노드 크기: 중요도(빈도×영향도 / 티커는 보유+impact) · 엣지 두께: 시맨틱 강도(공출현 비중) · 거리: 1/강도 (강할수록 가까움) · 색: 토픽=남색, 티커=갈색, ★보유=금테 · <b style='color:#1e8449'>초록 엣지=긍정 언급(수혜)</b> · <b style='color:#922b21'>빨강 엣지=부정 언급(피해)</b> · 회색=중립 · halo: ACT 신호<br>
+<b>철학 필터</b> — Kostolany: 심리 레짐(도취/공포/무관심)+사이클(A1~B3) · Kiyosaki: 현금흐름 품질(자산 vs 포지션) · Lynch: 텐배거 스코어(EV×p_win×impact×언급)
+</div>
+<div class="bar">
+<button data-m="ALL" class="on">전체</button><button data-m="HOT">🔥 핫토픽만</button><button data-m="HELD">★ 보유 연결만</button><button data-m="ACT">⚡ ACT 시그널만</button>
+<input id="q" placeholder="토픽/티커 검색" size="14" style="border:1px solid #ddd;border-radius:8px;padding:4px 8px;font-size:12px">
+</div>
+<canvas id="cv" height="640"></canvas>
+<div id="panel"></div>
+<script>
+let G=null, MODE="ALL", Q="";
+const cvs=document.getElementById("cv"), ctx=cvs.getContext("2d");
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function size(){if(cvs.clientWidth<50){setTimeout(size,300);return} cvs.width=cvs.clientWidth*devicePixelRatio;cvs.height=640*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0)}
+window.onresize=()=>{size()};
+async function load(){
+  G=await (await fetch("/data/ranto28/topics.json?"+Date.now())).json();
+  document.getElementById("meta").textContent=`토픽 ${G.topics.length} · 티커 ${G.tickers.length} · 엣지 ${G.edges.length} · 핫토픽 ${G.topics.filter(t=>t.hot).length} · 생성 ${G.generated}`;
+  build(); size(); requestAnimationFrame(tick);
+  const qt=new URLSearchParams(location.search).get("t");
+  if(qt) setTimeout(()=>spotTicker(qt),800);
+}
+let nodes=[], links=[], drag=null, FROZEN=false;
+function build(){FROZEN=false;
+  const W=cvs.clientWidth||1100, H=640;
+  const tset=new Set(G.topics.filter(t=>MODE==="ALL"||(MODE==="HOT"&&t.hot)||(MODE==="HELD"&&t.tickers.some(k=>tkmap(k).held))||(MODE==="ACT"&&t.tickers.some(k=>tkmap(k).actionable))).map(t=>t.topic));
+  const tkvis=new Set();
+  G.edges.forEach(e=>{if(e.type==="topic-ticker"&&tset.has(e.a))tkvis.add(e.b)});
+  nodes=[]; links=[];
+  const idx={};
+  G.topics.forEach(t=>{if(!tset.has(t.topic))return;
+    if(Q && !t.topic.toLowerCase().includes(Q) && !t.tickers.some(k=>k.toLowerCase().includes(Q)))return;
+    idx[t.topic]=nodes.length;
+    nodes.push({id:t.topic,type:"topic",r:8+Math.min(26,Math.sqrt(t.freq)*2.2)*(0.6+t.impact/160),impact:t.impact,hot:t.hot,x:W/2+Math.cos(nodes.length*2.4)*Math.min(W,H)*0.32,y:H/2+Math.sin(nodes.length*2.4)*Math.min(H)*0.36,vx:0,vy:0,data:t})});
+  G.tickers.forEach(k=>{if(!tkvis.has(k.t))return;
+    const linked=nodes.some(n=>n.type==="topic"&&n.data.tickers.includes(k.t));
+    if(!linked)return;
+    if(Q && !k.t.toLowerCase().includes(Q) && !nodes.some(n=>n.data.tickers&&n.data.tickers.includes(k.t)&&n.id.toLowerCase().includes(Q)))return;
+    idx[k.t]=nodes.length;
+    nodes.push({id:k.t,type:"ticker",r:5+Math.min(18,Math.sqrt(k.n)*1.8)+(k.held?4:0),impact:k.impact,held:k.held,act:k.actionable,cyc:k.cycle,x:W/2+Math.cos(nodes.length*2.4+1.2)*Math.min(W,H)*0.44,y:H/2+Math.sin(nodes.length*2.4+1.2)*Math.min(H)*0.46,vx:0,vy:0,data:k})});
+  G.edges.forEach(e=>{
+    if(idx[e.a]!=null && idx[e.b]!=null){const tk=e.type==="topic-ticker"?tkmap(e.b):{};const sn=tk.sent||0;links.push({s:idx[e.a],t:idx[e.b],w:e.w,type:e.type,sgn:sn>2?1:sn<-2?-1:0});}
+  });
+}
+function tkmap(t){const k=G.tickers.find(x=>x.t===t);return k||{}}
+function tick(){
+  const W=cvs.clientWidth||1100, H=640;
+  // semantic force: spring length ∝ 1/strength, strength ∝ w
+  if(FROZEN){draw();requestAnimationFrame(tick);return}
+  let KE=0;
+  for(let iter=0;iter<2;iter++){
+    nodes.forEach(n=>{n.fx=(W/2-n.x)*0.002; n.fy=(H/2-n.y)*0.002});
+    for(let i=0;i<nodes.length;i++)for(let j=i+1;j<nodes.length;j++){
+      const a=nodes[i],b=nodes[j];let dx=b.x-a.x,dy=b.y-a.y,d2=dx*dx+dy*dy+40;
+      const f=140/d2; a.fx-=dx*f; a.fy-=dy*f; b.fx+=dx*f; b.fy+=dy*f;}
+    links.forEach(l=>{const a=nodes[l.s],b=nodes[l.t];
+      const rest=60+220*(1-l.w); const str=0.004+0.02*l.w;
+      let dx=b.x-a.x,dy=b.y-a.y,d=Math.sqrt(dx*dx+dy*dy)||1;
+      const f=(d-rest)*str; a.fx+=dx/d*f*d; a.fy+=dy/d*f*d; b.fx-=dx/d*f*d; b.fy-=dy/d*f*d;});
+    nodes.forEach(n=>{if(n===drag)return; n.vx=(n.vx+n.fx)*0.55; n.vy=(n.vy+n.fy)*0.55; const sp=Math.hypot(n.vx,n.vy); if(sp>1.2){n.vx*=1.2/sp;n.vy*=1.2/sp} n.x+=n.vx; n.y+=n.vy;
+      n.x=Math.max(20,Math.min(W-20,n.x)); n.y=Math.max(20,Math.min(H-20,n.y)); KE+=n.vx*n.vx+n.vy*n.vy;});
+  if(KE<0.02){FROZEN=true}
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+function draw(){
+  const W=cvs.clientWidth,H=640;
+  ctx.clearRect(0,0,W,H);
+  links.forEach(l=>{const a=nodes[l.s],b=nodes[l.t];
+    ctx.strokeStyle=l.type==="topic-topic"?"rgba(120,120,140,.25)":l.sgn>0?"rgba(30,132,73,.55)":l.sgn<0?"rgba(146,43,33,.55)":"rgba(18,43,73,.30)";
+    ctx.lineWidth=0.5+l.w*7; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke();});
+  nodes.forEach(n=>{
+    if(n.act){ctx.beginPath();ctx.arc(n.x,n.y,n.r+6,0,7);ctx.strokeStyle="rgba(123,36,28,.8)";ctx.lineWidth=2.5;ctx.stroke()}
+    if(n.held){ctx.beginPath();ctx.arc(n.x,n.y,n.r+3,0,7);ctx.strokeStyle="#b7950b";ctx.lineWidth=2;ctx.stroke()}
+    ctx.beginPath();ctx.arc(n.x,n.y,n.r,0,7);
+    ctx.fillStyle=n.type==="topic"?(n.hot?"#122B49":"#5d6d7e"):(n.act?"#7b241c":"#8d6e3f");
+    ctx.fill();
+    {ctx.fillStyle="#333";ctx.font=(n.hot||n.held?"bold ":"")+"11px sans-serif";ctx.textAlign="center";ctx.fillText((n.held?"★":"")+n.id,n.x,n.y-n.r-4)}
+  });
+}
+FROZEN=false; cvs.onmousedown=e=>{FROZEN=false;const r=cvs.getBoundingClientRect(),mx=e.clientX-r.left,my=e.clientY-r.top;
+  drag=nodes.find(n=>(n.x-mx)**2+(n.y-my)**2<(n.r+4)**2)||null;
+  if(drag){showPanel(drag)}};
+cvs.onmousemove=e=>{if(drag){const r=cvs.getBoundingClientRect();drag.x=e.clientX-r.left;drag.y=e.clientY-r.top;drag.vx=drag.vy=0}};
+cvs.onmouseup=()=>drag=null;
+function showPanel(n){
+  const p=document.getElementById("panel");let h="";
+  if(n.type==="topic"){const t=n.data;
+    h=`<h3>🏷 ${esc(t.topic)} ${t.hot?'<span class="badge b-act">HOT</span>':''}</h3>
+    <div class="prow"><span>영향도 인덱스</span><b>${t.impact}/100</b></div>
+    <div class="prow"><span>총 빈도</span><span>${t.freq}건</span></div>
+    <div class="prow"><span>최근 30일</span><span>${t.recent30}건</span></div>
+    <div class="prow"><span>가속도</span><b>${t.accel}×</b></div>
+    <div class="prow"><span>포워드 이벤트</span><span>${t.fwd}건</span></div>
+    <div class="phil"><b>연결 티커</b><br>${t.tickers.map(k=>`<a href="#" onclick="spotTicker('${esc(k)}');return false" style="color:#21618c">${esc(k)}</a>`).join(" · ")}</div>
+    <div class="phil"><b>핵심 포스트</b><br>${(t.examples||[]).map(x=>`<a href="${esc(x.url)}" target="_blank" style="color:#555">${esc(x.date)} ${esc(x.title.slice(0,28))}…</a>`).join("<br>")}</div>`;
+  } else {const k=n.data;
+    const pc={"euphoria":"b-eu","panic":"b-pa","indifference":"b-in"}[k.psych];
+    h=`<h3>📈 ${esc(k.t)} ${k.held?'<span class="badge b-hold">★ GOD 보유</span>':''} ${k.actionable?'<span class="badge b-act">ACT</span>':''}</h3>
+    <div class="prow"><span>현재가</span><b>${k.price??"—"}</b></div>
+    <div class="prow"><span>Mer 언급</span><span>${k.n}건</span></div>
+    <div class="prow"><span>언급 방향 (의도)</span><b style="color:${(k.sent||0)>2?'#1e8449':(k.sent||0)<-2?'#922b21':'#7f8c8d'}">${k.sent!=null&&k.sent!==0?((k.sent>0?'+':'')+k.sent+' — '+(k.sent>2?'긍정(수혜)':k.sent<-2?'부정(피해)':'중립')):'— 언급 없음'}</b></div>
+    <div class="prow"><span>토픽 영향도</span><b>${k.impact}/100</b></div>
+    <div class="phil"><b>Kostolany</b><br>심리 레짐: <span class="badge ${pc}">${esc(k.psych_kr)}</span><br>사이클: <b>${esc(k.cycle)}</b> — ${esc(k.cycle_kr)}<br>손: ${k.hands==="shaky-capitulation"?"약한손 투매 구간 (역발상 후보)":"강한손 유지"}<br>20W 괴리: ${k.dist??"—"}%</div>
+    <div class="phil"><b>Kiyosaki</b><br>현금흐름 품질: <b>${k.cash}</b> — ${esc(k.cash_kr)}</div>
+    <div class="phil"><b>Lynch</b><br>텐배거 스코어: <b>${k.tenbagger}/100</b><br>EV 1Y: ${k.ev!=null?k.ev+"%":"—"} · ES5: ${k.es5!=null?k.es5+"%":"—"} · p_win: ${k.p_win!=null?Math.round(k.p_win*100)+"%":"—"}</div>
+    <div class="phil"><a class="deep" href="/one_page.html" target="_blank">🔬 심층 분석 페이지 →</a><br><span style="color:#888;font-size:10px">대시보드에서 ${esc(k.t)} 카드 확인</span></div>`;
+  }
+  p.innerHTML=h+'<div style="text-align:center;margin-top:8px"><button onclick="document.getElementById(\'panel\').style.display=\'none\'">닫기</button></div>';
+  p.style.display="block";
+}
+window.spotTicker=t=>{const k=G.tickers.find(x=>x.t===t);if(k){const n=nodes.find(nn=>nn.type==="ticker"&&nn.id===t);if(n)showPanel(n);else showPanel({type:"ticker",data:k})}};
+document.querySelectorAll(".bar button[data-m]").forEach(b=>b.onclick=()=>{document.querySelectorAll(".bar button[data-m]").forEach(x=>x.classList.remove("on"));b.classList.add("on");MODE=b.dataset.m;build()});
+document.getElementById("q").oninput=e=>{Q=e.target.value.toLowerCase();build()};
+load();
+</script></body></html>

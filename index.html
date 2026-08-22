@@ -1,0 +1,145 @@
+<!DOCTYPE html><html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>OLYMPUS UNIFIED COMMAND</title>
+<style>
+body{font-family:-apple-system,'Segoe UI',sans-serif;background:#f5f3ef;color:#222;max-width:1240px;margin:0 auto;padding:12px}
+h1{font-size:18px;margin:2px 0;color:#122B49}
+.sub{font-size:11px;color:#888;margin-bottom:8px}
+.tabs{display:flex;gap:6px;margin:8px 0;flex-wrap:wrap}
+.tabs button{border:1px solid #d5cfc6;background:#fff;border-radius:16px;padding:6px 14px;font-size:13px;cursor:pointer}
+.tabs button.on{background:#122B49;color:#fff;border-color:#122B49}
+.card{background:#fff;border:1px solid #e5e0da;border-radius:10px;padding:12px 14px;margin:8px 0;overflow-x:auto}
+.gate{font-size:14px;font-weight:700;padding:10px 14px;border-radius:10px;margin:8px 0}
+.g-open{background:#eaf6ec;color:#1e8449;border:1px solid #a9dfbf}
+.g-warn{background:#fdf3e0;color:#9c640c;border:1px solid #f0c97f}
+.g-closed{background:#fdedec;color:#922b21;border:1px solid #f5b7b1}
+table{width:100%;border-collapse:collapse;font-size:12px;min-width:820px}
+th{background:#122B49;color:#fff;padding:5px 8px;text-align:left;font-size:11px;white-space:nowrap}
+td{padding:6px 8px;border-bottom:1px solid #eee;vertical-align:top}
+.badge{display:inline-block;border-radius:8px;padding:1px 6px;font-size:10px;font-weight:700;white-space:nowrap}
+.b-act{background:#7b241c;color:#fff}.b-watch{background:#eaf2f8;color:#1a5276}.b-hold{background:#b7950b;color:#fff}
+.b-dip{background:#1e8449;color:#fff}.b-trim{background:#e67e22;color:#fff}.b-avoid{background:#f2f3f4;color:#999}
+.b-eu{background:#fdedec;color:#922b21}.b-pa{background:#eaf2f8;color:#1a5276}.b-in{background:#f2f3f4;color:#7f8c8d}
+.route{font-size:10px;margin-left:2px;text-decoration:none;border:1px solid #d5cfc6;border-radius:8px;padding:1px 6px;color:#555;background:#faf9f7;white-space:nowrap}
+.route:hover{background:#122B49;color:#fff}
+.frame{width:100%;height:78vh;border:1px solid #e5e0da;border-radius:10px;background:#fff}
+.cmd{background:#122B49;color:#fff;border-radius:10px;padding:10px 14px;font-size:13px;margin:8px 0}
+.kicker{font-size:10px;color:#9aa5b1;letter-spacing:1px}
+h3{font-size:13px;margin:4px 0 6px;color:#122B49}
+.score{font-weight:800;font-size:14px}
+.comp{font-size:10px;color:#666;white-space:nowrap;line-height:1.6}
+.phil{font-size:11px;color:#555;background:#f8f6f2;border-radius:8px;padding:8px 10px;margin-top:6px;line-height:1.7}
+.phil b{color:#122B49}
+.gbar{height:6px;border-radius:3px;background:#eee;margin-top:2px;min-width:60px}
+.gbar i{display:block;height:6px;border-radius:3px;background:#122B49}
+details{font-size:11px}summary{cursor:pointer;color:#7b241c;font-weight:600}
+.evrow{padding:3px 0;border-bottom:1px dashed #eee}
+.evrow a{color:#2c3e50;text-decoration:none}.evrow a:hover{text-decoration:underline}
+.cal{display:inline-block;background:#fdf3e0;border:1px solid #f0c97f;border-radius:8px;padding:3px 10px;margin:2px;font-size:11px}
+</style></head><body>
+<h1>🏛 OLYMPUS UNIFIED COMMAND</h1>
+<div class="sub" id="meta">로딩 중…</div>
+<div class="tabs">
+<button data-v="todo" class="on">⚡ WHAT TO DO</button>
+<button data-v="dash">📊 데일리 대시보드</button>
+<button data-v="graph">🕸 핫토픽 그래프</button>
+<button data-v="ledger">📜 인텔리전스 원장</button>
+</div>
+<div id="v-todo">
+  <div id="gate"></div>
+  <div class="cmd" id="cmd"></div>
+  <div class="card"><h3>📌 매크로 캘린더 — 확정 일정 (각 항목: 내 돈에 미치는 영향)</h3><div id="cal"></div></div>
+  <div class="card"><h3>⭐ GOD SCORE — 보유 종목 (6인 철학 수식 합성 · 근거 펼치기 필수)</h3><table id="theld"></table></div>
+  <div class="card"><h3>🎯 GOD SCORE — 관찰/신규 후보 TOP 10</h3><table id="twatch"></table></div>
+  <div class="card"><h3>📅 포워드 이벤트 — 내 포트폴리오 연관만 (미래·근접 필터)</h3><table id="tfwd"></table></div>
+  <div class="card"><h3>🔥 핫토픽 TOP — 영향도×가속도</h3><table id="ttop"></table></div>
+  <div class="card"><h3>📐 수식 체계 — 철학의 수학화</h3><div class="phil" id="formulas"></div></div>
+</div>
+<div id="v-dash" style="display:none"><iframe class="frame" id="fdash"></iframe></div>
+<div id="v-graph" style="display:none"><iframe class="frame" id="fgraph"></iframe></div>
+<div id="v-ledger" style="display:none"><iframe class="frame" id="fledger"></iframe></div>
+<script>
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+let T=null,DS=null,FEED=null,SC=null,LA=null;
+const loaded={};
+async function j(u){const r=await fetch(u+"?"+Date.now());const t=await r.text();return JSON.parse(t.replace(/:\s*NaN/g,':null'))}
+function route(t){if(!t)return "—";return `<a class="route" href="#" onclick="go('graph','${esc(t)}');return false">🕸그래프</a><a class="route" href="#" onclick="go('ledger','${esc(t)}');return false">📜근거</a><a class="route" href="#" onclick="go('dash','${esc(t)}');return false">📊</a>`}
+window.go=(v,t)=>{
+  document.querySelectorAll('.tabs button').forEach(b=>b.classList.toggle('on',b.dataset.v===v));
+  ['todo','dash','graph','ledger'].forEach(x=>document.getElementById('v-'+x).style.display=x===v?'block':'none');
+  const srcs={dash:'/one_page.html',graph:'/hot_topics.html'+(t?'?t='+encodeURIComponent(t):''),ledger:'/ranto28.html'+(t?'?q='+encodeURIComponent(t):'')};
+  const fid={dash:'fdash',graph:'fgraph',ledger:'fledger'}[v];
+  if(fid){const el=document.getElementById(fid);const want=srcs[v];if(!loaded[fid]||el.src!==want){el.src=want;loaded[fid]=true}}
+};
+document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v,null));
+function badge(t,cls){return `<span class="badge ${cls}">${esc(t)}</span>`}
+const AB={"ACCUMULATE":"b-act","BUY ON DIP":"b-dip","WATCH":"b-watch","HOLD":"b-hold","TRIM":"b-trim","AVOID":"b-avoid"};
+const PB={"euphoria":"b-eu","panic":"b-pa","indifference":"b-in"};
+function comp(x){return `<div class="comp">L <b>${x.LYNCH}</b> · K <b>${x.KOSTOLANY}</b> · B <b>${x.BUFFETT}</b><br>S <b>${x.SOROS}</b> · C <b>${x.KIYOSAKI}</b> · V <b>${x.LIVERMORE}</b></div>`}
+function evid(x){
+  const ev=x.evidence||[];
+  if(!ev.length)return '<span class="comp">원장 근거 없음</span>';
+  return `<details><summary>📖 근거 ${ev.length}건 (Mer 원장)</summary>`+ev.map(e=>
+    `<div class="evrow"><span class="badge ${e.prio==='P0'?'b-act':e.prio==='P1'?'b-watch':'b-in'}">${e.prio}</span> <a href="${esc(e.url)}" target="_blank">${esc(e.date)} — ${esc(e.title.slice(0,38))}</a>${e.fevent&&e.fevent!=='NONE'?`<div class="comp">➤ ${esc(e.fevent)} (${esc(e.ewin||'')})</div>`:''}</div>`).join('')+'</details>'}
+function row(x){
+  return `<tr><td style="white-space:nowrap"><b>${esc(x.t)}</b>${x.held?' '+badge('보유','b-hold'):''}<div class="comp">${x.psych?badge(x.psych,PB[x.psych]):''} ${esc(x.letter||'')}${x.sent?` <span class="badge" style="background:${x.sent>0?'#eaf6ec':'#fdedec'};color:${x.sent>0?'#1e8449':'#922b21'}">언급 ${x.sent>0?'+':''}${x.sent} ${x.sent>0?'긍정':'부정'}</span>`:''}</div></td>
+  <td><span class="score" style="color:${x.god>=70?'#1e8449':x.god>=55?'#9c640c':'#922b21'}">${x.god}</span><div class="gbar"><i style="width:${x.god}%"></i></div></td>
+  <td>${badge(x.action,AB[x.action]||'b-watch')}<div class="comp">${esc(x.why)}</div></td>
+  <td>${comp(x)}</td>
+  <td class="comp">EV ${x.ev!=null?(x.ev>0?'+':'')+x.ev+'%':'—'} · 승률 ${x.p_win!=null?Math.round(x.p_win*100)+'%':'—'}<br>ES5 ${x.es5!=null?x.es5+'%':'—'} · 괴리 ${x.dist!=null?x.dist+'%':'—'}${x.fc?'':' · 예측없음(대체추정)'}</td>
+  <td style="min-width:200px">${evid(x)}</td>
+  <td>${route(x.t)}</td></tr>`}
+async function load(){
+  [T,DS,SC,LA]=await Promise.all([j('/data/ranto28/topics.json'),j('/data/dashboard_state.json'),j('/data/scores.json'),j('/data/liquidity_anchors.json')]);
+  const ft=await fetch('/data/ranto28/full_feed_v2.jsonl?'+Date.now());
+  FEED=(await ft.text()).replace(/:\s*NaN/g,':null').trim().split('\n').map(l=>{try{return JSON.parse(l)}catch(e){return null}}).filter(Boolean);
+  const lq=DS.liquidity||{}, mc=DS.macro||{};
+  const zone=(SC.gate.zone||'').toUpperCase();
+  document.getElementById('gate').className='gate '+(zone==='OPEN'?'g-open':zone==='WARNING'?'g-warn':'g-closed');
+  const anch=Object.entries(LA||{}).filter(([k])=>k!=='note').map(([k,v])=>`<tr><td>${esc(k)}</td><td>${esc(v.date)}</td><td style="text-align:right"><b>$${v.walcl_bn.toLocaleString()}B</b></td><td>${v.walcl_bn<1500?'극단적 긴축 — 대공황급':v.walcl_bn<4500?'긴축/정상 구간':v.walcl_bn<7000?'완화 확장 — 위기 대응':'무제한 완화 — 역사적 최대'}</td></tr>`).join('');
+  document.getElementById('gate').innerHTML=`🚪 유동성 게이트 (strike_radar): <b>${esc(zone)}</b> — 투입 배수 ×${SC.gate.mult} · 순유동성(준비금−TGA−RRP) <b>$${(lq.liquidity_usd_bn??0).toLocaleString()}B</b> (7일 ${lq.liquidity_change_7d_bn>0?'+':''}${lq.liquidity_change_7d_bn??'—'}B) · 매크로 ${esc(mc.status||'—')} / VIX ${esc(mc.vix_regime||'—')} · deploy ${mc.deploy_pct??'—'}%<br><span style="font-weight:400;font-size:12px">${esc(lq.action||'')}</span>
+  <details style="margin-top:6px"><summary style="color:inherit">📊 지금은 역사적 어디쯤? — 대사건 대비 연준 총자산(WALCL, FRED 실측)</summary>
+  <table style="min-width:0;margin-top:4px;font-size:11px"><tr><th>기준점</th><th>날짜</th><th style="text-align:right">규모</th><th>해석</th></tr>${anch}</table>
+  <div class="comp" style="margin-top:4px">${esc((LA||{}).note||'')}</div></details>`;
+  document.getElementById('cmd').innerHTML=`<span class="kicker">ONE COMMAND — 점수 엔진 실시간 생성 · 기준일 ${esc(SC.generated)}</span><br>⚡ ${esc(SC.command||DS.one_command||'—')}`;
+  const CAL=[['08-26','NVDA 실적','보유 NVDA 직격. 가이던스가 005930.KS·000660.KS·TSM(전부 보유) HBM 수요 기대를 결정. 어닝 미스 시 AI 체인 전체 조정 트리거'],
+['08-27~29','잭슨홀','파월 발언이 9월 금리 경로를 사실상 확정. 비둘기=성장주(PLTR·TSLA·RKLB 보유분) 재평가, 매파=유동성 게이트 WARNING 지속 시 신규 매수 중단'],
+['09-16','FOMC','금리 결정+점도표. QT 종료/완화 신호 여부가 순유동성($1,982B) 방향을 결정 — 게이트 배수(현재 ×1.0)의 실질 스위치'],
+['11-04','QRA','재무부 국채발행계획 = TGA/단기물 비중 → 순유동성 직결. 2023년 11월 QRA가 그해 4분기 랠리를 만든 전례']];
+  document.getElementById('cal').innerHTML=CAL.map(c=>`<div class="cal" style="display:block;margin:3px 0"><b>${c[0]}</b> ${c[1]} <span style="color:#555">— ${c[2]}</span></div>`).join('');
+  const held=SC.scores.filter(x=>x.held);
+  document.getElementById('theld').innerHTML='<tr><th>티커</th><th>GOD</th><th>행동</th><th>철학 6점수</th><th>예측/심리 수치</th><th>📖 근거 (증명)</th><th>링크</th></tr>'+held.map(row).join('');
+  const watch=SC.scores.filter(x=>!x.held).slice(0,10);
+  document.getElementById('twatch').innerHTML='<tr><th>티커</th><th>GOD</th><th>행동</th><th>철학 6점수</th><th>예측/심리 수치</th><th>📖 근거 (증명)</th><th>링크</th></tr>'+watch.map(row).join('');
+  const today=new Date().setHours(0,0,0,0), seen=new Set();
+  const heldSet=new Set(SC.scores.filter(x=>x.held).map(x=>x.t));
+  const sentMap={}; (T.tickers||[]).forEach(x=>sentMap[x.t]=x.sent||0);
+  const SURF={'005930.KS':['삼성전자'],'000660.KS':['하이닉스','SK하이닉스'],'NVDA':['엔비디아'],'TSLA':['테슬라'],'TSM':['TSMC','대만'],'AAPL':['애플'],'MSFT':['마이크로소프트'],'GOOGL':['구글'],'AVGO':['브로드컴'],'PLTR':['팔란티어'],'OKLO':['오클로'],'UEC':['우라늄에너지'],'UUUU':['에너지퓨얼'],'URNM':['우라늄'],'RKLB':['로켓랩'],'KTOS':['크라토스'],'FCX':['프리포트','구리'],'NTLA':['인텔리아'],'REGN':['리제네론'],'MC.PA':['루이비통','LVMH'],'COHR':['코히런트'],'NTR':['뉴트리엔'],'TMO':['써모피셔'],'272210.KS':['한화시스템'],'009540.KS':['한국조선해양','HD한국'],'CWEN':['클리어웨이'],'PRY.MI':['프리즈미안'],'SPCX':['우주'],'ARKQ':['ARK'],'BOTZ':['로봇'],'PL':['플래닛랩','플래닛'],'TER':['테라다인'],'BWXT':['BWX'],'CDNS':['케이던스']};
+  const MACWHY=[[/중간선거|선거/,'재정·관세·방산 정책 방향이 바뀐다 — 보유 방산(KTOS·272210.KS)·에너지(UEC·UUUU·URNM)·인프라(PRY.MI) 밸류에이션 프리미엄에 직결'],[/지진|태풍|허리케인/,'규슈=TSMC 구마모토·소니·도쿄일렉트론 공급망 — 보유 005930.KS·000660.KS·TSM·CDNS 반도체 체인 단기 변동성'],[/금리|FOMC|연준|잭슨홀/,'유동성 게이트 배수의 스위치 — 신규 자금 투입 속도를 결정'],[/관세|무역|제재/,'수출 의존 보유종목(005930.KS·000660.KS·TSM·FCX) 마진에 직접 영향'],[/MSCI|지수/,'패시브 자금 유출입 — 대형 보유종목 수급 이벤트']];
+  const dirOf=t=>{const s=sentMap[t]||0;return s>2?'긍정':s<-2?'부정':'중립'};
+  const DAY=864e5, NEAR=120*DAY;
+  const fwd=FEED.filter(r=>r.verify==='PENDING'&&r.ewin&&r.ewin!=='NONE').map(r=>{
+    const m=r.ewin.match(/(20\d\d)[-.\/]?\s?(\d{1,2})/); if(!m)return null;
+    const ts=new Date(+m[1],+m[2]-1,1).getTime(); if(ts<today)return null;  // 미래만
+    const aff=(r.named||[]).concat(r.inferred||[]);
+    const heldHit=new Set(aff.filter(t=>heldSet.has(t)));
+    heldSet.forEach(t=>{(SURF[t]||[]).forEach(nm=>{if((r.fevent||'').includes(nm))heldHit.add(t)})});
+    const near=ts-today<=NEAR;
+    const mac=(MACWHY.find(([re])=>re.test(r.fevent||''))||[])[1];
+    if(![...heldHit].length&&!near&&!mac)return null;   // 내 포트 타격 or 근접 or 매크로 해석 가능 이벤트만
+    return {r,ts,aff,heldHit:[...heldHit],near,mac};
+  }).filter(Boolean).sort((a,b)=>a.ts-b.ts)
+  .filter(x=>{const k=x.r.fevent.slice(0,25);if(seen.has(k))return false;seen.add(k);return true}).slice(0,10);
+  document.getElementById('tfwd').innerHTML='<tr><th>윈도우</th><th>이벤트</th><th>왜 내 돈에 중요한가 (포트폴리오 연결)</th><th>출처</th><th>링크</th></tr>'+
+    (fwd.map(x=>{const why=x.heldHit.length
+        ? x.heldHit.slice(0,4).map(t=>`<b>${esc(t)}</b>(보유·${dirOf(t)})`).join(' ')+' — 이 이벤트가 내 보유 종목에 직접 영향'
+        : (x.mac?('해석: '+x.mac):('간접 변수 — '+x.aff.slice(0,3).map(t=>esc(t)).join(', ')));
+      return `<tr><td style="white-space:nowrap">${esc(x.r.ewin)}${x.near?' '+badge('근접','b-trim'):''}</td><td>${esc(x.r.fevent)}</td><td style="font-size:11px">${why}</td><td><a href="${esc(x.r.url)}" target="_blank" style="color:#555">${esc(x.r.date)}</a></td><td>${route((x.heldHit[0]||x.aff[0]))}</td></tr>`}).join('')||'<tr><td colspan="5" style="color:#999">포트폴리오 연관 미래 이벤트 없음 — 위 매크로 캘린더(잭슨홀·FOMC) 참조</td></tr>');
+  const hot=T.topics.filter(t=>t.hot).sort((a,b)=>b.accel-a.accel||b.impact-a.impact).slice(0,8);
+  document.getElementById('ttop').innerHTML='<tr><th>토픽</th><th>영향도</th><th>빈도</th><th>30일</th><th>가속도</th><th>연결 티커</th></tr>'+
+    hot.map(t=>`<tr><td><b>${esc(t.topic)}</b></td><td><b>${t.impact}</b></td><td>${t.freq}</td><td>${t.recent30}</td><td style="color:${t.accel>=1.5?'#922b21':'#555'}"><b>${t.accel}×</b></td><td>${t.tickers.slice(0,4).map(k=>`<a href="#" onclick="go('graph','${esc(k)}');return false" style="color:#21618c">${esc(k)}</a>`).join(' ')}</td></tr>`).join('');
+  document.getElementById('formulas').innerHTML=Object.entries(SC.formulas).map(([k,v])=>`<b>${k}</b> = ${esc(v)}`).join('<br>');
+  document.getElementById('meta').textContent=`GOD SCORE ${SC.scores.length}종목 (예측보유 ${SC.scores.filter(x=>x.fc).length}) · 보유 ${held.length} · 원장 ${FEED.length}건 · 토픽 ${T.topics.length} · 게이트 ${zone} · 기준일 ${SC.generated}`;
+}
+const h0=location.hash.match(/v=(\w+)/); if(h0) go(h0[1],new URLSearchParams(location.search).get('t'));
+load().catch(e=>{document.getElementById('meta').textContent='로딩 오류: '+e.message});
+</script></body></html>
