@@ -212,21 +212,35 @@ def _run_blog():
 
 
 def _run_olympus():
-    """Scheduled Olympus refresh. Telegram /olympus is handled in interactive_bot.cmd_olympus; both paths call run_olympus_update(), which writes data/directives.json."""
+    """Saturday weekly heads-up (GOD directive 2026-08-22): ONE consolidated message —
+    liquidity gate state + GOD SCORE top actions + next-week macro calendar.
+    No GPT, no legacy olympus_engine import (removed in 7a5b2a5 rebuild)."""
+    import json as _json
+    from telegram_bot import send_telegram
+    base = os.path.join(os.path.dirname(__file__), "data")
     try:
-        from olympus_engine import run_olympus_update, get_olympus_telegram_summary
-        from telegram_bot import send_telegram
-        result = run_olympus_update()
-        msg = get_olympus_telegram_summary(result)
-        send_telegram(msg)
-        logger.info("Olympus update sent")
-    except Exception as e:
-        logger.error(f"Olympus failed: {e}", exc_info=True)
-        try:
-            from telegram_bot import send_telegram
-            send_telegram(f"🏛 Olympus error: {str(e)[:200]}")
-        except:
-            pass
+        sc = _json.load(open(os.path.join(base, "scores.json")))
+    except Exception:
+        sc = None
+    try:
+        dr = _json.load(open(os.path.join(base, "directives.json")))
+    except Exception:
+        dr = {}
+    lines = ["🏛 <b>OLYMPUS 주간 헤즈업 (토요일)</b>"]
+    liq = dr.get("liquidity") or {}
+    if liq:
+        lines.append(f"🚪 유동성: 순유동성 ${liq.get('liquidity_usd_bn','?')}B · "
+                     f"레짐 {liq.get('macro_liquidity_regime','?')} · {liq.get('corridor_status','?')} corridor")
+    if sc:
+        lines.append(f"⚡ {sc.get('command','')}")
+        acts = [f"{r['t']} {r['action']}({r['god']})"
+                for r in sc.get("scores", []) if r.get("held") and r.get("action") in ("ACCUMULATE", "BUY ON DIP", "TRIM")][:6]
+        if acts:
+            lines.append("📌 보유 종목 액션: " + " · ".join(acts))
+    lines.append("📅 다음 주: 잭슨홀(8/27~29, 파월 발언=9월 금리 경로) 이후 9/16 FOMC · 11/4 QRA")
+    lines.append("🕸 상세: http://5.189.176.185/index.html (WHAT TO DO)")
+    send_telegram("\n".join(lines))
+    logger.info("Olympus weekly heads-up sent")
 
 
 def _run_battle_rhythm(briefing_id: str):

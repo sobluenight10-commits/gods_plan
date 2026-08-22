@@ -277,7 +277,22 @@ def enrich_liquidity_directives_and_alarm(fred_out: Dict[str, Any]) -> None:
     # --- Telegram pre-alarms (deduped) ---
     st = _load_json(ALARM_STATE_PATH, {"last_fires": {}})
 
-    if corridor != "INSIDE" and _should_fire(st, f"corridor_{corridor}", 18.0):
+    # GOD directive 2026-08-22: alarms only when actionable — weekdays AND fresh FRED data.
+    # Weekend prints reuse stale observations (WALCL is weekly); alarming on them is noise.
+    _now = datetime.now(timezone.utc)
+    _snaps = _load_json(HISTORY_PATH, {}).get("snapshots", [])
+    _fresh = False
+    if _snaps:
+        try:
+            _dd = datetime.strptime(str(_snaps[-1].get("date", "")), "%Y-%m-%d").date()
+            _fresh = (_now.date() - _dd).days <= 5
+        except Exception:
+            _fresh = False
+    alarm_ok = _now.weekday() < 5 and _fresh
+    if not alarm_ok:
+        logger.info("pre-alarm TG suppressed (weekday=%s fresh=%s)", _now.weekday(), _fresh)
+
+    if alarm_ok and corridor != "INSIDE" and _should_fire(st, f"corridor_{corridor}", 66.0):
         _send_pre_alarm_tg(
             "🚨 <b>OLYMPUS PRE-ALARM · LIQUIDITY CORRIDOR</b>\n"
             f"Net <b>${float(net):.0f}B</b> is <b>{corridor}</b> the "
@@ -287,7 +302,7 @@ def enrich_liquidity_directives_and_alarm(fred_out: Dict[str, Any]) -> None:
         )
         _record_fire(st, f"corridor_{corridor}")
 
-    if v28 is not None and abs(v28) >= PRE_ALARM_VELOCITY_ALERT_B and _should_fire(st, "velocity_4w", 18.0):
+    if alarm_ok and v28 is not None and abs(v28) >= PRE_ALARM_VELOCITY_ALERT_B and _should_fire(st, "velocity_4w", 66.0):
         _send_pre_alarm_tg(
             "⚡ <b>OLYMPUS PRE-ALARM · 4W VELOCITY</b>\n"
             f"Net liq 4w change <b>{v28:+.0f}B</b> (threshold ±{PRE_ALARM_VELOCITY_ALERT_B:.0f}B).\n"
@@ -295,7 +310,7 @@ def enrich_liquidity_directives_and_alarm(fred_out: Dict[str, Any]) -> None:
         )
         _record_fire(st, "velocity_4w")
 
-    if abs(surprise) >= PRE_ALARM_SURPRISE_ALERT and corridor == "INSIDE" and _should_fire(st, "surprise", 20.0):
+    if alarm_ok and abs(surprise) >= PRE_ALARM_SURPRISE_ALERT and corridor == "INSIDE" and _should_fire(st, "surprise", 66.0):
         _send_pre_alarm_tg(
             "📊 <b>OLYMPUS PRE-ALARM · SURPRISE VS MID</b>\n"
             f"Inside band by label but vs mid: <b>{surprise:+.2f}</b> "
