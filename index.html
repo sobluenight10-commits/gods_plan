@@ -151,7 +151,8 @@ async function load(){
   document.getElementById('dvalert').innerHTML=dva.length
     ? dva.map(a=>`<div style="background:#fdedec;border:1px solid #f5b7b1;border-radius:8px;padding:6px 10px;margin:3px 0;font-size:12px">🚨 <b>${esc(a.driver)}→${esc(a.ticker)}</b> ${esc(a.kind)} · 괴리 ${a.gap>0?'+':''}${a.gap}%p · ${a.streak}일 연속</div>`).join('')
     : '<div class="comp">발동 중인 괴리 경보 없음 (2일 연속 지속 시에만 발사)</div>';
-  document.getElementById('upstr').innerHTML=Object.entries(DV.upstream||{}).map(([k,v])=>`<span class="cal"><b>${esc(k)}</b> 1일 ${v['1d']>0?'+':''}${v['1d']}% · 20일 ${v['20d']>0?'+':''}${v['20d']}%</span>`).join('');
+  document.getElementById('upstr').innerHTML=Object.entries(DV.upstream||{}).map(([k,v])=>`<span class="cal"><b>${esc(k)}</b> 1일 ${v['1d']>0?'+':''}${v['1d']}% · 20일 ${v['20d']>0?'+':''}${v['20d']}%</span>`).join('')
+    + (DV.customs_rss||[]).filter(c=>c.title).slice(0,3).map(c=>`<div class="cal" style="display:block;background:#eaf6ec;border-color:#a9dfbf">🛃 <b>관세청 매복</b> ${esc(c.title)}</div>`).join('');
   const dvTop=(DV.rows||[]).slice().sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap)).slice(0,10);
   document.getElementById('tdv').innerHTML='<tr><th>동인 → 종목</th><th>5일 괴리</th><th>동인 5일</th><th>종목 5일</th><th>상관 60d/120d</th><th>판정</th></tr>'+
     dvTop.map(r=>`<tr><td><b>${esc(r.driver)}</b> → ${esc(r.ticker)}</td>

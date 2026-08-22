@@ -28,6 +28,9 @@ px = {}
 for s in allsyms:
     try:
         h = yf.Ticker(s).history(period="6mo", interval="1d")["Close"].astype(float)
+        try:
+            h.index = h.index.tz_localize(None).normalize()   # 한국/미국 시차 제거 — 날짜만으로 정합
+        except Exception: pass
         if len(h) > 30: px[s] = h
     except Exception: pass
 
@@ -92,5 +95,24 @@ except Exception as e:
 out = {"generated_utc": NOW.strftime("%Y-%m-%dT%H:%M:%SZ"),
        "alerts": alerts, "rows": rows, "upstream": upstream, "tsmc": tsmc,
        "note": "gap>0: 동인 대비 종목 정체(서사 갭·기회 후보) / gap<0: 과열 경보 / 2일 연속 시에만 경보"}
+# ── 관세청 10일 통계 — Google News RSS 매복 (API 키 불요). 매월 1·11·21일 신선 데이터 감지
+customs = []
+try:
+    import requests, re as _re
+    import xml.etree.ElementTree as ET
+    rss = requests.get("https://news.google.com/rss/search?q=%EA%B4%80%EC%84%B8%EC%B2%AD+%EC%88%98%EC%B6%9C+%EB%B0%98%EB%8F%84%EC%B2%B4&hl=ko&gl=KR&ceid=KR:ko",
+                       timeout=15, headers={"User-Agent": "Mozilla/5.0"}).text
+    root = ET.fromstring(rss)
+    for item in root.iter("item"):
+        ti = item.findtext("title") or ""
+        pd_ = item.findtext("pubDate") or ""
+        m = _re.findall(r"([+-]?\d+\.\d+)%", ti)
+        if "수출" in ti or "반도체" in ti:
+            customs.append({"title": ti[:90], "pub": pd_, "pcts": m[:4]})
+    customs = customs[:6]
+except Exception as e:
+    customs = [{"err": str(e)[:80]}]
+out["customs_rss"] = customs
 json.dump(out, open("/root/gods_plan/data/divergence.json", "w"), ensure_ascii=False, indent=1)
+
 print("rows", len(rows), "| alerts", len(alerts), "| upstream", len(upstream), "| tsmc", tsmc)
