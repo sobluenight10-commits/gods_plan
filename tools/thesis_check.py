@@ -41,7 +41,7 @@ for tk in HELD:
     d20 = (VS.get(tk) or {}).get("d20")
     if not negs:
         out[tk] = {"status": "논제 무사 — 부정 이벤트 없음", "tdr": None, "P": d20, "R": None,
-                   "thesis": TM.get(tk, {}).get("thesis", ""), "kill": TM.get(tk, {}).get("kill", "")}
+                   "thesis": TM.get(tk, {}).get("thesis", ""), "kill": TM.get(tk, {}).get("kill", ""), "kill_src": TM.get(tk, {}).get("kill_src", "")}
         continue
     R = max(seg_hit(tk, c["title"]) * severity(c["title"]) for c in negs) * 100
     sh = SHOCK.get(tk, [])
@@ -60,7 +60,7 @@ for tk in HELD:
     else:            verdict = "⛔ 심각한 과소반응 — 논제 킬 기준 재심사"
     out[tk] = {"status": verdict, "tdr": tdr, "P": d20, "R": round(R, 1),
                "worst": max(negs, key=lambda c: -c["c"])["title"][:60],
-               "thesis": TM.get(tk, {}).get("thesis", ""), "kill": TM.get(tk, {}).get("kill", "")}
+               "thesis": TM.get(tk, {}).get("thesis", ""), "kill": TM.get(tk, {}).get("kill", ""), "kill_src": TM.get(tk, {}).get("kill_src", "")}
 json.dump({"formula": "TDR = |20일낙폭%| / max(Σ 세그먼트비중×충격강도 ×100, 1) · ≥3.0 극심한과잉(적극매수) / 2.0~3.0 과잉(눌림후보) / 1.5~2.0 경미과잉(조건부리밋) / 1.0~1.5 정당(관망) / 0.7~1.0 경미과소(경계) / 0.4~0.7 과소(축소검토) / <0.4 심각과소(킬기준 재심사)",
            "tickers": out}, open("/root/gods_plan/data/thesis_status.json", "w"), ensure_ascii=False, indent=1)
 flag = {k: v for k, v in out.items() if v["tdr"] is not None}
