@@ -74,6 +74,7 @@ window.go=(v,t)=>{
 document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>go(b.dataset.v,null));
 function badge(t,cls){return `<span class="badge ${cls}">${esc(t)}</span>`}
 const AB={"ACCUMULATE":"b-act","BUY ON DIP":"b-dip","WATCH":"b-watch","HOLD":"b-hold","TRIM":"b-trim","AVOID":"b-avoid"};
+const AKR={"ACCUMULATE":"적극 축적","BUY ON DIP":"눌림 매수","WATCH":"관찰 대기","HOLD":"보유 유지","TRIM":"일부 익절","AVOID":"회피"};
 const PB={"euphoria":"b-eu","panic":"b-pa","indifference":"b-in"};
 function comp(x){return `<div class="comp">L <b>${x.LYNCH}</b> · K <b>${x.KOSTOLANY}</b> · B <b>${x.BUFFETT}</b><br>S <b>${x.SOROS}</b> · C <b>${x.KIYOSAKI}</b> · V <b>${x.LIVERMORE}</b></div>`}
 function evid(x){
@@ -82,11 +83,11 @@ function evid(x){
   return `<details><summary>📖 근거 ${ev.length}건 (Mer 원장)</summary>`+ev.map(e=>
     `<div class="evrow"><span class="badge ${e.prio==='P0'?'b-act':e.prio==='P1'?'b-watch':'b-in'}">${e.prio}</span> ${e.c!=null?`<span class="badge" style="background:${e.c>0?'#eaf6ec':'#fdedec'};color:${e.c>0?'#1e8449':'#922b21'}">${e.c>0?'▲':'▼'}${e.c>0?'+':''}${e.c}</span> `:''}<a href="${esc(e.url)}" target="_blank">${esc(e.date)} — ${esc(e.title.slice(0,38))}</a>${e.fevent&&e.fevent!=='NONE'?`<div class="comp">➤ ${esc(e.fevent)} (${esc(e.ewin||'')})</div>`:''}</div>`).join('')+'</details>'}
 function row(x){
-  return `<tr><td style="white-space:nowrap"><b>${esc(x.t)}</b>${x.held?' '+badge('보유','b-hold'):''}<div class="comp">${x.psych?badge(x.psych,PB[x.psych]):''} ${esc(x.letter||'')}${x.sent?` <span class="badge" style="background:${x.sent>0?'#eaf6ec':'#fdedec'};color:${x.sent>0?'#1e8449':'#922b21'}">언급 ${x.sent>0?'+':''}${x.sent} ${x.sent>2?'긍정':x.sent<-2?'부정':'중립'}${x.sent_ext!=null?' ⊕교차검증':''}</span>`:''}</div></td>
+  return `<tr><td style="white-space:nowrap"><b>${esc(x.t)}</b>${x.held?' '+badge('보유','b-hold'):''}<div class="comp">${x.psych?badge({euphoria:"도취",panic:"공포",indifference:"무관심"}[x.psych]||x.psych,PB[x.psych]):''} ${esc(x.letter||'')}${x.sent?` <span class="badge" style="background:${x.sent>0?'#eaf6ec':'#fdedec'};color:${x.sent>0?'#1e8449':'#922b21'}">언급 ${x.sent>0?'+':''}${x.sent} ${x.sent>2?'긍정':x.sent<-2?'부정':'중립'}${x.sent_ext!=null?' ⊕교차검증':''}</span>`:''}</div></td>
   <td><span class="score" style="color:${x.god>=70?'#1e8449':x.god>=55?'#9c640c':'#922b21'}">${x.god}</span><div class="gbar"><i style="width:${x.god}%"></i></div></td>
-  <td>${badge(x.action,AB[x.action]||'b-watch')}<div class="comp">${esc(x.why)}</div></td>
+  <td>${badge(AKR[x.action]||x.action,AB[x.action]||'b-watch')}<div class="comp">${esc(x.why)}</div></td>
   <td>${comp(x)}</td>
-  <td class="comp">EV ${x.ev!=null?(x.ev>0?'+':'')+x.ev+'%':'—'} · 승률 ${x.p_win!=null?Math.round(x.p_win*100)+'%':'—'}<br>ES5 ${x.es5!=null?x.es5+'%':'—'} · 괴리 ${x.dist!=null?x.dist+'%':'—'}${x.fc?'':' · 예측없음(대체추정)'}</td>
+  <td class="comp">EV ${x.ev!=null?(x.ev>0?'+':'')+x.ev+'%':'—'} · 승률 ${x.p_win!=null?Math.round(x.p_win*100)+'%':'—'}<br>ES5 ${x.es5!=null?x.es5+'%':'—'} · 괴리 ${x.dist!=null?x.dist+'%':'—'}${x.fc?'':' · 예측없음(대체추정)'}<br>사카타26 <b style="color:${x.sakata26>=70?'#1e8449':x.sakata26>=45?'#9c640c':'#922b21'}">${x.sakata26??'—'}</b> <span style="color:#999">(레벨+속도 단일지수)</span></td>
   <td style="min-width:200px">${evid(x)}</td>
   <td>${route(x.t)}</td></tr>`}
 async function load(){
