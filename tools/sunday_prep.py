@@ -27,9 +27,11 @@ lines.append(f"① 게이트: <b>{zone}</b> (×{mult}) · 순유동성 ${liq.get
 
 held = [r for r in sc.get("scores", []) if r.get("held")]
 lines.append("")
-lines.append("② 보유 종목 괴리/액션 (zone-distance):")
+lines.append("② 보유 종목 사카타26/액션:")
 for r in sorted(held, key=lambda x: -(x.get("god") or 0))[:8]:
-    lines.append(f"  · {r['t']} GOD {r['god']} {r['action']} · 20W괴리 {r.get('dist')}% · 언급 {r.get('sent',0):+.0f}")
+    s26 = r.get('sakata26')
+    s26s = "공시게이트 정지" if s26 is None else f"S26 {s26}"
+    lines.append(f"  · {r['t']} GOD {r['god']} {r['action']} · {s26s} · 언급 {r.get('sent',0):+.0f}")
 
 lines.append("")
 lines.append("③ 다음 주 확정 이벤트: 8/26 NVDA 실적 → 8/28 잭슨홀(워시, 23시) → 9/16 FOMC")
