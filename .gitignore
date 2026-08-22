@@ -21,3 +21,4 @@ Thumbs.db
 # HOME TO MYSELF — generated quote merge (run kdp_launch/merge_quotes_to_one_file.py)
 kdp_launch/home_to_myself_quotes_1_1080_MERGED.txt
 kdp_launch/home_to_myself_quotes_MASTER.json
+config.json
