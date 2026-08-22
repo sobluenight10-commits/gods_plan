@@ -51,6 +51,7 @@ details{font-size:11px}summary{cursor:pointer;color:#7b241c;font-weight:600}
   <div class="card"><h3>⭐ GOD SCORE — 보유 종목 (6인 철학 수식 합성 · 근거 펼치기 필수)</h3><table id="theld"></table></div>
   <div class="card"><h3>🎯 GOD SCORE — 관찰/신규 후보 TOP 10</h3><table id="twatch"></table></div>
   <div class="card"><h3>🧪 SGI — 소로스 갭 지수 (심리 할인 vs 펀더멘털 갭 · 게이트 우선)</h3><div class="comp" style="margin-bottom:4px">원인불명=점수 정지(SK하이닉스 구제 원칙) · 밸류에이션/상대괴리=[AUTO] · 사실밀도/강제매물/게이트=[MINERVA 판정]</div><table id="tsgi"></table></div>
+  <div class="card"><h3>⚡ 괴리 엔진 — 동인 vs 종목 (원인-결과 파열 감지) · 상류 데이터</h3><div id="dvalert"></div><div id="upstr" style="margin:4px 0"></div><table id="tdv"></table></div>
   <div class="card"><h3>📅 포워드 이벤트 — 내 포트폴리오 연관만 (미래·근접 필터)</h3><table id="tfwd"></table></div>
   <div class="card"><h3>🔥 핫토픽 TOP — 영향도×가속도</h3><table id="ttop"></table></div>
   <div class="card"><h3>📐 수식 체계 — 철학의 수학화</h3><div class="phil" id="formulas"></div></div>
@@ -60,7 +61,7 @@ details{font-size:11px}summary{cursor:pointer;color:#7b241c;font-weight:600}
 <div id="v-ledger" style="display:none"><iframe class="frame" id="fledger"></iframe></div>
 <script>
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
-let T=null,DS=null,FEED=null,SC=null,LA=null,LH=null;
+let T=null,DS=null,FEED=null,SC=null,LA=null,LH=null,DV=null;
 const loaded={};
 async function j(u){const r=await fetch(u+"?"+Date.now());const t=await r.text();return JSON.parse(t.replace(/:\s*NaN/g,':null'))}
 function route(t){if(!t)return "—";return `<a class="route" href="#" onclick="go('graph','${esc(t)}');return false">🕸그래프</a><a class="route" href="#" onclick="go('ledger','${esc(t)}');return false">📜근거</a><a class="route" href="#" onclick="go('dash','${esc(t)}');return false">📊</a>`}
@@ -92,7 +93,7 @@ function row(x){
   <td style="min-width:200px">${evid(x)}</td>
   <td>${route(x.t)}</td></tr>`}
 async function load(){
-  [T,DS,SC,LA,LH]=await Promise.all([j('/data/ranto28/topics.json'),j('/data/dashboard_state.json'),j('/data/scores.json'),j('/data/liquidity_anchors.json'),j('/data/liquidity_history.json')]);
+  [T,DS,SC,LA,LH,DV]=await Promise.all([j('/data/ranto28/topics.json'),j('/data/dashboard_state.json'),j('/data/scores.json'),j('/data/liquidity_anchors.json'),j('/data/liquidity_history.json'),j('/data/divergence.json')]);
   const ft=await fetch('/data/ranto28/full_feed_v2.jsonl?'+Date.now());
   FEED=(await ft.text()).replace(/:\s*NaN/g,':null').trim().split('\n').map(l=>{try{return JSON.parse(l)}catch(e){return null}}).filter(Boolean);
   const lq=DS.liquidity||{}, mc=DS.macro||{};
@@ -145,6 +146,19 @@ async function load(){
         : (x.mac?('해석: '+x.mac):('간접 변수 — '+x.aff.slice(0,3).map(t=>esc(t)).join(', ')));
       if(x.r.date==='확정')return `<tr><td style="white-space:nowrap"><b>${esc(x.r.ewin)}</b> ${badge('확정','b-act')}</td><td><b>${esc(x.r.fevent)}</b></td><td style="font-size:11px">${esc(x.mac)} ${x.heldHit.length?'· 타격: '+x.heldHit.map(t=>`<b>${esc(t)}</b>`).join(' '):''}</td><td>—</td><td>${route((x.heldHit[0]||''))}</td></tr>`;
       return `<tr><td style="white-space:nowrap">${esc(x.r.ewin)}${x.near?' '+badge('근접','b-trim'):''}</td><td>${esc(x.r.fevent)}</td><td style="font-size:11px">${why}</td><td><a href="${esc(x.r.url)}" target="_blank" style="color:#555">${esc(x.r.date)}</a></td><td>${route((x.heldHit[0]||x.aff[0]))}</td></tr>`}).join('')||'<tr><td colspan="5" style="color:#999">포트폴리오 연관 미래 이벤트 없음 — 위 매크로 캘린더(잭슨홀·FOMC) 참조</td></tr>');
+  // ── 괴리 엔진
+  const dva=DV.alerts||[];
+  document.getElementById('dvalert').innerHTML=dva.length
+    ? dva.map(a=>`<div style="background:#fdedec;border:1px solid #f5b7b1;border-radius:8px;padding:6px 10px;margin:3px 0;font-size:12px">🚨 <b>${esc(a.driver)}→${esc(a.ticker)}</b> ${esc(a.kind)} · 괴리 ${a.gap>0?'+':''}${a.gap}%p · ${a.streak}일 연속</div>`).join('')
+    : '<div class="comp">발동 중인 괴리 경보 없음 (2일 연속 지속 시에만 발사)</div>';
+  document.getElementById('upstr').innerHTML=Object.entries(DV.upstream||{}).map(([k,v])=>`<span class="cal"><b>${esc(k)}</b> 1일 ${v['1d']>0?'+':''}${v['1d']}% · 20일 ${v['20d']>0?'+':''}${v['20d']}%</span>`).join('');
+  const dvTop=(DV.rows||[]).slice().sort((a,b)=>Math.abs(b.gap)-Math.abs(a.gap)).slice(0,10);
+  document.getElementById('tdv').innerHTML='<tr><th>동인 → 종목</th><th>5일 괴리</th><th>동인 5일</th><th>종목 5일</th><th>상관 60d/120d</th><th>판정</th></tr>'+
+    dvTop.map(r=>`<tr><td><b>${esc(r.driver)}</b> → ${esc(r.ticker)}</td>
+    <td style="font-weight:700;color:${r.gap>=4?'#1e8449':r.gap<=-4?'#922b21':'#666'}">${r.gap>0?'+':''}${r.gap}%p</td>
+    <td>${r.d5>0?'+':''}${r.d5}%</td><td>${r.m5>0?'+':''}${r.m5}%</td>
+    <td class="comp">${r.corr60??'—'} / ${r.corr120??'—'}${r.flip?' <span class="badge b-act">부호반전</span>':''}</td>
+    <td class="comp">${r.gap>=4?'서사 갭 — 기회 후보':r.gap<=-4?'과열 — 추격 금지':'정상 궤도'}</td></tr>`).join('');
   // ── SGI table
   const sgiRows=SC.scores.filter(x=>x.held).sort((a,b)=>((b.sgi&&b.sgi.score)||0)-((a.sgi&&a.sgi.score)||0));
   const GB={pass:['통과','b-dip'],fail:['실패','b-act'],unknown:['정지','b-in']};
