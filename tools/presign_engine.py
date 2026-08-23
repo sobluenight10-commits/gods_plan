@@ -89,6 +89,9 @@ for rule in rules:
     for t in sorted(pool):
         if not match_cond(t, rule["if"]): continue
         is_buy = any(w in rule["then"] for w in BUY_WORDS)
+        if not is_buy and t in ("000660.KS", "272210.KS") and "논제파괴" not in rule["name"]:
+            blocked.append({"ticker": t, "rule": rule["name"], "why": "LEGEND 승자 보호 — 매도 신호 억제 (킬 기준만 해제)"})
+            continue
         tr = tier_of(t)
         px, atr, vol20 = atr_data(t)
         prov, verified = provenance(t)

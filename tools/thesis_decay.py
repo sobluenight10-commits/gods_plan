@@ -46,8 +46,14 @@ tm_mtime = datetime.datetime.fromtimestamp(os.path.getmtime(os.path.join(DATA, "
 map_age = (now - tm_mtime).days
 
 out = {}
+LEGEND = {"000660.KS", "272210.KS"}  # 승자 보호 조항 (교훈 #13)
 for t in sorted(set(HELD) | set(TM.keys())):
     v = TM.get(t, {})
+    if t in LEGEND:
+        out[t] = {"strikes": [], "notes": ["LEGEND — 승자 보호 조항 적용: 부패 시계 면제, 킬 기준만 감시"], "n": 0,
+                  "months": None, "verdict": "LEGEND 보호", "thesis": v.get("thesis", ""),
+                  "kill": v.get("kill", ""), "kill_src": v.get("kill_src", "")}
+        continue
     strikes, notes = [], []
     fs = first_seen.get(t)
     months = None
