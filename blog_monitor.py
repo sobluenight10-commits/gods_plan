@@ -132,6 +132,16 @@ def classify_blog_theme(content: str, direct_tickers: list) -> dict:
     new_watchlist -= PORTFOLIO
     new_watchlist -= set(direct_tickers or [])
 
+    # 실보유 교차 — 하드코딩 PORTFOLIO 폐지 (VRT 오정보 사건). 실제 보유만 '확인'으로 표기.
+    try:
+        import json as _jj
+        _ovr = _jj.load(open("/var/www/html/data/holdings_override.json"))
+        REAL_HELD = {k for k, v in _ovr.items() if isinstance(v, dict) and v.get("held")}
+    except Exception:
+        REAL_HELD = PORTFOLIO
+    portfolio_confirmed &= REAL_HELD
+    new_watchlist -= REAL_HELD
+
     detected_themes = list(dict.fromkeys(detected_themes))
 
     # Theme-level pure-play fallback (never let a concept post return STOCKS: NONE)
