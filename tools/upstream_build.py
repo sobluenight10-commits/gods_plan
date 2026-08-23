@@ -46,6 +46,24 @@ def corr(a, b, win):
     df = pd.concat([ha.pct_change(), hb.pct_change()], axis=1).dropna().tail(win)
     return round(float(df.corr().iloc[0, 1]), 2) if len(df) > win * 0.7 else None
 
+def leadlag(a, b, max_lag=10):
+    # cross-corr: lag k>0 이면 동인(a)이 종목(b)을 k일 선행
+    ha, hb = px.get(a), px.get(b)
+    if ha is None or hb is None: return None, None
+    df = pd.concat([ha.pct_change().rename("d"), hb.pct_change().rename("m")], axis=1).dropna()
+    if len(df) < 40: return None, None
+    best_lag, best_c = 0, -2.0
+    for k in range(-max_lag, max_lag + 1):
+        c = df["d"].corr(df["m"].shift(-k)) if k != 0 else df["d"].corr(df["m"])
+        if c is not None and c == c and c > best_c:
+            best_c, best_lag = float(c), k
+    return best_lag, round(best_c, 2)
+
+def ret_lag(s, n, lag):
+    h = px.get(s)
+    if h is None or len(h) < n + lag + 2: return None
+    return float(h.iloc[-1 - lag] / h.iloc[-1 - lag - n] - 1) * 100
+
 # 상태 파일 (지속성 추적)
 import os
 STP = "/root/gods_plan/data/diverge_state.json"
@@ -60,13 +78,20 @@ for drv, members in GROUPS.items():
         gap = round(d5 - m5, 1)                    # +면 종목이 동인에 밀림(서사 갭), −면 과열
         c60, c120 = corr(drv, m, 60), corr(drv, m, 120)
         flip = c60 is not None and c120 is not None and (c60 > 0) != (c120 > 0)
+        bl, bc = leadlag(drv, m)                   # 리드-랙: bl>0 이면 동인이 bl일 선행
+        d5l = ret_lag(drv, 5, max(0, bl))          # 랙 정합 동인 수익률
+        gap_adj = round(d5l - m5, 1) if d5l is not None else None
+        lag_cls = ("무관계(노이즈)" if bc is None or bc < 0.25 else
+                   "실시간" if abs(bl) <= 1 else
+                   ("동인선행 %d일" % bl if bl > 0 else "종목선행 %d일" % (-bl)))
         key = f"{drv}->{m}"
         active = abs(gap) >= 4 or flip
         cnt = state.get(key, 0)
         cnt = cnt + 1 if active else 0
         state[key] = cnt
         row = {"driver": drv, "ticker": m, "d5": round(d5,1), "m5": round(m5,1),
-               "gap": gap, "corr60": c60, "corr120": c120, "flip": flip, "streak": cnt}
+               "gap": gap, "corr60": c60, "corr120": c120, "flip": flip, "streak": cnt,
+               "best_lag": bl, "lag_corr": bc, "lag_cls": lag_cls, "gap_adj": gap_adj}
         rows.append(row)
         if cnt >= 2 and (abs(gap) >= 4 or flip):
             kind = ("상관 부호 반전" if flip else
