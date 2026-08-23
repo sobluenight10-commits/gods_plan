@@ -6,7 +6,7 @@ sc = json.load(open("/root/gods_plan/data/scores.json"))
 vs = json.load(open("/root/gods_plan/data/value_sakata.json")).get("tickers", {})
 rec = {"date": now, "zone": sc["gate"]["zone"],
        "rows": [{"t": r["t"], "god": r["god"], "action": r["action"],
-                 "s26": r.get("sakata26"), "sent": r.get("sent"),
+                 "s26": r.get("sakata27"), "sent": r.get("sent"),
                  "price": (vs.get(r["t"]) or {}).get("price")} for r in sc["scores"]]}
 path = "/root/gods_plan/data/score_history.jsonl"
 lines = open(path).read().strip().split("\n") if __import__("os").path.exists(path) else []

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """value_sakata_build.py — 완전 자동화 밸류에이션 + 사카타2026 (GOD directive 2026-08-22)
 1) val_auto: 5년 주간 trailing P/E 백분위 (낮을수록 저평가 → 점수↑). EPS 없으면 20W괴리 대리(표기).
-2) sakata26: 사카타 핵심(위치+전환)만 계승해 현대화.
+2) sakata27: 사카타 핵심(위치+전환)만 계승해 현대화.
    pos  = 0.25·d5 + 0.35·d10 + 0.40·d20        (레벨: 이평선 대비 위치)
    vel  = 0.5·Δd5(2주) + 0.3·Δd10(3주) + 0.2·Δd20(4주)  (속도: 어느 방향으로 가속 중인가)
    v2 (평가 4지시 반영):
@@ -141,9 +141,9 @@ for _s, _d in out.items():
     _d["reldiv"] = round(reldiv, 2)
     _d["fact_gate"] = fact_gate
     _d["gate_note"] = gate_note
-    _d["sakata26"] = round(raw * fact_gate, 1) if fact_gate else None
+    _d["sakata27"] = round(raw * fact_gate, 1) if fact_gate else None
     _d.pop("raw0", None)
 json.dump({"generated_utc": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-           "formula": "SAKATA26 = 50+25·tanh((1.8·vel+1.2·acc+0.9·reldiv−1.0·pos)/25) × 사실계수(SEC공시 게이트) · 밸류캡(PE백분위≥80→≤30) · vel 창 4~6주 · acc=vel−vel(4주전) · reldiv=d20−섹터중앙값",
+           "formula": "SAKATA27 = 50+25·tanh((1.8·vel+1.2·acc+0.9·reldiv−1.0·pos)/25) × 사실계수(SEC공시 게이트) · 밸류캡(PE백분위≥80→≤30) · vel 창 4~6주 · acc=vel−vel(4주전) · reldiv=d20−섹터중앙값",
            "tickers": out}, open("/root/gods_plan/data/value_sakata.json", "w"), ensure_ascii=False, indent=1)
 print("done", len(out))

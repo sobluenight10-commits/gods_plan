@@ -27,10 +27,10 @@ lines.append(f"① 게이트: <b>{zone}</b> (×{mult}) · 순유동성 ${liq.get
 
 held = [r for r in sc.get("scores", []) if r.get("held")]
 lines.append("")
-lines.append("② 보유 종목 사카타26/액션:")
+lines.append("② 보유 종목 사카타27/액션:")
 for r in sorted(held, key=lambda x: -(x.get("god") or 0))[:8]:
-    s26 = r.get('sakata26')
-    s26s = "공시게이트 정지" if s26 is None else f"S26 {s26}"
+    s26 = r.get('sakata27')
+    s26s = "공시게이트 정지" if s26 is None else f"S27 {s26}"
     lines.append(f"  · {r['t']} GOD {r['god']} {r['action']} · {s26s} · 언급 {r.get('sent',0):+.0f}")
 
 lines.append("")

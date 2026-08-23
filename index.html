@@ -90,7 +90,7 @@ function row(x){
   <td><span class="score" style="color:${x.god>=70?'#1e8449':x.god>=55?'#9c640c':'#922b21'}">${x.god}</span><div class="gbar"><i style="width:${x.god}%"></i></div></td>
   <td>${badge(AKR[x.action]||x.action,AB[x.action]||'b-watch')}<div class="comp">${esc(x.why)}</div></td>
   <td>${comp(x)}</td>
-  <td class="comp">EV ${x.ev!=null?(x.ev>0?'+':'')+x.ev+'%':'—'} · 승률 ${x.p_win!=null?Math.round(x.p_win*100)+'%':'—'}<br>ES5 ${x.es5!=null?x.es5+'%':'—'} · 괴리 ${x.dist!=null?x.dist+'%':'—'}${x.fc?'':' · 예측없음(대체추정)'}<br>사카타26 ${x.sakata26==null?'<span class="badge b-in">공시 게이트 정지</span>':`<b style="color:${x.sakata26>=70?'#1e8449':x.sakata26>=45?'#9c640c':'#922b21'}">${x.sakata26}</b>`}</td>
+  <td class="comp">EV ${x.ev!=null?(x.ev>0?'+':'')+x.ev+'%':'—'} · 승률 ${x.p_win!=null?Math.round(x.p_win*100)+'%':'—'}<br>ES5 ${x.es5!=null?x.es5+'%':'—'} · 괴리 ${x.dist!=null?x.dist+'%':'—'}${x.fc?'':' · 예측없음(대체추정)'}<br>사카타27 ${x.sakata27==null?'<span class="badge b-in">공시 게이트 정지</span>':`<b style="color:${x.sakata27>=70?'#1e8449':x.sakata27>=45?'#9c640c':'#922b21'}">${x.sakata27}</b>`}</td>
   <td style="min-width:200px">${evid(x)}</td>
   <td>${route(x.t)}</td></tr>`}
 async function load(){
