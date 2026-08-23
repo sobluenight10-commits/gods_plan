@@ -23,6 +23,19 @@ for u in upd.get("result", []):
     msg = u.get("message") or {}
     if str(msg.get("chat", {}).get("id")) != chat: continue
     text = (msg.get("text") or "").strip()
+    mv = re.match(r"^판정\s+(\S+)\s*(.*)$", text)
+    if mv:
+        vp = os.path.join(DATA, "verdicts.jsonl")
+        rec = {"date": datetime.datetime.now(datetime.UTC).strftime("%Y-%m-%d %H:%M"),
+               "slot": mv.group(1), "verdict": mv.group(2).strip(), "src": "telegram"}
+        with open(vp, "a") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
+        try:
+            body = urllib.parse.urlencode({"chat_id": chat, "text": "판정 기록: [%s] — 일요일 채점 대상 등재" % mv.group(1)}).encode()
+            urllib.request.urlopen("https://api.telegram.org/bot%s/sendMessage" % tok, body, timeout=10)
+        except Exception: pass
+        n += 1
+        continue
     mg = re.match(r"^논제갱신\s+(\S+)\s*(.*)$", text)
     if mg:
         import os as _os
